@@ -11,18 +11,29 @@ import Table from "react-bootstrap/Table";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import Form from "react-bootstrap/Form";
-
+import { Col, Container } from "react-bootstrap";
+import { Row } from "antd";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 function UserList() {
   const [users, setUsers] = useState([]);
   const [editingUser, setEditingUser] = useState(null);
   const [showModal, setShowModal] = useState(false);
-  const [updatedUsername, setUpdatedUsername] = useState("");
+  const [updatedUserInfo, setUpdatedUserInfo] = useState({
+    businessName: "",
+    country: "",
+    email: "",
+    phoneNumber: "",
+    username: "",
+  });
 
   useEffect(() => {
     const getUsers = async () => {
       try {
         const db = getFirestore();
-        const usersCollection = await getDocs(collection(db, "RegisteredUsers"));
+        const usersCollection = await getDocs(
+          collection(db, "RegisteredUsers")
+        );
         const usersData = usersCollection.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
@@ -38,30 +49,35 @@ function UserList() {
 
   const handleEdit = (user) => {
     setEditingUser(user);
-    setUpdatedUsername(user.username); // Set the initial value for the updated username
+    setUpdatedUserInfo(user);
     setShowModal(true);
   };
 
   const handleCloseModal = () => {
     setShowModal(false);
     setEditingUser(null);
-    setUpdatedUsername(""); // Reset the updated username
+    setUpdatedUserInfo({
+      businessName: "",
+      country: "",
+      email: "",
+      phoneNumber: "",
+      username: "",
+    });
   };
 
   const handleSaveChanges = async () => {
     try {
       const db = getFirestore();
       const userRef = doc(db, "RegisteredUsers", editingUser.id);
-      await updateDoc(userRef, { username: updatedUsername });
-      // Update the user locally
+      await updateDoc(userRef, updatedUserInfo);
       const updatedUsers = users.map((user) =>
-        user.id === editingUser.id ? { ...user, username: updatedUsername } : user
+        user.id === editingUser.id ? { ...user, ...updatedUserInfo } : user
       );
       setUsers(updatedUsers);
       handleCloseModal();
-      console.log("User updated successfully:", editingUser);
+      toast.success("User updated successfully:", editingUser);
     } catch (error) {
-      console.error("Error updating user:", error);
+      toast.error("Error updating user:", error);
     }
   };
 
@@ -71,14 +87,16 @@ function UserList() {
       const db = getFirestore();
       await deleteDoc(doc(db, "RegisteredUsers", user.id));
       setUsers((prevUsers) => prevUsers.filter((_, i) => i !== index));
-      console.log("User deleted successfully:", user);
+      toast.success("User deleted successfully:", user);
     } catch (error) {
-      console.error("Error deleting user:", error);
+      toast.error("Error deleting user:", error);
     }
   };
 
   return (
-    <div className="container-fluid px-3 pt-4">
+    <>
+    <ToastContainer />
+     <div className="container-fluid px-3 pt-4">
       <div className="row">
         <div className="col-lg-12 p-3">
           <div className="text-center">
@@ -117,19 +135,92 @@ function UserList() {
           </tbody>
         </Table>
         {/* Edit User Modal */}
-        <Modal show={showModal} onHide={handleCloseModal}>
+        <Modal
+          show={showModal}
+          size="lg"
+          centered
+          onHide={handleCloseModal}
+          large
+          backdrop="static"
+          className="editinfo_modal"
+        >
           <Modal.Header closeButton>
             <Modal.Title>Edit User</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <Form.Group>
-              <Form.Label>New Username</Form.Label>
-              <Form.Control
-                type="text"
-                value={updatedUsername}
-                onChange={(e) => setUpdatedUsername(e.target.value)}
-              />
-            </Form.Group>
+            <Container fluid>
+              <Row className="gap-3">
+                <Col>
+                  <Form.Group>
+                    <Form.Label>New Username</Form.Label>
+                    <Form.Control
+                      type="text"
+                      value={updatedUserInfo.username}
+                      onChange={(e) =>
+                        setUpdatedUserInfo({
+                          ...updatedUserInfo,
+                          username: e.target.value,
+                        })
+                      }
+                    />
+                  </Form.Group>
+                  <Form.Group>
+                    <Form.Label>New BusinessName</Form.Label>
+                    <Form.Control
+                      type="text"
+                      value={updatedUserInfo.businessName}
+                      onChange={(e) =>
+                        setUpdatedUserInfo({
+                          ...updatedUserInfo,
+                          businessName: e.target.value,
+                        })
+                      }
+                    />
+                  </Form.Group>
+                  <Form.Group>
+                    <Form.Label>New Email</Form.Label>
+                    <Form.Control
+                      type="text"
+                      value={updatedUserInfo.email}
+                      onChange={(e) =>
+                        setUpdatedUserInfo({
+                          ...updatedUserInfo,
+                          email: e.target.value,
+                        })
+                      }
+                    />
+                  </Form.Group>
+                </Col>
+                <Col>
+                  <Form.Group>
+                    <Form.Label>New Phone Number</Form.Label>
+                    <Form.Control
+                      type="text"
+                      value={updatedUserInfo.phoneNumber}
+                      onChange={(e) =>
+                        setUpdatedUserInfo({
+                          ...updatedUserInfo,
+                          phoneNumber: e.target.value,
+                        })
+                      }
+                    />
+                  </Form.Group>
+                  <Form.Group>
+                    <Form.Label>New Country Name</Form.Label>
+                    <Form.Control
+                      type="text"
+                      value={updatedUserInfo.country}
+                      onChange={(e) =>
+                        setUpdatedUserInfo({
+                          ...updatedUserInfo,
+                          country: e.target.value,
+                        })
+                      }
+                    />
+                  </Form.Group>
+                </Col>
+              </Row>
+            </Container>
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={handleCloseModal}>
@@ -140,8 +231,11 @@ function UserList() {
             </Button>
           </Modal.Footer>
         </Modal>
+        
       </div>
     </div>
+    </>
+   
   );
 }
 

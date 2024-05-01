@@ -11,54 +11,31 @@ const Login = () => {
   const auth = getAuth();
   const navigate = useNavigate();
 
+  
   const handleLogin = (e) => {
     e.preventDefault();
     const loginForm = document.getElementById("login");
-    
-    // Check if the entered email is the admin's email
-    if (email === "adminbusmate@gmail.com") {
-      // Check if the entered password matches the default password
-      if (password === "admin123") {
-        // If the credentials are correct, proceed with login
-        toast.success("Welcome admin");
+    const log = signInWithEmailAndPassword(auth,email, password).then((userCredentails) => {
+      const user = userCredentails.user;
+      storeUserToLocalStorage({email: user.email})
+      toast.success("Welcome admin");
+      if(user.email === "adminbusmate@gmail.com") {
         loginForm.reset();
+        toast.success("Welcome admin");
         setTimeout(() => {
           navigate("/admin");
-        }, 1000);
-      } else {
-        // If the password is incorrect, show an error message
-        toast.error("Invalid password");
+        }, 1000)
       }
-    } else {
-      // If the entered email is not the admin's email, show an error message
-      toast.error("Invalid email");
-    }
+      else{
+        toast.error("Invalid credentials");
+      }
+    })
+    .catch((err) => {
+     const errorMessage = err.message;
+      console.error("error is ",errorMessage)
+     toast.error("Invalid Credentials", errorMessage);
+    })
   };
-  
-  // const handleLogin = (e) => {
-  //   e.preventDefault();
-  //   const loginForm = document.getElementById("login");
-  //   const log = signInWithEmailAndPassword(auth,email, password).then((userCredentails) => {
-  //     const user = userCredentails.user;
-  //     storeUserToLocalStorage({email: user.email})
-
-  //     if(user.email === "adminbusmate@gmail.com") {
-  //       toast.success("Welcome admin");
-  //       loginForm.reset();
-  //       setTimeout(() => {
-  //         navigate("/admin");
-  //       }, 1000)
-  //     }
-  //     else{
-  //       toast.error("Invalid credentials");
-  //     }
-  //   })
-  //   .catch((err) => {
-  //    const errorMessage = err.message;
-  //     console.error("error is ",errorMessage)
-  //    toast.error("Invalid Credentials", errorMessage);
-  //   })
-  // };
 
   return (
     <>

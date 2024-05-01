@@ -3,59 +3,96 @@ import { MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
 import {
   AiOutlineDashboard,
   AiOutlineSetting,
-  AiOutlineShoppingCart,
   AiOutlineUserSwitch,
 } from "react-icons/ai";
-import { FaBusinessTime, FaCalendar, FaCalendarDays, FaCalendarPlus, FaMap, FaMapLocation, FaMapPin, FaRegCalendarCheck, FaRoute, FaShapes, FaUpload, FaUserLock } from "react-icons/fa6";
+import {
+  FaBusinessTime,
+  FaCalendar,
+  FaCalendarDays,
+  FaCalendarPlus,
+  FaMapLocation,
+  FaRegCalendarCheck,
+  FaRoute,
+  FaShapes,
+  FaUpload,
+  FaUserLock,
+} from "react-icons/fa6";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Link } from "react-router-dom";
 import { Outlet } from "react-router-dom";
 import { FcDataConfiguration } from "react-icons/fc";
 import { IoIosNotifications } from "react-icons/io";
-import {  FaMobileAlt, FaDatabase, FaCalendarTimes, FaMapMarked, FaCalendarAlt, FaStop, FaStopCircle, FaTimes, FaRegCalendarTimes, FaTripadvisor,} from "react-icons/fa";
-import { BiCategoryAlt, BiCustomize, BiMap, BiSolidShapes, BiSolidTime, BiUser } from "react-icons/bi";
+import {
+  FaMobileAlt,
+  FaDatabase,
+  FaStop,
+  FaStopCircle,
+  FaTripadvisor,
+} from "react-icons/fa";
+import {
+  BiCategoryAlt,
+  BiCustomize,
+  BiSolidShapes,
+  BiSolidTime,
+  BiUser,
+} from "react-icons/bi";
 import { Layout, Menu, theme } from "antd";
 import { useNavigate } from "react-router-dom";
-import { BsCardList, BsMap, BsMarkerTip, BsRouter, BsStop } from "react-icons/bs";
+import { BsCardList, BsMap, BsStop } from "react-icons/bs";
 import { MdOutlineDeleteSweep } from "react-icons/md";
-import {getUserFromLocalStorage} from "../utils/localstorage";
-import {getAuth} from "firebase/auth"
+import { getUserFromLocalStorage } from "../utils/localstorage";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 const { Header, Sider, Content } = Layout;
 const MainLayout = () => {
   const [userData, setUserData] = useState(null);
-    const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
-    const auth = getAuth();
+  const auth = getAuth();
 
-    useEffect(() => {
-      const user = getUserFromLocalStorage();
-      setUserData(user);
-    }, [])
+  useEffect(() => {
+    const user = getUserFromLocalStorage();
+    setUserData(user);
+  }, []);
 
-    const handleLogout= () => {
-      auth.signOut();
-      localStorage.removeItem('user');
-      toast.success("you are logged out")
+  const handleLogout = () => {
+    auth.signOut();
+    localStorage.removeItem("user");
+    toast.success("you are logged out");
 
-      setTimeout(() => {
-        navigate("/")
-      },1000)
-    }
+    setTimeout(() => {
+      navigate("/");
+    }, 1000);
+  };
 
-    const handleMenuClick = ({ key }) => {
-      navigate(key);
-    }
+  const handleMenuClick = ({ key }) => {
+    // Check if the user is logged in
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        navigate(key);
+      } else {
+        toast.error("You must be logged in");
+        setTimeout(() => {
+          navigate("/"); // Change "/login" to the actual login page route
+        },1000);
+      }
+    });
+  };
   const {
     token: { colorBgContainer },
   } = theme.useToken();
   return (
     <Layout /* onContextMenu={(e) => e.preventDefault()} */>
-      <Sider  trigger={null} collapsible collapsed={collapsed}>
+      <Sider trigger={null} collapsible collapsed={collapsed}>
         <div className="logo">
           <h2 className="text-white fs-5 text-center py-2 mb-0">
-          <span className="sm-logo"><img src="/images/logo2.png" width={50} /></span>
-            <span className="lg-logo"> <img src="/images/logo white.png" width={200}/></span>
+            <span className="sm-logo">
+              <img src="/images/logo2.png" width={50} />
+            </span>
+            <span className="lg-logo">
+              {" "}
+              <img src="/images/logo white.png" width={200} />
+            </span>
           </h2>
         </div>
         <Menu
@@ -69,7 +106,7 @@ const MainLayout = () => {
               icon: <AiOutlineDashboard className="fs-4" />,
               label: "Dashboard",
             },
-            
+
             {
               key: "Manage Users",
               icon: <BiUser className="fs-4" />,
@@ -156,7 +193,7 @@ const MainLayout = () => {
                   icon: <FaCalendar className="fs-4" />,
                   label: "Calendar",
 
-                  children:[
+                  children: [
                     {
                       key: "AllData/calendar",
                       icon: <FaCalendarPlus className="fs-4" />,
@@ -171,15 +208,15 @@ const MainLayout = () => {
                       key: "AllData/Calendar_dates",
                       icon: <FaCalendarDays className="fs-4" />,
                       label: "C_dates",
-                    }
-                  ]
+                    },
+                  ],
                 },
                 {
                   key: "Routes",
                   icon: <FaRoute className="fs-4" />,
                   label: "Routes",
 
-                  children:[
+                  children: [
                     {
                       key: "AllData/RoutesData",
                       icon: <FaRoute className="fs-4" />,
@@ -190,14 +227,14 @@ const MainLayout = () => {
                       icon: <BsMap className="fs-4" />,
                       label: "Routes_02",
                     },
-                  ]
+                  ],
                 },
                 {
                   key: "Shapes",
                   icon: <FaShapes className="fs-4" />,
                   label: "Shapes",
 
-                  children:[
+                  children: [
                     {
                       key: "AllData/Shapes",
                       icon: <BiSolidShapes className="fs-4" />,
@@ -208,14 +245,14 @@ const MainLayout = () => {
                       icon: <BiSolidShapes className="fs-4" />,
                       label: "Shapes_02",
                     },
-                  ]
+                  ],
                 },
                 {
                   key: "Stops",
                   icon: <FaStop className="fs-4" />,
                   label: "Stops",
 
-                  children:[
+                  children: [
                     {
                       key: "AllData/Stops1",
                       icon: <BsStop className="fs-4" />,
@@ -236,14 +273,14 @@ const MainLayout = () => {
                       icon: <FaBusinessTime className="fs-4" />,
                       label: "S_times-02",
                     },
-                  ]
+                  ],
                 },
                 {
                   key: "Trips",
                   icon: <FaTripadvisor className="fs-4" />,
                   label: "Trips",
 
-                  children:[
+                  children: [
                     {
                       key: "AllData/Trips1",
                       icon: <FaTripadvisor className="fs-4" />,
@@ -254,9 +291,8 @@ const MainLayout = () => {
                       icon: <FaTripadvisor className="fs-4" />,
                       label: "Trips_02",
                     },
-                  ]
+                  ],
                 },
-              
               ],
             },
             {
@@ -284,7 +320,6 @@ const MainLayout = () => {
               icon: <BiUser className="fs-4" />,
               label: "Registered User",
             },
-            
           ]}
         />
       </Sider>
@@ -323,48 +358,45 @@ const MainLayout = () => {
               </div>
               {userData ? (
                 <>
-                 <div
-                role="button"
-                id="dropdownMenuLink"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-              >
-                <h5 className="mb-0">Admin</h5>
-                <p className="mb-0">{userData.email}</p>
-              </div>
-              <div className="dropdown-menu" aria-labelledby="dropdownMenuLink">
-                <li>
-                  <Link
-                    className="dropdown-item py-1 mb-1"
-                    style={{ height: "auto", lineHeight: "20px" }}
-                    
+                  <div
+                    role="button"
+                    id="dropdownMenuLink"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
                   >
-                    View Profile
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    className="dropdown-item py-1 mb-1"
-                    style={{ height: "auto", lineHeight: "20px" }}
-                    onClick={handleLogout}
+                    <h5 className="mb-0">Admin</h5>
+                    <p className="mb-0">{userData.email}</p>
+                  </div>
+                  <div
+                    className="dropdown-menu"
+                    aria-labelledby="dropdownMenuLink"
                   >
-                    Signout
-                  </Link>
-                </li>
-              </div>
+                    <li>
+                      <Link
+                        className="dropdown-item py-1 mb-1"
+                        style={{ height: "auto", lineHeight: "20px" }}
+                      >
+                        View Profile
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        className="dropdown-item py-1 mb-1"
+                        style={{ height: "auto", lineHeight: "20px" }}
+                        onClick={handleLogout}
+                      >
+                        Signout
+                      </Link>
+                    </li>
+                  </div>
                 </>
-
-              ): (
+              ) : (
                 <div className="">
-                  <Link
-                    to="/"
-                    className="nav-link"
-                  >
+                  <Link to="/" className="nav-link">
                     <b>Login</b>
                   </Link>
                 </div>
               )}
-             
             </div>
           </div>
         </Header>

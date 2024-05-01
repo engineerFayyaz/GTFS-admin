@@ -18,8 +18,8 @@
 }
 .btn:hover, button:hover{
   background: #1890ff;
-
 }
+
 .trigger {
   padding: 0 24px;
   font-size: 18px;
@@ -145,3 +145,10 @@ main::-webkit-scrollbar {
 }
 
 /* login page end */
+
+
+.editinfo_modal label{
+  margin-top: 10px;
+  font-weight: 600;
+  font-family: monospace;
+}
