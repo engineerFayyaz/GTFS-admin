@@ -8,45 +8,49 @@ import {
 } from "firebase/firestore";
 import Table from "react-bootstrap/Table";
 import Button from "react-bootstrap/Button";
+import { toast } from "react-toastify";
+import { ToastContainer } from "react-bootstrap";
 
-function UserList() {
-  const [users, setUsers] = useState([]);
+function Trips2() {
+  const [Trips, setTrips] = useState([]);
 
   useEffect(() => {
-    const getUsers = async () => {
+    const getTrips = async () => {
       try {
         const db = getFirestore(); // Initialize Firestore directly here
-        const usersCollection = await getDocs(
-          collection(db, "RegisteredUsers")
+        const TripsCollection = await getDocs(
+          collection(db, "trips2")
         );
-        const usersData = usersCollection.docs.map((doc) => ({
+        const TripsData = TripsCollection.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
-        setUsers(usersData);
+        setTrips(TripsData);
+        toast.success("data saved successfully");
       } catch (error) {
         console.error("Error fetching users:", error);
       }
+
     };
 
-    getUsers();
+    getTrips();
   }, []);
 
   const handleEdit = (index) => {
     // Implement edit functionality here
-    const user = users[index];
+    const user = Trips[index];
     // Example: Redirect to edit page or open a modal with user data
     console.log("Edit user:", user);
   };
 
   const handleDelete = async (index) => {
     // Implement delete functionality here
-    const user = users[index];
+    const user = Trips[index];
     try {
       const db = getFirestore();
       await deleteDoc(doc(db, "RegisteredUsers", user.id));
       // Remove the user from the state
-      setUsers((prevUsers) => prevUsers.filter((_, i) => i !== index));
+      setTrips((prevUsers) => prevUsers.filter((_, i) => i !== index));
       console.log("User deleted successfully:", user);
     } catch (error) {
       console.error("Error deleting user:", error);
@@ -54,48 +58,45 @@ function UserList() {
   };
 
   return (
+    <>
+    <ToastContainer />
     <div className="container-fluid px-3 pt-4">
       <div className="row">
         <div className="col-lg-12 p-3">
           <div className="text-center  ">
-            <h5 className="text-uppercase p-2 page-title">Registered Users</h5>
+            <h5 className="text-uppercase p-2 page-title">Trips_1 Time</h5>
           </div>
         </div>
-        <Table striped bordered hover>
+        <Table striped bordered hover className=" overflow-scroll  ">
           <thead>
             <tr>
-              <th>Business Name</th>
-              <th>Country</th>
-              <th>Email</th>
-              <th>Phone Number</th>
-              <th>Username</th>
-              <th>Actions</th> {/* New column for actions */}
+              <th>Count</th>
+              <th>Direction Id</th>
+              <th>Route Id</th>
+              <th>Service Id</th>
+              <th>Shape Id</th>
+              <th>Trip Id</th>
             </tr>
           </thead>
           <tbody>
-            {users.map((user, index) => (
+            {Trips.map((trips, index) => (
               <tr key={index}>
-                <td>{user.businessName}</td>
-                <td>{user.country}</td>
-                <td>{user.email}</td>
-                <td>{user.phoneNumber}</td>
-                <td>{user.username}</td>
-                <td>
-                  {/* Buttons for edit and delete */}
-                  <Button variant="primary" onClick={() => handleEdit(index)}>
-                    Edit
-                  </Button>{" "}
-                  <Button variant="danger" onClick={() => handleDelete(index)}>
-                    Delete
-                  </Button>
+                <td className="text-secondary">
+                  <b>{trips.count}</b>
                 </td>
+                <td>{trips.direction_id}</td>
+                <td>{trips.route_id}</td>
+                <td>{trips.service_id}</td>
+                <td>{trips.shape_id} </td>
+                <td>{trips.trip_id} </td>
               </tr>
             ))}
           </tbody>
         </Table>
       </div>
     </div>
+    </>
   );
 }
 
-export default UserList;
+export default Trips2;

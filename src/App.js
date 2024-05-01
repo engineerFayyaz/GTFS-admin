@@ -5,16 +5,16 @@ import Login from "./pages/Login";
 import Resetpassword from "./pages/Resetpassword";
 import Forgotpassword from "./pages/Forgotpassword";
 import MainLayout from "./components/MainLayout";
-import Productlist from "./pages/Productlist";
+import Productlist from "./pages/AllData/Calendar_dates";
 import Addcolor from "./pages/UserList";
 import Addcat from "./pages/UserDetails";
-import Addbrand from "./pages/AddDesigner";
+import Addbrand from "./pages/AllData/Calendar";
 import AddCoupon from "./pages/ManageMobileData";
-import ViewEnq from "./pages/ViewEnq";
-import ViewOrder from "./pages/ViewOrder";
-import AddEdits from "./pages/AddEdits";
+import ViewEnq from "./pages/AllData/Routes_2";
+import ViewOrder from "./pages/AllData/Shapes_1";
+import AddEdits from "./pages/AllData/Calendar2";
 import RegisteredUser from "./pages/RegisteredUser";
-import ProductApproval from "./pages/ProductApproval";
+import ProductApproval from "./pages/AllData/Routes_1";
 import UploadVisitorCheels from "./pages/AccessPermissions/UploadVisitorCheels";
 import UploadVisitorGallery from "./pages/AccessPermissions/UserPermission";
 import Register from "./pages/Signup";
@@ -28,6 +28,19 @@ import Configration from "./pages/Configration";
 import ManageMobileData from "./pages/ManageMobileData";
 import UploadMobileData from "./pages/UploadMobileData";
 import DeleteMobileData from "./pages/DeleteMobileData";
+import Calendar from "./pages/AllData/Calendar";
+import CalendarTwo from "./pages/AllData/Calendar2";
+import CalendarDates from "./pages/AllData/Calendar_dates";
+import RoutesData from "./pages/AllData/Routes_1";
+import RoutesData2 from "./pages/AllData/Routes_2";
+import Shapes1 from "./pages/AllData/Shapes_1";
+import Shapes2 from "./pages/AllData/Shapes_2";
+import Stops1 from "./pages/AllData/Stops1";
+import Stops2 from "./pages/AllData/Stops2";
+import StopsTime1 from "./pages/AllData/StopTimes_1";
+import StopsTime2 from "./pages/AllData/StopTimes_2";
+import Trips1 from "./pages/AllData/Trips1";
+import Trips2 from "./pages/AllData/Trips2";
 function App() {
   return (
     <Router>
@@ -62,6 +75,21 @@ function App() {
           <Route path="AccessPermissions/UserRole" element={<UserRole />} />
           <Route path="AccessPermissions/UploadVisitorCheels" element={<UploadVisitorCheels />} />
           <Route path="AccessPermissions/UploadVisitorCheels" element={<UploadVisitorGallery />} />
+
+          <Route path="AllData/Calendar" element={<Calendar />} />
+          <Route path="AllData/Calendar2" element={<CalendarTwo />} />
+          <Route path="AllData/Calendar_dates" element={<CalendarDates />} />
+          <Route path="AllData/RoutesData" element={<RoutesData />} />
+          <Route path="AllData/RoutesData2" element={<RoutesData2 />} />
+          <Route path="AllData/Shapes" element={<Shapes1 />} />
+          <Route path="AllData/Shapes2" element={<Shapes2 />} />
+          <Route path="AllData/Stops1" element={<Stops1 />} />
+          <Route path="AllData/Stops2" element={<Stops2 />} />
+          <Route path="AllData/Stops_Times1" element={<StopsTime1 />} />
+          <Route path="AllData/Stops_Times2" element={<StopsTime2 />} />
+          <Route path="AllData/Trips1" element={<Trips1 />} />
+          <Route path="AllData/Trips2" element={<Trips2 />} />
+
         </Route>
       </Routes>
     </Router>

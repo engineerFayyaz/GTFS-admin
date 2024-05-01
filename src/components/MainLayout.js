@@ -6,18 +6,18 @@ import {
   AiOutlineShoppingCart,
   AiOutlineUserSwitch,
 } from "react-icons/ai";
-import { FaUpload, FaUserLock } from "react-icons/fa6";
+import { FaBusinessTime, FaCalendar, FaCalendarDays, FaCalendarPlus, FaMap, FaMapLocation, FaMapPin, FaRegCalendarCheck, FaRoute, FaShapes, FaUpload, FaUserLock } from "react-icons/fa6";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Link } from "react-router-dom";
 import { Outlet } from "react-router-dom";
 import { FcDataConfiguration } from "react-icons/fc";
 import { IoIosNotifications } from "react-icons/io";
-import {  FaMobileAlt, FaDatabase,} from "react-icons/fa";
-import { BiCategoryAlt, BiCustomize, BiUser } from "react-icons/bi";
+import {  FaMobileAlt, FaDatabase, FaCalendarTimes, FaMapMarked, FaCalendarAlt, FaStop, FaStopCircle, FaTimes, FaRegCalendarTimes, FaTripadvisor,} from "react-icons/fa";
+import { BiCategoryAlt, BiCustomize, BiMap, BiSolidShapes, BiSolidTime, BiUser } from "react-icons/bi";
 import { Layout, Menu, theme } from "antd";
 import { useNavigate } from "react-router-dom";
-import { BsCardList } from "react-icons/bs";
+import { BsCardList, BsMap, BsMarkerTip, BsRouter, BsStop } from "react-icons/bs";
 import { MdOutlineDeleteSweep } from "react-icons/md";
 import {getUserFromLocalStorage} from "../utils/localstorage";
 import {getAuth} from "firebase/auth"
@@ -56,7 +56,6 @@ const MainLayout = () => {
           <h2 className="text-white fs-5 text-center py-2 mb-0">
           <span className="sm-logo"><img src="/images/logo2.png" width={50} /></span>
             <span className="lg-logo"> <img src="/images/logo white.png" width={200}/></span>
-          
           </h2>
         </div>
         <Menu
@@ -73,7 +72,7 @@ const MainLayout = () => {
             
             {
               key: "Manage Users",
-              icon: <AiOutlineShoppingCart className="fs-4" />,
+              icon: <BiUser className="fs-4" />,
               label: "Manage Users",
               children: [
                 {
@@ -145,6 +144,119 @@ const MainLayout = () => {
                   icon: <MdOutlineDeleteSweep className="fs-4" />,
                   label: "Delete Mobile Data",
                 },
+              ],
+            },
+            {
+              key: "All Routes Data",
+              icon: <FaMapLocation className="fs-4" />,
+              label: "All Routes Data",
+              children: [
+                {
+                  key: "Calendar",
+                  icon: <FaCalendar className="fs-4" />,
+                  label: "Calendar",
+
+                  children:[
+                    {
+                      key: "AllData/calendar",
+                      icon: <FaCalendarPlus className="fs-4" />,
+                      label: "Calendar_01",
+                    },
+                    {
+                      key: "AllData/Calendar2",
+                      icon: <FaRegCalendarCheck className="fs-4" />,
+                      label: "Calendar_02",
+                    },
+                    {
+                      key: "AllData/Calendar_dates",
+                      icon: <FaCalendarDays className="fs-4" />,
+                      label: "C_dates",
+                    }
+                  ]
+                },
+                {
+                  key: "Routes",
+                  icon: <FaRoute className="fs-4" />,
+                  label: "Routes",
+
+                  children:[
+                    {
+                      key: "AllData/RoutesData",
+                      icon: <FaRoute className="fs-4" />,
+                      label: "Routes_01",
+                    },
+                    {
+                      key: "AllData/RoutesData2",
+                      icon: <BsMap className="fs-4" />,
+                      label: "Routes_02",
+                    },
+                  ]
+                },
+                {
+                  key: "Shapes",
+                  icon: <FaShapes className="fs-4" />,
+                  label: "Shapes",
+
+                  children:[
+                    {
+                      key: "AllData/Shapes",
+                      icon: <BiSolidShapes className="fs-4" />,
+                      label: "Shapes_01",
+                    },
+                    {
+                      key: "AllData/Shapes2",
+                      icon: <BiSolidShapes className="fs-4" />,
+                      label: "Shapes_02",
+                    },
+                  ]
+                },
+                {
+                  key: "Stops",
+                  icon: <FaStop className="fs-4" />,
+                  label: "Stops",
+
+                  children:[
+                    {
+                      key: "AllData/Stops1",
+                      icon: <BsStop className="fs-4" />,
+                      label: "Stops_01",
+                    },
+                    {
+                      key: "AllData/Stops2",
+                      icon: <FaStopCircle className="fs-4" />,
+                      label: "Stops_02",
+                    },
+                    {
+                      key: "AllData/Stops_Times1",
+                      icon: <BiSolidTime className="fs-4" />,
+                      label: "S_times-01",
+                    },
+                    {
+                      key: "AllData/Stops_Times2",
+                      icon: <FaBusinessTime className="fs-4" />,
+                      label: "S_times-02",
+                    },
+                  ]
+                },
+                {
+                  key: "Trips",
+                  icon: <FaTripadvisor className="fs-4" />,
+                  label: "Trips",
+
+                  children:[
+                    {
+                      key: "AllData/Trips1",
+                      icon: <FaTripadvisor className="fs-4" />,
+                      label: "Trips_01",
+                    },
+                    {
+                      key: "AllData/Trips2",
+                      icon: <FaTripadvisor className="fs-4" />,
+                      label: "Trips_02",
+                    },
+                  ]
+                },
+              
               ],
             },
             {

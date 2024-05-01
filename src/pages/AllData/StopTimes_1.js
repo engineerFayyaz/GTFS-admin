@@ -8,45 +8,50 @@ import {
 } from "firebase/firestore";
 import Table from "react-bootstrap/Table";
 import Button from "react-bootstrap/Button";
+import { toast } from "react-toastify";
+import { ToastContainer } from "react-bootstrap";
 
-function UserList() {
-  const [users, setUsers] = useState([]);
+function StopsTime1() {
+  const [Stops, setStops] = useState([]);
 
   useEffect(() => {
-    const getUsers = async () => {
+    const getStops = async () => {
       try {
         const db = getFirestore(); // Initialize Firestore directly here
-        const usersCollection = await getDocs(
-          collection(db, "RegisteredUsers")
+        const StopsCollection = await getDocs(
+          collection(db, "stop_times")
         );
-        const usersData = usersCollection.docs.map((doc) => ({
+        const StopsData = StopsCollection.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
-        setUsers(usersData);
+        setStops(StopsData);
+        toast.success("data saved successfully");
       } catch (error) {
+        toast.error("erorr fetching data");
         console.error("Error fetching users:", error);
       }
+
     };
 
-    getUsers();
+    getStops();
   }, []);
 
   const handleEdit = (index) => {
     // Implement edit functionality here
-    const user = users[index];
+    const user = Stops[index];
     // Example: Redirect to edit page or open a modal with user data
     console.log("Edit user:", user);
   };
 
   const handleDelete = async (index) => {
     // Implement delete functionality here
-    const user = users[index];
+    const user = Stops[index];
     try {
       const db = getFirestore();
       await deleteDoc(doc(db, "RegisteredUsers", user.id));
       // Remove the user from the state
-      setUsers((prevUsers) => prevUsers.filter((_, i) => i !== index));
+      setStops((prevUsers) => prevUsers.filter((_, i) => i !== index));
       console.log("User deleted successfully:", user);
     } catch (error) {
       console.error("Error deleting user:", error);
@@ -54,48 +59,48 @@ function UserList() {
   };
 
   return (
+    <>
+    <ToastContainer />
     <div className="container-fluid px-3 pt-4">
       <div className="row">
         <div className="col-lg-12 p-3">
           <div className="text-center  ">
-            <h5 className="text-uppercase p-2 page-title">Registered Users</h5>
+            <h5 className="text-uppercase p-2 page-title">Stops_1 Time</h5>
           </div>
         </div>
-        <Table striped bordered hover>
+        <Table striped bordered hover className=" overflow-scroll  ">
           <thead>
             <tr>
-              <th>Business Name</th>
-              <th>Country</th>
-              <th>Email</th>
-              <th>Phone Number</th>
-              <th>Username</th>
-              <th>Actions</th> {/* New column for actions */}
+              <th>Count</th>
+              <th>Arrival Time</th>
+              <th>Departure Time</th>
+              <th>Stop Id</th>
+              <th>Pickup Type</th>
+              <th>Stop Sequence</th>
+              <th>Trip Id</th>
+              
             </tr>
           </thead>
           <tbody>
-            {users.map((user, index) => (
+            {Stops.map((stops, index) => (
               <tr key={index}>
-                <td>{user.businessName}</td>
-                <td>{user.country}</td>
-                <td>{user.email}</td>
-                <td>{user.phoneNumber}</td>
-                <td>{user.username}</td>
-                <td>
-                  {/* Buttons for edit and delete */}
-                  <Button variant="primary" onClick={() => handleEdit(index)}>
-                    Edit
-                  </Button>{" "}
-                  <Button variant="danger" onClick={() => handleDelete(index)}>
-                    Delete
-                  </Button>
+                <td className="text-secondary">
+                  <b>{stops.count}</b>
                 </td>
+                <td>{stops.arrival_time}</td>
+                <td>{stops.departure_time}</td>
+                <td>{stops.stop_id}</td>
+                <td>{stops.pickup_type} </td>
+                <td>{stops.stop_sequence} </td>
+                <td>{stops.trip_id} </td>
               </tr>
             ))}
           </tbody>
         </Table>
       </div>
     </div>
+    </>
   );
 }
 
-export default UserList;
+export default StopsTime1;

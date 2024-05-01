@@ -9,44 +9,44 @@ import {
 import Table from "react-bootstrap/Table";
 import Button from "react-bootstrap/Button";
 
-function UserList() {
-  const [users, setUsers] = useState([]);
+function CalendarDates() {
+  const [Calendar, setCalendar] = useState([]);
 
   useEffect(() => {
-    const getUsers = async () => {
+    const getCalendar = async () => {
       try {
         const db = getFirestore(); // Initialize Firestore directly here
-        const usersCollection = await getDocs(
-          collection(db, "RegisteredUsers")
+        const CalendarCollection = await getDocs(
+          collection(db, "calendar_dates")
         );
-        const usersData = usersCollection.docs.map((doc) => ({
+        const CalendarData = CalendarCollection.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
-        setUsers(usersData);
+        setCalendar(CalendarData);
       } catch (error) {
         console.error("Error fetching users:", error);
       }
     };
 
-    getUsers();
+    getCalendar();
   }, []);
 
   const handleEdit = (index) => {
     // Implement edit functionality here
-    const user = users[index];
+    const user = Calendar[index];
     // Example: Redirect to edit page or open a modal with user data
     console.log("Edit user:", user);
   };
 
   const handleDelete = async (index) => {
     // Implement delete functionality here
-    const user = users[index];
+    const user = Calendar[index];
     try {
       const db = getFirestore();
       await deleteDoc(doc(db, "RegisteredUsers", user.id));
       // Remove the user from the state
-      setUsers((prevUsers) => prevUsers.filter((_, i) => i !== index));
+      setCalendar((prevUsers) => prevUsers.filter((_, i) => i !== index));
       console.log("User deleted successfully:", user);
     } catch (error) {
       console.error("Error deleting user:", error);
@@ -58,37 +58,23 @@ function UserList() {
       <div className="row">
         <div className="col-lg-12 p-3">
           <div className="text-center  ">
-            <h5 className="text-uppercase p-2 page-title">Registered Users</h5>
+            <h5 className="text-uppercase p-2 page-title">Calendar Dates</h5>
           </div>
         </div>
-        <Table striped bordered hover>
+        <Table striped bordered hover className=" overflow-scroll  " >
           <thead>
             <tr>
-              <th>Business Name</th>
-              <th>Country</th>
-              <th>Email</th>
-              <th>Phone Number</th>
-              <th>Username</th>
-              <th>Actions</th> {/* New column for actions */}
+              <th>Count</th>
+              <th>Date</th>
+              <th>Service Id</th>
             </tr>
           </thead>
           <tbody>
-            {users.map((user, index) => (
+            {Calendar.map((calendar, index) => (
               <tr key={index}>
-                <td>{user.businessName}</td>
-                <td>{user.country}</td>
-                <td>{user.email}</td>
-                <td>{user.phoneNumber}</td>
-                <td>{user.username}</td>
-                <td>
-                  {/* Buttons for edit and delete */}
-                  <Button variant="primary" onClick={() => handleEdit(index)}>
-                    Edit
-                  </Button>{" "}
-                  <Button variant="danger" onClick={() => handleDelete(index)}>
-                    Delete
-                  </Button>
-                </td>
+                <td className="text-secondary"><b>{calendar.count}</b></td>
+                <td>{calendar.date}</td>
+                <td>{calendar.service_Id}</td>
               </tr>
             ))}
           </tbody>
@@ -98,4 +84,4 @@ function UserList() {
   );
 }
 
-export default UserList;
+export default CalendarDates;
