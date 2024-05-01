@@ -1,69 +1,80 @@
-import React, { useState, useEffect } from "react";
-import Form from "react-bootstrap/Form";
-import Button from "react-bootstrap/Button";
-import Table from "react-bootstrap/Table";
-import axios from "axios";
-import { Link } from "react-router-dom";
-import {auth} from "../../src/firebase/Config.js"
+import React, { useEffect, useState } from 'react';
+import { getFirestore, collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import Table from 'react-bootstrap/Table';
+import Button from 'react-bootstrap/Button';
 
-const UserList = () => {
+function UserList() {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    fetchUsers();
+    const getUsers = async () => {
+      try {
+        const db = getFirestore(); // Initialize Firestore directly here
+        const usersCollection = await getDocs(collection(db, 'RegisteredUsers'));
+        const usersData = usersCollection.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setUsers(usersData);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+      }
+    };
+
+    getUsers();
   }, []);
 
-  const fetchUsers = async () => {
+  const handleEdit = (index) => {
+    // Implement edit functionality here
+    const user = users[index];
+    // Example: Redirect to edit page or open a modal with user data
+    console.log('Edit user:', user);
+  };
+
+  const handleDelete = async (index) => {
+    // Implement delete functionality here
+    const user = users[index];
     try {
-      // Use Firebase Authentication to get a list of users
-      const userList = await auth.listUsers();
-      const userData = userList.users.map((user) => ({
-        id: user.uid,
-        email: user.email,
-        // Add any other user data you want to display
-      }));
-      setUsers(userData);
+      const db = getFirestore();
+      await deleteDoc(doc(db, 'RegisteredUsers', user.id));
+      // Remove the user from the state
+      setUsers(prevUsers => prevUsers.filter((_, i) => i !== index));
+      console.log('User deleted successfully:', user);
     } catch (error) {
-      console.error("Error fetching users:", error);
+      console.error('Error deleting user:', error);
     }
   };
 
   return (
-    <>
-      <div className="container-fluid px-3 pt-4">
-        <div className="text-center  ">
-          <h2 className="text-uppercase p-2 page-title">Manage All Users</h2>
-        </div>
-        <div className="row ">
-          <div className="col-lg-12 mt-4">
-            <div className="mt-4">
-              <div className="text-center  ">
-                <h2 className="text-uppercase p-2 page-title">All Users</h2>
-              </div>
-              <Table striped bordered hover>
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Email</th>
-                    {/* Add more columns as needed */}
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map((user, index) => (
-                    <tr key={user.id}>
-                      <td>{index + 1}</td>
-                      <td>{user.email}</td>
-                      {/* Display more user data in additional columns */}
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
+    <div>
+      <h1>Registered Users</h1>
+      <Table striped bordered hover>
+        <thead>
+          <tr>
+            <th>Business Name</th>
+            <th>Country</th>
+            <th>Email</th>
+            <th>Phone Number</th>
+            <th>Username</th>
+            <th>Actions</th> {/* New column for actions */}
+          </tr>
+        </thead>
+        <tbody>
+          {users.map((user, index) => (
+            <tr key={index}>
+              <td>{user.businessName}</td>
+              <td>{user.country}</td>
+              <td>{user.email}</td>
+              <td>{user.phoneNumber}</td>
+              <td>{user.username}</td>
+              <td>
+                {/* Buttons for edit and delete */}
+                <Button variant="primary" onClick={() => handleEdit(index)}>Edit</Button>{' '}
+                <Button variant="danger" onClick={() => handleDelete(index)}>Delete</Button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </Table>
+    </div>
   );
-};
+}
 
 export default UserList;
