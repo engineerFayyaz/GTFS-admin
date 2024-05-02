@@ -4,15 +4,35 @@ import {
   collection,
   getDocs,
   deleteDoc,
+  updateDoc,
   doc,
 } from "firebase/firestore";
-import Table from "react-bootstrap/Table";
-import Button from "react-bootstrap/Button";
-import { toast } from "react-toastify";
-import { ToastContainer } from "react-bootstrap";
+import {
+  Table,
+  Button,
+  Form,
+  Container,
+  Row,
+  Col,
+  Modal,
+} from "react-bootstrap/";
+import { db } from "../../Config";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function StopsTime2() {
   const [Stops, setStops] = useState([]);
+  const [showModal, setShowModal] = useState(false);
+  const [editedStops, setEditedStops] = useState(null);
+  const [updatedStopsInfo, setUpdatedStopsInfo] = useState({
+    count: "",
+    arrival_time: "",
+    departure_time: "",
+    pickup_type: "",
+    stop_id: "",
+    stop_sequence: "",
+    trip_id: ""
+  });
 
   useEffect(() => {
     const getStops = async () => {
@@ -36,11 +56,40 @@ function StopsTime2() {
     getStops();
   }, []);
 
-  const handleEdit = (index) => {
-    // Implement edit functionality here
-    const user = Stops[index];
-    // Example: Redirect to edit page or open a modal with user data
-    console.log("Edit user:", user);
+  const handleEdit = (route) => {
+    setEditedStops(route);
+    setShowModal(true);
+    setUpdatedStopsInfo(route);
+  };
+
+  const handleCloseModal = () => {
+    setEditedStops(null);
+    setShowModal(false);
+    setUpdatedStopsInfo({
+      count: "",
+      arrival_time: "",
+      departure_time: "",
+      pickup_type: "",
+      stop_id: "",
+      stop_sequence: "",
+      trip_id: ""
+    });
+  };
+  const handleSaveChanges = async () => {
+    try {
+      const db = getFirestore();
+      const routeRef = doc(db, "stop_times2", updatedStopsInfo.id);
+      await updateDoc(routeRef, updatedStopsInfo);
+      const updatedStops = Stops.map((stop) =>
+        stop.id === editedStops.id ? { ...stop, ...updatedStops } : stop
+      );
+      setStops(updatedStops);
+      handleCloseModal();
+      toast.success("route updated successfully");
+    } catch (error) {
+      toast.error(" Error while updating Routes: ", error);
+      console.log(" Error while updating Routes: ", error);
+    }
   };
 
   const handleDelete = async (index) => {
@@ -48,12 +97,12 @@ function StopsTime2() {
     const user = Stops[index];
     try {
       const db = getFirestore();
-      await deleteDoc(doc(db, "RegisteredUsers", user.id));
+      await deleteDoc(doc(db, "stop_times2", user.id));
       // Remove the user from the state
       setStops((prevUsers) => prevUsers.filter((_, i) => i !== index));
-      console.log("User deleted successfully:", user);
+      console.log("deleted successfully:", user);
     } catch (error) {
-      console.error("Error deleting user:", error);
+      console.error("Error deleting :", error);
     }
   };
 
@@ -67,7 +116,7 @@ function StopsTime2() {
             <h5 className="text-uppercase p-2 page-title">Stops_2 Time</h5>
           </div>
         </div>
-        <Table striped bordered hover className=" overflow-scroll  ">
+        <Table striped bordered responsive hover className=" overflow-scroll  ">
           <thead>
             <tr>
               <th>Count</th>
@@ -92,12 +141,142 @@ function StopsTime2() {
                 <td>{stops.pickup_type} </td>
                 <td>{stops.stop_sequence} </td>
                 <td>{stops.trip_id} </td>
+                <td className="d-flex gap-2">
+                    <Button variant="primary" onClick={() => handleEdit(stops)}>
+                      Edit
+                    </Button>
+                    <Button variant="danger" onClick={() => handleDelete(stops)}>
+                      Delete{" "}
+                    </Button>
+                  </td>
               </tr>
             ))}
           </tbody>
         </Table>
       </div>
     </div>
+    <Modal
+        show={showModal}
+        size="lg"
+        centered
+        onHide={handleCloseModal}
+        large
+        backdrop="static"
+        className="editinfo_modal"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Edit Stops_1 Times </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Container fluid>
+            <Row className="gap-3">
+              <Col>
+                <Form.Group>
+                  <Form.Label>New Count </Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={updatedStopsInfo.count}
+                    onChange={(e) =>
+                      setUpdatedStopsInfo({
+                        ...updatedStopsInfo,
+                        count: e.target.value,
+                      })
+                    }
+                  />
+                </Form.Group>
+                <Form.Group>
+                  <Form.Label>New Stops Id</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={updatedStopsInfo.stop_id}
+                    onChange={(e) =>
+                      setUpdatedStopsInfo({
+                        ...updatedStopsInfo,
+                        stop_id: e.target.value,
+                      })
+                    }
+                  />
+                </Form.Group>
+                <Form.Group>
+                  <Form.Label>New Arrival Time</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={updatedStopsInfo.arrival_time}
+                    onChange={(e) =>
+                      setUpdatedStopsInfo({
+                        ...updatedStopsInfo,
+                        arrival_time: e.target.value,
+                      })
+                    }
+                  />
+                </Form.Group>
+                <Form.Group>
+                  <Form.Label>New Departure Time</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={updatedStopsInfo.departure_time}
+                    onChange={(e) =>
+                      setUpdatedStopsInfo({
+                        ...updatedStopsInfo,
+                        departure_time: e.target.value,
+                      })
+                    }
+                  />
+                </Form.Group>
+              </Col>
+              <Col>
+                <Form.Group>
+                  <Form.Label>New Pick Up Time</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={updatedStopsInfo.pickup_type}
+                    onChange={(e) =>
+                      setUpdatedStopsInfo({
+                        ...updatedStopsInfo,
+                        pickup_type: e.target.value,
+                      })
+                    }
+                  />
+                </Form.Group>
+                <Form.Group>
+                  <Form.Label>New Stops Sequence</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={updatedStopsInfo.stop_sequence}
+                    onChange={(e) =>
+                      setUpdatedStopsInfo({
+                        ...updatedStopsInfo,
+                        stop_sequence: e.target.value,
+                      })
+                    }
+                  />
+                </Form.Group>
+                <Form.Group>
+                  <Form.Label>New Trip_Id</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={updatedStopsInfo.trip_id}
+                    onChange={(e) =>
+                      setUpdatedStopsInfo({
+                        ...updatedStopsInfo,
+                        trip_id: e.target.value,
+                      })
+                    }
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+          </Container>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleCloseModal}>
+            Close
+          </Button>
+          <Button variant="primary" onClick={handleSaveChanges}>
+            Save Changes
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </>
   );
 }
