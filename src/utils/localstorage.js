@@ -17,4 +17,5 @@ export function storeUserToLocalStorage(user) {
       return null;
     }
   }
+
   

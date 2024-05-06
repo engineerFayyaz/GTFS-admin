@@ -15,7 +15,18 @@ import { Col, Container } from "react-bootstrap";
 import { Row } from "antd";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+// import { sendNotificationToAllUsers } from "../api";
+import { generateToken, messaging } from "../Config";
+import {onMessage} from "firebase/messaging"
 function UserList() {
+  useEffect(() => {
+    generateToken();
+    onMessage(messaging, (payload) => {
+      console.log("Payload is:" ,payload);
+      toast.success(payload.notification.body);
+    });
+  },[])
+
   const [users, setUsers] = useState([]);
   const [editingUser, setEditingUser] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -93,6 +104,12 @@ function UserList() {
     }
   };
 
+  // const handleSendNotification = async () => {
+  //   await sendNotificationToAllUsers();
+  // };
+
+ 
+
   return (
     <>
     <ToastContainer />
@@ -101,6 +118,7 @@ function UserList() {
         <div className="col-lg-12 p-3">
           <div className="text-center">
             <h5 className="text-uppercase p-2 page-title">Registered Users</h5>
+            {/* <button >Send Notification to All Users</button> */}
           </div>
         </div>
         <Table striped bordered hover>
