@@ -310,6 +310,11 @@ const MainLayout = () => {
               icon: <AiOutlineSetting className="fs-4" />,
               label: "Settings",
             },
+            {
+              key: "Vehicle-Tracking",
+              icon: <AiOutlineSetting className="fs-4" />,
+              label: "Vehicle-Tracking",
+            },
             // {
             //   key: "Product-Approval",
             //   icon: <BiCheckSquare className="fs-4" />,
