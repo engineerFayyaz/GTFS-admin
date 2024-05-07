@@ -41,6 +41,7 @@ import StopsTime1 from "./pages/AllData/StopTimes_1";
 import StopsTime2 from "./pages/AllData/StopTimes_2";
 import Trips1 from "./pages/AllData/Trips1";
 import Trips2 from "./pages/AllData/Trips2";
+import VehicleTracking from "./pages/VechicleTracking";
 function App() {
   return (
     <Router>
@@ -89,6 +90,7 @@ function App() {
           <Route path="AllData/Stops_Times2" element={<StopsTime2 />} />
           <Route path="AllData/Trips1" element={<Trips1 />} />
           <Route path="AllData/Trips2" element={<Trips2 />} />
+          <Route path="/admin/Vehicle-Tracking" element={<VehicleTracking/>}/>
 
         </Route>
       </Routes>
