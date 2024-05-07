@@ -1,100 +1,144 @@
-import React, { useState } from "react";
-import { Button, Modal, Form, Col, Container, Row } from "react-bootstrap";
+// import React, { useState } from "react";
+// import { Button, Modal, Form, Col, Container, Row } from "react-bootstrap";
 
-const NotificationForm = () => {
-    const [notificationTitle, setNotificationTitle] = useState("");
-    const [notificationDes, setNotificationDes] = useState("");
-    const [notificationImage, setNotificationImage] = useState("");
-    const [showModal, setShowModal] = useState(false);
+// const NotificationForm = () => {
+//     const [notificationTitle, setNotificationTitle] = useState("");
+//     const [notificationDes, setNotificationDes] = useState("");
+//     const [notificationImage, setNotificationImage] = useState("");
+//     const [showModal, setShowModal] = useState(false);
 
-    const handleShowModal = () => {
-        setShowModal(true);
-    }
+//     const handleShowModal = () => {
+//         setShowModal(true);
+//     }
 
-    const handleCloseModal = () => {
-        setShowModal(false);
-        setNotificationDes("");
-        setNotificationTitle("");
-        setNotificationImage("");
-    };
+//     const handleCloseModal = () => {
+//         setShowModal(false);
+//         setNotificationDes("");
+//         setNotificationTitle("");
+//         setNotificationImage("");
+//     };
 
-    const handleSendNotification = () => {
-        console.log('navigator.serviceWorker.controller:', navigator.serviceWorker.controller);
-        console.log('notificationTitle:', notificationTitle);
-        console.log('notificationDes:', notificationDes);
-        console.log('notificationImage:', notificationImage);
+//     const handleSendNotification = () => {
+//         console.log('navigator.serviceWorker.controller:', navigator.serviceWorker.controller);
+//         console.log('notificationTitle:', notificationTitle);
+//         console.log('notificationDes:', notificationDes);
+//         console.log('notificationImage:', notificationImage);
     
-        navigator.serviceWorker.controller.postMessage({
-            type: 'send_notification',
-            data: {
-                title: notificationTitle,
-                body: notificationDes,
-                image: notificationImage
-            }
-        });
-        handleCloseModal();
-    };
+//         navigator.serviceWorker.controller.postMessage({
+//             type: 'send_notification',
+//             data: {
+//                 title: notificationTitle,
+//                 body: notificationDes,
+//                 image: notificationImage
+//             }
+//         });
+//         handleCloseModal();
+//     };
     
     
 
-    return (
-        <>
-            <Button onClick={handleShowModal}>Send Notification</Button>
-            <Modal
-                show={showModal}
-                size="lg"
-                centered
-                onHide={handleCloseModal}
-                large
-                backdrop="static"
-                className="editinfo_modal"
-            >
-                <Modal.Header closeButton>
-                    <Modal.Title>Edit User</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Container fluid>
-                        <Row className="gap-3">
-                            <Col>
-                                <Form.Group>
-                                    <Form.Label>Enter Notification Title</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        value={notificationTitle}
-                                        onChange={(e) => setNotificationTitle(e.target.value)}
-                                    />
-                                </Form.Group>
-                                <Form.Group>
-                                    <Form.Label>Enter Notification Description</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        value={notificationDes}
-                                        onChange={(e) => setNotificationDes(e.target.value)}
-                                    />
-                                </Form.Group>
-                                <Form.Group>
-                                    <Form.Label>Paste Image URL</Form.Label>
-                                    <Form.Control
-                                        type="text"
-                                        value={notificationImage}
-                                        onChange={(e) => setNotificationImage(e.target.value)}
-                                    />
-                                </Form.Group>
-                            </Col>
-                        </Row>
-                    </Container>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={handleCloseModal}>
-                        Close
-                    </Button>
-                    <Button variant="primary" onClick={handleSendNotification}>
-                        Send Notification
-                    </Button>
-                </Modal.Footer>
-            </Modal>
-        </>
-    )
-}
+//     return (
+//         <>
+//             <Button onClick={handleShowModal}>Send Notification</Button>
+//             <Modal
+//                 show={showModal}
+//                 size="lg"
+//                 centered
+//                 onHide={handleCloseModal}
+//                 large
+//                 backdrop="static"
+//                 className="editinfo_modal"
+//             >
+//                 <Modal.Header closeButton>
+//                     <Modal.Title>Edit User</Modal.Title>
+//                 </Modal.Header>
+//                 <Modal.Body>
+//                     <Container fluid>
+//                         <Row className="gap-3">
+//                             <Col>
+//                                 <Form.Group>
+//                                     <Form.Label>Enter Notification Title</Form.Label>
+//                                     <Form.Control
+//                                         type="text"
+//                                         value={notificationTitle}
+//                                         onChange={(e) => setNotificationTitle(e.target.value)}
+//                                     />
+//                                 </Form.Group>
+//                                 <Form.Group>
+//                                     <Form.Label>Enter Notification Description</Form.Label>
+//                                     <Form.Control
+//                                         type="text"
+//                                         value={notificationDes}
+//                                         onChange={(e) => setNotificationDes(e.target.value)}
+//                                     />
+//                                 </Form.Group>
+//                                 <Form.Group>
+//                                     <Form.Label>Paste Image URL</Form.Label>
+//                                     <Form.Control
+//                                         type="text"
+//                                         value={notificationImage}
+//                                         onChange={(e) => setNotificationImage(e.target.value)}
+//                                     />
+//                                 </Form.Group>
+//                             </Col>
+//                         </Row>
+//                     </Container>
+//                 </Modal.Body>
+//                 <Modal.Footer>
+//                     <Button variant="secondary" onClick={handleCloseModal}>
+//                         Close
+//                     </Button>
+//                     <Button variant="primary" onClick={handleSendNotification}>
+//                         Send Notification
+//                     </Button>
+//                 </Modal.Footer>
+//             </Modal>
+//         </>
+//     )
+// }
 
-export default NotificationForm;
+// export default NotificationForm;
+
+
+import React, { useEffect } from "react";
+import { toast, ToastContainer } from "react-bootstrap";
+import { onMessageListener, generateToken } from "../Config";
+import { useState } from "react";
+import Title from "antd/es/skeleton/Title";
+
+// const Notification = () => {
+//     const [notification, setNotification] = useState({title: "", body: ""});
+
+//     const notify = () => <ToastDisplay />
+
+//         const ToastDisplay = () => {
+//             return (
+//                 <>
+//                 <div>
+//                 <h3>{notification?.title}</h3>
+//                 <p>{notification?.body}</p>
+//                 </div>
+//                 {console.log("notifications is:", notification?.title)};
+//                 </>
+                
+//             )
+//         }
+
+//         useEffect(() => {
+//             if(notification?.title){
+//                 notify();
+//             }
+//         }, [notification])
+
+//     generateToken();
+//     onMessageListener().then((payload) => {
+//         setNotification({title: payload?.notification?.title, body: payload?.notification?.body});
+//     })
+//     .catch((err) => {
+//         console.log("On message listener:", err);
+//     })
+
+//     return <ToastContainer />
+// }
+
+// export default Notification;

@@ -2,7 +2,7 @@ import { initializeApp } from 'firebase/app';
 import {getFirestore} from "firebase/firestore"
 import {getStorage} from 'firebase/storage';
 import { getAuth } from 'firebase/auth'; // Import Firebase Authentication
-import {getMessaging, getToken} from 'firebase/messaging'
+import {getMessaging, getToken, onMessage} from 'firebase/messaging'
 
 const firebaseConfig = {
   apiKey: "AIzaSyBvqUHysbjYNn3nAg8pNhD8eA0LmbSOlX0",
@@ -37,3 +37,14 @@ export const generateToken = async () => {
   }
 
 }
+
+// export const onMessageListener = () => {
+
+//   return new Promise((resolve) => {
+//     onMessage(messaging, (payload) => {
+//       console.log("onMessage Payload", payload);
+
+//       resolve(payload);
+//     })
+//   })
+// }

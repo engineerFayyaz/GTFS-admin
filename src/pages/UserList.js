@@ -11,18 +11,21 @@ import Table from "react-bootstrap/Table";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import Form from "react-bootstrap/Form";
-import { Col, Container } from "react-bootstrap";
+import { Col, Container, ModalHeader } from "react-bootstrap";
 import { Row } from "antd";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-// import { sendNotificationToAllUsers } from "../api";
+import Notification from "../components/NotificationForm";
+import { sendNotificationToAllUsers } from "../api";
 import { generateToken, messaging } from "../Config";
 import {onMessage} from "firebase/messaging"
 function UserList() {
+  const {showNotificationModal, setNotificationModal} = useState(false);
   useEffect(() => {
     generateToken();
     onMessage(messaging, (payload) => {
       console.log("Payload is:" ,payload);
+      setNotificationModal(true);
       toast.success(payload.notification.body);
     });
   },[])
@@ -113,6 +116,7 @@ function UserList() {
   return (
     <>
     <ToastContainer />
+    {/* <Notification /> */}
      <div className="container-fluid px-3 pt-4">
       <div className="row">
         <div className="col-lg-12 p-3">
