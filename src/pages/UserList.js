@@ -15,7 +15,7 @@ import { Col, Container, ModalHeader } from "react-bootstrap";
 import { Row } from "antd";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import Notification from "../components/NotificationForm";
+// import Notification from "../components/NotificationForm";
 import { sendNotificationToAllUsers } from "../api";
 import { generateToken, messaging } from "../Config";
 import {onMessage} from "firebase/messaging"

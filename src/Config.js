@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import {getFirestore} from "firebase/firestore"
+import {getFirestore,collection, addDoc} from "firebase/firestore"
 import {getStorage} from 'firebase/storage';
 import { getAuth } from 'firebase/auth'; // Import Firebase Authentication
 import {getMessaging, getToken, onMessage} from 'firebase/messaging'
@@ -22,21 +22,35 @@ const auth = getAuth(app); // Initialize Firebase Authentication
 const messaging = getMessaging(app);
 
 export {storage, db,app ,auth, messaging};
+console.log('Firestore instance:', db);
+
 
 export const generateToken = async () => {
-
-  const permission = await Notification.requestPermission();
-
-  console.log("permision is ",permission)
-
-  if (permission === "granted"){
-    const token = await getToken(messaging, {
+  try {
+    const token = await messaging.getToken({
       vapidKey: "BLZQb9jKDmmIuw8FWtCx9iCfeL8UU8dteoLAK7AqISIEQ_3N8OgyAqFIYO56lgX3V3YxzzmDXrbN6SefWZZ-leg"
-    })
-    console.log("Token is :" ,token)
+    });
+    console.log("Token is:", token);
+    return token;
+  } catch (error) {
+    console.error('Error generating token:', error);
+    return null;
   }
+};
 
-}
+
+export const sendNotification = async (title, body) => {
+  try {
+    // Add a new document with a generated ID to the "notifications" collection
+    await addDoc(collection(db, 'notifications'), {
+      title: title,
+      body: body,
+    });
+    console.log('Notification sent from Admin panel');
+  } catch (error) {
+    console.error('Error sending notification from Admin panel:', error);
+  }
+};
 
 // export const onMessageListener = () => {
 
