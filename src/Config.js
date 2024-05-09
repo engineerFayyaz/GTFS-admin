@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import {getFirestore,collection, addDoc} from "firebase/firestore"
+import {getFirestore,collection, addDoc, getDocs, deleteDoc,doc} from "firebase/firestore"
 import {getStorage} from 'firebase/storage';
 import { getAuth } from 'firebase/auth'; // Import Firebase Authentication
 import {getMessaging, getToken, onMessage} from 'firebase/messaging'
@@ -21,7 +21,7 @@ const storage = getStorage(app);
 const auth = getAuth(app); // Initialize Firebase Authentication
 const messaging = getMessaging(app);
 
-export {storage, db,app ,auth, messaging};
+
 console.log('Firestore instance:', db);
 
 
@@ -51,7 +51,63 @@ export const sendNotification = async (title, body) => {
     console.error('Error sending notification from Admin panel:', error);
   }
 };
+const getNotifications = async () => {
+  try {
+    const querySnapshot = await getDocs(collection(db, 'notifications'));
+    if (!querySnapshot.empty) {
+      const notifications = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      return notifications;
+    } else {
+      console.log('No notifications found.');
+      return [];
+    }
+  } catch (error) {
+    console.error('Error getting notifications:', error);
+    return [];
+  }
+};
 
+
+// const getNotifications = async () => {
+//   try {
+//     const querySnapshot = await getDocs(collection(db, 'notifications'));
+//     if (!querySnapshot.empty) {
+//       const notifications = querySnapshot.docs.map(doc => ({
+//         id: doc.id,
+//         ...doc.data()
+//       }));
+//       return notifications;
+//     } else {
+//       console.log('No notifications found.');
+//       return [];
+//     }
+//   } catch (error) {
+//     console.error('Error getting notifications:', error);
+//     return [];
+//   }
+// };
+
+
+// Inside your Config module
+const deleteNotification = async (id) => {
+  try {
+    // Delete the notification with the specified ID
+    await deleteDoc(doc(db, 'notifications', id));
+    console.log('Notification deleted successfully');
+  } catch (error) {
+    console.error('Error deleting notification:', error);
+    throw error; // Rethrow the error to handle it in the component
+  }
+};
+
+
+
+
+
+export {storage, db,app ,auth, messaging,getNotifications, deleteNotification};
 // export const onMessageListener = () => {
 
 //   return new Promise((resolve) => {
