@@ -4,6 +4,8 @@ import {
   AiOutlineDashboard,
   AiOutlineSetting,
   AiOutlineUserSwitch,
+  AiOutlineNotification,
+  AiOutlineHighlight
 } from "react-icons/ai";
 import {
   FaBusinessTime,
@@ -312,8 +314,14 @@ const MainLayout = () => {
             },
             {
               key: "Vehicle-Tracking",
-              icon: <AiOutlineSetting className="fs-4" />,
+              icon: <AiOutlineHighlight className="fs-4" />,
               label: "Vehicle-Tracking",
+            },
+
+            {
+              key: "send-notification",
+              icon: <AiOutlineNotification className="fs-4" />,
+              label: "send-notification",
             },
             // {
             //   key: "Product-Approval",
