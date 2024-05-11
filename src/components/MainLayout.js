@@ -328,11 +328,11 @@ const MainLayout = () => {
             //   icon: <BiCheckSquare className="fs-4" />,
             //   label: "Product Approval",
             // },
-            {
-              key: "RegisteredUser",
-              icon: <BiUser className="fs-4" />,
-              label: "Registered User",
-            },
+            // {
+            //   key: "RegisteredUser",
+            //   icon: <BiUser className="fs-4" />,
+            //   label: "Registered User",
+            // },
           ]}
         />
       </Sider>
