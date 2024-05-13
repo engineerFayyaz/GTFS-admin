@@ -176,7 +176,7 @@ const MainLayout = () => {
                 {
                   key: "uploadgtfsfiles",
                   icon: <FaUpload className="fs-4" />,
-                  label: "Upload Mobile Data",
+                  label: "Upload GTFS Files",
                 },
                 {
                   key: "DeleteMobileData",
