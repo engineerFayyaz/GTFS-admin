@@ -323,6 +323,18 @@ const MainLayout = () => {
               icon: <AiOutlineNotification className="fs-4" />,
               label: "send-notification",
             },
+
+            {
+              key: "Partners-Request",
+              icon: <AiOutlineNotification className="fs-4" />,
+              label: "Partners-Request",
+            },
+
+            {
+              key: "Contact-Request",
+              icon: <AiOutlineNotification className="fs-4" />,
+              label: "Contact-Request",
+            },
             // {
             //   key: "Product-Approval",
             //   icon: <BiCheckSquare className="fs-4" />,
