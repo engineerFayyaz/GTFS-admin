@@ -1,93 +1,69 @@
-import React from "react";
-import { BsArrowDownRight, BsArrowUpRight } from "react-icons/bs";
+import React, { useState, useEffect } from "react";
+import { getFirestore, collection, getDocs } from "firebase/firestore";
+import { BsArrowDownRight } from "react-icons/bs";
 import { Column } from "@ant-design/plots";
 import { Table } from "antd";
-import { Container } from "react-bootstrap";
-const columns = [
-  {
-    title: "SNo",
-    dataIndex: "key",
-  },
-  {
-    title: "Name",
-    dataIndex: "name",
-  },
-  {
-    title: "Product",
-    dataIndex: "product",
-  },
-  {
-    title: "Status",
-    dataIndex: "staus",
-  },
-];
-const data1 = [];
-for (let i = 0; i < 46; i++) {
-  data1.push({
-    key: i,
-    name: `Edward King ${i}`,
-    product: 32,
-    staus: `London, Park Lane no. ${i}`,
-  });
-}
+import { Container, Row, Col, Card } from "react-bootstrap";
+
 const Dashboard = () => {
-  const data = [
-    {
-      type: "Jan",
-      sales: 38,
-    },
-    {
-      type: "Feb",
-      sales: 52,
-    },
-    {
-      type: "Mar",
-      sales: 61,
-    },
-    {
-      type: "Apr",
-      sales: 145,
-    },
-    {
-      type: "May",
-      sales: 48,
-    },
-    {
-      type: "Jun",
-      sales: 38,
-    },
-    {
-      type: "July",
-      sales: 38,
-    },
-    {
-      type: "Aug",
-      sales: 38,
-    },
-    {
-      type: "Sept",
-      sales: 38,
-    },
-    {
-      type: "Oct",
-      sales: 38,
-    },
-    {
-      type: "Nov",
-      sales: 38,
-    },
-    {
-      type: "Dec",
-      sales: 38,
-    },
+  const [recentUsers, setRecentUsers] = useState([]);
+
+  useEffect(() => {
+    const fetchRecentUsers = async () => {
+      try {
+        const db = getFirestore();
+        const usersCollection = await getDocs(collection(db, "RegisteredUsers"));
+        const usersData = usersCollection.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        const sortedUsers = usersData.sort((a, b) => b.registrationDate - a.registrationDate);
+        const latestUsers = sortedUsers.slice(0, 5);
+        setRecentUsers(latestUsers);
+      } catch (error) {
+        console.error("Error fetching recent users:", error);
+      }
+    };
+
+    fetchRecentUsers();
+  }, []);
+
+  const pricingPackages = [
+    { name: "Bronze", price: "$20 / Month per User" },
+    { name: "Silver", price: "$45 / Month per User" },
+    { name: "Gold", price: "$150 / Month per User" },
+    { name: "Platinum", price: "$300 / Month per User" },
   ];
+
+  const columns = [
+    { title: "ID", dataIndex: "id", key: "id" },
+    { title: "Business Name", dataIndex: "businessName", key: "businessName" },
+    { title: "Country", dataIndex: "country", key: "country" },
+    { title: "Email", dataIndex: "email", key: "email" },
+    { title: "Phone Number", dataIndex: "phoneNumber", key: "phoneNumber" },
+    { title: "Username", dataIndex: "username", key: "username" },
+  ];
+
+  const data = [
+    { type: "Jan", sales: 38 },
+    { type: "Feb", sales: 52 },
+    { type: "Mar", sales: 61 },
+    { type: "Apr", sales: 145 },
+    { type: "May", sales: 48 },
+    { type: "Jun", sales: 38 },
+    { type: "July", sales: 38 },
+    { type: "Aug", sales: 38 },
+    { type: "Sept", sales: 38 },
+    { type: "Oct", sales: 38 },
+    { type: "Nov", sales: 38 },
+    { type: "Dec", sales: 38 },
+  ];
+
   const config = {
     data,
     xField: "type",
     yField: "sales",
-    color: ({ type }) => {
-      return "#ffd333";
-    },
+    color: "#ffd333",
     label: {
       position: "middle",
       style: {
@@ -110,63 +86,39 @@ const Dashboard = () => {
       },
     },
   };
+
   return (
-    <Container  className="container-fluid px-3 pt-4">
-    <div>
-    <div className="text-center  ">
-        <h2 className="text-uppercase p-2 page-title">Dashboard</h2>
-        </div>
-      <div className="d-flex justify-content-between align-items-center gap-3">
-        <div className="d-flex justify-content-between align-items-end flex-grow-1 bg-white p-3 roudned-3">
-          <div>
-            <p className="desc">Total</p>
-            <h4 className="mb-0 sub-title">$1100</h4>
-          </div>
-          <div className="d-flex flex-column align-items-end">
-            <h6>
-              <BsArrowDownRight /> 32%
-            </h6>
-            <p className="mb-0  desc">Compared To April 2022</p>
-          </div>
-        </div>
-        <div className="d-flex justify-content-between align-items-end flex-grow-1 bg-white p-3 roudned-3">
-          <div>
-            <p className="desc">Total</p>
-            <h4 className="mb-0 sub-title">$1100</h4>
-          </div>
-          <div className="d-flex flex-column align-items-end">
-            <h6 className="red">
-              <BsArrowDownRight /> 32%
-            </h6>
-            <p className="mb-0  desc">Compared To April 2022</p>
-          </div>
-        </div>
-        <div className="d-flex justify-content-between align-items-end flex-grow-1 bg-white p-3 roudned-3">
-          <div>
-            <p className="desc">Total</p>
-            <h4 className="mb-0 sub-title">$1100</h4>
-          </div>
-          <div className="d-flex flex-column align-items-end">
-            <h6 className="green">
-              <BsArrowDownRight /> 32%
-            </h6>
-            <p className="mb-0 desc">Compared To April 2022</p>
-          </div>
-        </div>
+    <Container className="container-fluid px-3 pt-4">
+      <div className="text-center">
+        <h2 className="text-uppercase p-2 page-title">GTFS Admin Dashboard</h2>
       </div>
       <div className="mt-4">
-        <h3 className="mb-5 title">Income Statics</h3>
+        <h3 className="mb-5 title">Pricing Packages</h3>
+        <Row className="pricing-packages">
+          {pricingPackages.map((pricingPackage, index) => (
+            <Col key={index} md={3} sm={6}>
+              <Card>
+                <Card.Body>
+                  <Card.Title>{pricingPackage.name}</Card.Title>
+                  <Card.Text>{pricingPackage.price}</Card.Text>
+                </Card.Body>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      </div>
+      <div className="mt-4">
+        <h3 className="mb-5 title">Income Statistics</h3>
         <div>
           <Column {...config} />
         </div>
       </div>
       <div className="mt-4">
-        <h3 className="mb-5 title">Recent Orders</h3>
+        <h3 className="mb-5 title">Recent Users</h3>
         <div>
-          <Table columns={columns} dataSource={data1} />
+          <Table columns={columns} dataSource={recentUsers} />
         </div>
       </div>
-    </div>
     </Container>
   );
 };

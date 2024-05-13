@@ -5,7 +5,6 @@ import {
   deleteNotification,
 } from "../Config";
 import { Form, Button, Container, Row, Col, Table } from "react-bootstrap";
-import { Toast } from "react-bootstrap";
 import { toast } from "react-toastify";
 
 const NotificationForm = () => {
