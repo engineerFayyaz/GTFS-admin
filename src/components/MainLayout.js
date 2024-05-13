@@ -5,7 +5,9 @@ import {
   AiOutlineSetting,
   AiOutlineUserSwitch,
   AiOutlineNotification,
-  AiOutlineHighlight
+  AiOutlineHighlight,
+  AiOutlineAlert,
+  AiOutlineUser
 } from "react-icons/ai";
 import {
   FaBusinessTime,
@@ -326,13 +328,13 @@ const MainLayout = () => {
 
             {
               key: "Partners-Request",
-              icon: <AiOutlineNotification className="fs-4" />,
+              icon: <AiOutlineAlert className="fs-4" />,
               label: "Partners-Request",
             },
 
             {
               key: "Contact-Request",
-              icon: <AiOutlineNotification className="fs-4" />,
+              icon: <AiOutlineUser className="fs-4" />,
               label: "Contact-Request",
             },
             // {
