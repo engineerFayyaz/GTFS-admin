@@ -88,7 +88,7 @@ function CalendarTwo() {
    const handleSaveChanges = async () => {
      const db = getFirestore();
      try {
-       const calendarRef = doc(db, "calendar", editingCalendar.id);
+       const calendarRef = doc(db, "calendar2", editingCalendar.id);
        await updateDoc(calendarRef, updatedCalendar);
  
        const updatedCalendars = Calendar.map((calendar) => 

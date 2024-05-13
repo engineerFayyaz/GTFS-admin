@@ -73,10 +73,10 @@ function Stops1() {
   const handleSaveChanges = async () => {
     try {
       const db = getFirestore();
-      const routeRef = doc(db, "stops", updatedStopsInfo.id);
+      const routeRef = doc(db, "stops", editedStops.id);
       await updateDoc(routeRef, updatedStopsInfo);
       const updatedStops = Stops.map((stop) =>
-        stop.id === editedStops.id ? { ...stop, ...updatedStops } : stop
+        stop.id === editedStops.id ? { ...stop, ...updatedStopsInfo } : stop
       );
       setStops(updatedStops);
       handleCloseModal();

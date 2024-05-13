@@ -26,7 +26,7 @@ import UserRole from "./pages/AccessPermissions/UserRole";
 import Customization from "./pages/Customization";
 import Configration from "./pages/Configration";
 import ManageMobileData from "./pages/ManageMobileData";
-import UploadMobileData from "./pages/UploadMobileData";
+// import  UploadGTFSFiles  from "./pages/UploadGTFSFiles";
 import DeleteMobileData from "./pages/DeleteMobileData";
 import Calendar from "./pages/AllData/Calendar";
 import CalendarTwo from "./pages/AllData/Calendar2";
@@ -43,6 +43,7 @@ import Trips1 from "./pages/AllData/Trips1";
 import Trips2 from "./pages/AllData/Trips2";
 import VehicleTracking from "./pages/VechicleTracking";
 import NotificationForm from "./pages/NotificationForm";
+import { UploadGTFSFiles } from "./pages/UploadGTFSFiles";
 function App() {
   return (
     <Router>
@@ -58,7 +59,7 @@ function App() {
           <Route path="Configration" element={<Configration />} />
           <Route path="ManageMobileData" element={<ManageMobileData />} />
           <Route path="coupon/:id" element={<AddCoupon />} />
-          <Route path="UploadMobileData" element={<UploadMobileData />} />
+          <Route path="uploadgtfsfiles" element={<UploadGTFSFiles />} />
           <Route path="DeleteMobileData" element={<DeleteMobileData />} />
 
           <Route path="order/:id" element={<ViewOrder />} />

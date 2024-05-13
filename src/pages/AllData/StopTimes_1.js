@@ -78,14 +78,14 @@ function StopsTime1() {
   const handleSaveChanges = async () => {
     try {
       const db = getFirestore();
-      const routeRef = doc(db, "stop_times", updatedStopsInfo.id);
+      const routeRef = doc(db, "stop_times", editedStops.id);
       await updateDoc(routeRef, updatedStopsInfo);
       const updatedStops = Stops.map((stop) =>
-        stop.id === editedStops.id ? { ...stop, ...updatedStops } : stop
+        stop.id === editedStops.id ? { ...stop, ...updatedStopsInfo } : stop
       );
       setStops(updatedStops);
       handleCloseModal();
-      toast.success("route updated successfully");
+      toast.success("stop_times updated successfully");
     } catch (error) {
       toast.error(" Error while updating Routes: ", error);
       console.log(" Error while updating Routes: ", error);

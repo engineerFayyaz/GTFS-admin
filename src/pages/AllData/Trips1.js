@@ -75,10 +75,10 @@ function Trips1() {
   const handleSaveChanges = async () => {
     try {
       const db = getFirestore();
-      const tripRef = doc(db, "trips", updatedTripsInfo.id);
+      const tripRef = doc(db, "trips", editedTrips.id);
       await updateDoc(tripRef, updatedTripsInfo);
       const updatedTrips = Trips.map((trip) =>
-        trip.id === editedTrips.id ? { ...trip, ...updatedTrips } : trip
+        trip.id === editedTrips.id ? { ...trip, ...updatedTripsInfo } : trip
       );
       setTrips(updatedTrips);
       handleCloseModal();

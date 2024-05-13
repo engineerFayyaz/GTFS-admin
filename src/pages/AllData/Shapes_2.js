@@ -73,10 +73,10 @@ function Shapes2() {
   const handleSaveChanges = async () => {
     try {
       const db = getFirestore();
-      const routeRef = doc(db, "shapes2", updatedShapesInfo.id);
+      const routeRef = doc(db, "shapes2", editedShapes.id);
       await updateDoc(routeRef, updatedShapesInfo);
       const updatedShapes = Shapes.map((stop) =>
-        stop.id === editedShapes.id ? { ...stop, ...updatedShapes } : stop
+        stop.id === editedShapes.id ? { ...stop, ...updatedShapesInfo } : stop
       );
       setShapes(updatedShapes);
       handleCloseModal();
