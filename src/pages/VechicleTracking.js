@@ -119,7 +119,9 @@ function PublicTransitStops() {
 
   return (
     <Container>
-      <h1 className="mt-3">Public Transit Stops</h1>
+       <div className="text-center mt-3 ">
+        <h2 className="text-uppercase p-2 page-title">Public Transit Stops</h2>
+        </div>
       <Row>
         <Col md={8}>
           <div style={{ height: "80vh", width: "100%" }}>

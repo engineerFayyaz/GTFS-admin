@@ -36,9 +36,11 @@ function PartnersRequest() {
 
   return (
     <Container>
+       <div className="text-center  mt-3">
+        <h2 className="text-uppercase p-2 page-title">Partners Information</h2>
+        </div>
       <Row>
         <Col>
-          <h1>Partners Information</h1>
           <Table striped bordered hover>
             <thead>
               <tr>

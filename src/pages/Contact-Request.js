@@ -25,9 +25,11 @@ function ContactRequest() {
 
   return (
     <Container>
+       <div className="text-center  mt-3">
+        <h2 className="text-uppercase p-2 page-title">Contact Requests</h2>
+        </div>
       <Row>
         <Col>
-          <h1>Contact Requests</h1>
           <Table striped bordered hover>
             <thead>
               <tr>
