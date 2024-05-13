@@ -44,6 +44,8 @@ import Trips2 from "./pages/AllData/Trips2";
 import VehicleTracking from "./pages/VechicleTracking";
 import NotificationForm from "./pages/NotificationForm";
 import { UploadGTFSFiles } from "./pages/UploadGTFSFiles";
+import PartnersRequest from "./pages/Partners-Request";
+import ContactRequest from "./pages/Contact-Request";
 function App() {
   return (
     <Router>
@@ -94,6 +96,8 @@ function App() {
           <Route path="AllData/Trips2" element={<Trips2 />} />
           <Route path="/admin/Vehicle-Tracking" element={<VehicleTracking/>}/>
           <Route path="/admin/send-notification" element={<NotificationForm/>}/>
+          <Route path="/admin/Partners-Request" element={<PartnersRequest/>}/>
+          <Route path="/admin/Contact-Request" element={<ContactRequest/>}/>
 
         </Route>
       </Routes>
