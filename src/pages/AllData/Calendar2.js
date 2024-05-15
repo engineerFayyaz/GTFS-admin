@@ -71,19 +71,26 @@ function CalendarTwo() {
        sunday:""
      })
    }
-   const handleDelete = async (index) => {
-     // Implement delete functionality here
-     const user = Calendar[index];
-     try {
-       const db = getFirestore();
-       await deleteDoc(doc(db, "RegisteredUsers", user.id));
-       // Remove the user from the state
-       setCalendar((prevUsers) => prevUsers.filter((_, i) => i !== index));
-       console.log("User deleted successfully:", user);
-     } catch (error) {
-       console.error("Error deleting user:", error);
-     }
-   };
+   const handleDelete = async (countToDelete) => {
+    try {
+      const db = getFirestore();
+      const calendarToDelete = Calendar.find(calendar => calendar.count === countToDelete);
+      if (calendarToDelete) {
+        await deleteDoc(doc(db, "calendar2", calendarToDelete.id));
+        // Remove the calendar from the state
+        setCalendar(prevCalendar => prevCalendar.filter(calendar => calendar.count !== countToDelete));
+        console.log("Calendar deleted successfully:", calendarToDelete);
+      } else {
+        console.error("Calendar with count", countToDelete, "not found.");
+      }
+    } catch (error) {
+      console.error("Error deleting calendar:", error);
+    }
+  };
+  
+  
+  
+  
  
    const handleSaveChanges = async () => {
      const db = getFirestore();
@@ -159,7 +166,7 @@ function CalendarTwo() {
                     </Button>{" "}
                     <Button
                       variant="danger"
-                      onClick={() => handleDelete(calendar)}
+                      onClick={() => handleDelete(calendar.count)}
                     >
                       Delete
                     </Button>
