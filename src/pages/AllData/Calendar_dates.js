@@ -12,37 +12,38 @@ import "react-toastify/dist/ReactToastify.css";
 import { Col, Container, Row, Modal, Form, Button, Table } from "react-bootstrap";
 
 function CalendarDates() {
-  const [Calendar, setCalendar] = useState([]);
+  const [calendar, setCalendar] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingCalendar, setEditingCalendar] = useState(null);
   const [updatedCalendarInfo, setUpdatedCalendarInfo] = useState({
     date: "",
     service_Id: "",
   });
+  const [selectedRows, setSelectedRows] = useState([]);
 
   useEffect(() => {
     const getCalendar = async () => {
       try {
-        const db = getFirestore(); // Initialize Firestore directly here
-        const CalendarCollection = await getDocs(
+        const db = getFirestore();
+        const calendarCollection = await getDocs(
           collection(db, "calendar_dates")
         );
-        const CalendarData = CalendarCollection.docs.map((doc) => ({
+        const calendarData = calendarCollection.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
-        setCalendar(CalendarData);
+        setCalendar(calendarData);
       } catch (error) {
-        console.error("Error fetching users:", error);
+        console.error("Error fetching calendar:", error);
       }
     };
 
     getCalendar();
   }, []);
 
-  const handleEdit = (calendar) => {
-    setEditingCalendar(calendar);
-    setUpdatedCalendarInfo(calendar);
+  const handleEdit = (calendarItem) => {
+    setEditingCalendar(calendarItem);
+    setUpdatedCalendarInfo(calendarItem);
     setShowModal(true);
   };
 
@@ -51,7 +52,7 @@ function CalendarDates() {
     setEditingCalendar(null);
     setUpdatedCalendarInfo({
       date: "",
-      service_id: "",
+      service_Id: "",
     });
   };
 
@@ -60,31 +61,74 @@ function CalendarDates() {
       const db = getFirestore();
       const calendarRef = doc(db, "calendar_dates", editingCalendar.id);
       await updateDoc(calendarRef, updatedCalendarInfo);
-      const updatedCalendars = Calendar.map((calendar) =>
-        calendar.id === editingCalendar.id
-          ? { ...calendar, ...updatedCalendarInfo }
-          : calendar
+      const updatedCalendars = calendar.map((calendarItem) =>
+        calendarItem.id === editingCalendar.id
+          ? { ...calendarItem, ...updatedCalendarInfo }
+          : calendarItem
       );
       setCalendar(updatedCalendars);
       handleCloseModal();
-      toast.success("User updated successfully:", editingCalendar);
+      toast.success("Calendar updated successfully:", editingCalendar);
     } catch (error) {
-      toast.error("Error updating user:", error);
+      toast.error("Error updating calendar:", error);
     }
   };
 
-  const handleDelete = async (index) => {
-    // Implement delete functionality here
-    const user = Calendar[index];
+  const handleDelete = async (count) => {
     try {
       const db = getFirestore();
-      await deleteDoc(doc(db, "RegisteredUsers", user.id));
-      // Remove the user from the state
-      setCalendar((prevUsers) => prevUsers.filter((_, i) => i !== index));
-      console.log("User deleted successfully:", user);
+      const calendarToDelete = calendar.find((calendarItem) => calendarItem.count === count);
+      if (calendarToDelete) {
+        await deleteDoc(doc(db, "calendar_dates", calendarToDelete.id));
+        setCalendar((prevCalendar) =>
+          prevCalendar.filter((calendarItem) => calendarItem.count !== count)
+        );
+        console.log("Calendar deleted successfully:", calendarToDelete);
+      } else {
+        console.error("Calendar with count", count, "not found.");
+      }
     } catch (error) {
-      console.error("Error deleting user:", error);
+      console.error("Error deleting calendar:", error);
     }
+  };
+
+  const handleToggleRow = (count) => {
+    setSelectedRows((prevSelectedRows) =>
+      prevSelectedRows.includes(count)
+        ? prevSelectedRows.filter((selectedCount) => selectedCount !== count)
+        : [...prevSelectedRows, count]
+    );
+  };
+
+  const handleDeleteSelected = async () => {
+    try {
+      const db = getFirestore();
+
+      for (const count of selectedRows) {
+        const calendarToDelete = calendar.find((calendarItem) => calendarItem.count === count);
+        if (calendarToDelete) {
+          await deleteDoc(doc(db, "calendar_dates", calendarToDelete.id));
+        } else {
+          console.error("Calendar with count", count, "not found.");
+        }
+      }
+
+      setCalendar((prevCalendar) =>
+        prevCalendar.filter((calendarItem) => !selectedRows.includes(calendarItem.count))
+      );
+      console.log("Selected calendars deleted successfully:", selectedRows);
+      setSelectedRows([]);
+    } catch (error) {
+      console.error("Error deleting selected calendars:", error);
+    }
+  };
+
+  const handleSelectAll = () => {
+    setSelectedRows(calendar.map((calendarItem) => calendarItem.count));
+  };
+
+  const handleUnselectAll = () => {
+    setSelectedRows([]);
   };
 
   return (
@@ -97,9 +141,21 @@ function CalendarDates() {
               <h5 className="text-uppercase p-2 page-title">Calendar Dates</h5>
             </div>
           </div>
-          <Table striped bordered hover className=" overflow-scroll  ">
+          <div className="col-lg-12 p-3">
+            <Button variant="danger" onClick={handleDeleteSelected}>
+              Delete Selected
+            </Button>
+            <Button variant="info" onClick={handleSelectAll} className="ms-2">
+              Select All
+            </Button>
+            <Button variant="info" onClick={handleUnselectAll} className="ms-2">
+              Unselect All
+            </Button>
+          </div>
+          <Table striped bordered hover className="overflow-scroll">
             <thead>
               <tr>
+                <th>Select</th>
                 <th>Count</th>
                 <th>Date</th>
                 <th>Service Id</th>
@@ -107,23 +163,28 @@ function CalendarDates() {
               </tr>
             </thead>
             <tbody>
-              {Calendar.map((calendar, index) => (
-                <tr key={index}>
-                  <td className="text-secondary">
-                    <b>{calendar.count}</b>
+              {calendar.map((calendarItem) => (
+                <tr key={calendarItem.id}>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={selectedRows.includes(calendarItem.count)}
+                      onChange={() => handleToggleRow(calendarItem.count)}
+                    />
                   </td>
-                  <td>{calendar.date}</td>
-                  <td>{calendar.service_Id}</td>
+                  <td className="text-secondary">{calendarItem.count}</td>
+                  <td>{calendarItem.date}</td>
+                  <td>{calendarItem.service_Id}</td>
                   <td>
                     <Button
                       variant="primary"
-                      onClick={() => handleEdit(calendar)}
+                      onClick={() => handleEdit(calendarItem)}
                     >
                       Edit
                     </Button>{" "}
                     <Button
                       variant="danger"
-                      onClick={() => handleDelete(calendar)}
+                      onClick={() => handleDelete(calendarItem.count)}
                     >
                       Delete
                     </Button>
@@ -134,13 +195,12 @@ function CalendarDates() {
           </Table>
         </div>
       </div>
-      {/* Edit User Modal */}
+      {/* Edit Calendar Modal */}
       <Modal
         show={showModal}
         size="lg"
         centered
         onHide={handleCloseModal}
-        large
         backdrop="static"
         className="editinfo_modal"
       >

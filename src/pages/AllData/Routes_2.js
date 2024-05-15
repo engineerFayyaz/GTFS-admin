@@ -20,28 +20,29 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 function RoutesData2() {
-  const [Routes, setRoutes] = useState([]);
+  const [routes, setRoutes] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [editedRoutes, setEditedRoutes] = useState(null);
-  const [updatedRoutesInfo, setUpdatedRoutesInfo] = useState({
+  const [editedRoute, setEditedRoute] = useState(null);
+  const [updatedRouteInfo, setUpdatedRouteInfo] = useState({
     count: "",
     route_id: "",
     route_color: "",
     route_long_name: "",
   });
+  const [selectedRows, setSelectedRows] = useState([]);
 
   useEffect(() => {
     const getRoutes = async () => {
       try {
-        const db = getFirestore(); // Initialize Firestore directly here
-        const RoutesCollection = await getDocs(collection(db, "routes2"));
-        const RoutesData = RoutesCollection.docs.map((doc) => ({
+        const db = getFirestore(); 
+        const routesCollection = await getDocs(collection(db, "routes2"));
+        const routesData = routesCollection.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
-        setRoutes(RoutesData);
+        setRoutes(routesData);
       } catch (error) {
-        console.error("Error fetching users:", error);
+        console.error("Error fetching routes:", error);
       }
     };
 
@@ -49,50 +50,95 @@ function RoutesData2() {
   }, []);
 
   const handleEdit = (route) => {
-    setEditedRoutes(route);
+    setEditedRoute(route);
     setShowModal(true);
-    setUpdatedRoutesInfo(route);
+    setUpdatedRouteInfo(route);
   };
 
   const handleCloseModal = () => {
-    setEditedRoutes(null);
+    setEditedRoute(null);
     setShowModal(false);
-    setUpdatedRoutesInfo({
+    setUpdatedRouteInfo({
       count: "",
       route_id: "",
       route_color: "",
       route_long_name: "",
     });
   };
+
   const handleSaveChanges = async () => {
     try {
       const db = getFirestore();
-      const routeRef = doc(db, "routes2", editedRoutes
-      .id);
-      await updateDoc(routeRef, updatedRoutesInfo);
-      const updatedRoutes = Routes.map((route) =>
-        route.id === editedRoutes.id ? { ...route, ...updatedRoutesInfo } : route
+      const routeRef = doc(db, "routes2", editedRoute.id);
+      await updateDoc(routeRef, updatedRouteInfo);
+
+      const updatedRoutes = routes.map((route) =>
+        route.id === editedRoute.id ? { ...route, ...updatedRouteInfo } : route
       );
       setRoutes(updatedRoutes);
       handleCloseModal();
-      toast.success("route updated successfully");
+      toast.success("Route updated successfully");
     } catch (error) {
-      toast.error(" Error while updating Routes: ", error);
-      console.log(" Error while updating Routes: ", error);
+      toast.error("Error while updating route:", error);
+      console.log("Error while updating route:", error);
     }
   };
-  const handleDelete = async (index) => {
-    // Implement delete functionality here
-    const user = Routes[index];
+
+  const handleDelete = async (count) => {
     try {
       const db = getFirestore();
-      await deleteDoc(doc(db, "RegisteredUsers", user.id));
-      // Remove the user from the state
-      setRoutes((prevUsers) => prevUsers.filter((_, i) => i !== index));
-      console.log("User deleted successfully:", user);
+      const routeToDelete = routes.find((route) => route.count === count);
+      if (routeToDelete) {
+        await deleteDoc(doc(db, "routes2", routeToDelete.id));
+        setRoutes((prevRoutes) =>
+          prevRoutes.filter((route) => route.count !== count)
+        );
+        console.log("Route deleted successfully:", routeToDelete);
+      } else {
+        console.error("Route with count", count, "not found.");
+      }
     } catch (error) {
-      console.error("Error deleting user:", error);
+      console.error("Error deleting route:", error);
     }
+  };
+
+  const handleToggleRow = (count) => {
+    setSelectedRows((prevSelectedRows) =>
+      prevSelectedRows.includes(count)
+        ? prevSelectedRows.filter((selectedCount) => selectedCount !== count)
+        : [...prevSelectedRows, count]
+    );
+  };
+
+  const handleDeleteSelected = async () => {
+    try {
+      const db = getFirestore();
+
+      for (const count of selectedRows) {
+        const routeToDelete = routes.find((route) => route.count === count);
+        if (routeToDelete) {
+          await deleteDoc(doc(db, "routes2", routeToDelete.id));
+        } else {
+          console.error("Route with count", count, "not found.");
+        }
+      }
+
+      setRoutes((prevRoutes) =>
+        prevRoutes.filter((route) => !selectedRows.includes(route.count))
+      );
+      console.log("Selected routes deleted successfully:", selectedRows);
+      setSelectedRows([]);
+    } catch (error) {
+      console.error("Error deleting selected routes:", error);
+    }
+  };
+
+  const handleSelectAll = () => {
+    setSelectedRows(routes.map((route) => route.count));
+  };
+
+  const handleUnselectAll = () => {
+    setSelectedRows([]);
   };
 
   return (
@@ -100,13 +146,25 @@ function RoutesData2() {
       <div className="container-fluid px-3 pt-4">
         <div className="row">
           <div className="col-lg-12 p-3">
-            <div className="text-center  ">
+            <div className="text-center">
               <h5 className="text-uppercase p-2 page-title">Routes_2 Data</h5>
             </div>
           </div>
-          <Table striped bordered hover responsive className=" overflow-scroll  ">
+          <div className="col-lg-12 p-3">
+            <Button variant="danger" onClick={handleDeleteSelected}>
+              Delete Selected
+            </Button>
+            <Button variant="info" onClick={handleSelectAll} className="ms-2">
+              Select All
+            </Button>
+            <Button variant="info" onClick={handleUnselectAll} className="ms-2">
+              Unselect All
+            </Button>
+          </div>
+          <Table striped bordered hover responsive className="overflow-scroll">
             <thead>
               <tr>
+                <th>Select</th>
                 <th>Count</th>
                 <th>Route Color</th>
                 <th>Route Id</th>
@@ -115,20 +173,31 @@ function RoutesData2() {
               </tr>
             </thead>
             <tbody>
-              {Routes.map((routes, index) => (
-                <tr key={index}>
-                  <td className="text-secondary">
-                    <b>{routes.count}</b>
+              {routes.map((route) => (
+                <tr key={route.id}>
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={selectedRows.includes(route.count)}
+                      onChange={() => handleToggleRow(route.count)}
+                    />
                   </td>
-                  <td>{routes.route_color}</td>
-                  <td>{routes.route_id}</td>
-                  <td>{routes.route_long_name}</td>
-                  <td className="d-flex gap-2">
-                    <Button variant="primary" onClick={() => handleEdit(routes)}>
+                  <td className="text-secondary">{route.count}</td>
+                  <td>{route.route_color}</td>
+                  <td>{route.route_id}</td>
+                  <td>{route.route_long_name}</td>
+                  <td>
+                    <Button
+                      variant="primary"
+                      onClick={() => handleEdit(route)}
+                    >
                       Edit
-                    </Button>
-                    <Button variant="danger" onClick={() => handleDelete(routes)}>
-                      Delete{" "}
+                    </Button>{" "}
+                    <Button
+                      variant="danger"
+                      onClick={() => handleDelete(route.count)}
+                    >
+                      Delete
                     </Button>
                   </td>
                 </tr>
@@ -148,20 +217,20 @@ function RoutesData2() {
         className="editinfo_modal"
       >
         <Modal.Header closeButton>
-          <Modal.Title>Edit Calendar Dates</Modal.Title>
+          <Modal.Title>Edit Route Data</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Container fluid>
             <Row className="gap-3">
               <Col>
                 <Form.Group>
-                  <Form.Label>New Count </Form.Label>
+                  <Form.Label>New Count</Form.Label>
                   <Form.Control
                     type="text"
-                    value={updatedRoutesInfo.count}
+                    value={updatedRouteInfo.count}
                     onChange={(e) =>
-                      setUpdatedRoutesInfo({
-                        ...updatedRoutesInfo,
+                      setUpdatedRouteInfo({
+                        ...updatedRouteInfo,
                         count: e.target.value,
                       })
                     }
@@ -171,10 +240,10 @@ function RoutesData2() {
                   <Form.Label>New Route Color</Form.Label>
                   <Form.Control
                     type="text"
-                    value={updatedRoutesInfo.route_color}
+                    value={updatedRouteInfo.route_color}
                     onChange={(e) =>
-                      setUpdatedRoutesInfo({
-                        ...updatedRoutesInfo,
+                      setUpdatedRouteInfo({
+                        ...updatedRouteInfo,
                         route_color: e.target.value,
                       })
                     }
@@ -186,10 +255,10 @@ function RoutesData2() {
                   <Form.Label>New Route ID</Form.Label>
                   <Form.Control
                     type="text"
-                    value={updatedRoutesInfo.route_id}
+                    value={updatedRouteInfo.route_id}
                     onChange={(e) =>
-                      setUpdatedRoutesInfo({
-                        ...updatedRoutesInfo,
+                      setUpdatedRouteInfo({
+                        ...updatedRouteInfo,
                         route_id: e.target.value,
                       })
                     }
@@ -199,10 +268,10 @@ function RoutesData2() {
                   <Form.Label>New Route Long Name</Form.Label>
                   <Form.Control
                     type="text"
-                    value={updatedRoutesInfo.route_long_name}
+                    value={updatedRouteInfo.route_long_name}
                     onChange={(e) =>
-                      setUpdatedRoutesInfo({
-                        ...updatedRoutesInfo,
+                      setUpdatedRouteInfo({
+                        ...updatedRouteInfo,
                         route_long_name: e.target.value,
                       })
                     }

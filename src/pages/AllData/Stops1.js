@@ -19,49 +19,51 @@ import {
 import { db } from "../../Config";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
 function Stops1() {
-  const [Stops, setStops] = useState([]);
+  const [stops, setStops] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [editedStops, setEditedStops] = useState(null);
-  const [updatedStopsInfo, setUpdatedStopsInfo] = useState({
+  const [editedStop, setEditedStop] = useState(null);
+  const [updatedStopInfo, setUpdatedStopInfo] = useState({
     count: "",
-    stops_id: "",
-    stops_lat: "",
-    stops_lon: "",
-    stops_name: "",
+    stop_id: "",
+    stop_lat: "",
+    stop_lon: "",
+    stop_name: "",
     zone_id: "",
   });
+  const [selectedStops, setSelectedStops] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
+
   useEffect(() => {
     const getStops = async () => {
       try {
-        const db = getFirestore(); // Initialize Firestore directly here
-        const StopsCollection = await getDocs(
-          collection(db, "stops")
-        );
-        const StopsData = StopsCollection.docs.map((doc) => ({
+        const db = getFirestore();
+        const stopsCollection = await getDocs(collection(db, "stops"));
+        const stopsData = stopsCollection.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
+          isSelected: false,
         }));
-        setStops(StopsData);
+        setStops(stopsData);
       } catch (error) {
-        console.error("Error fetching users:", error);
+        console.error("Error fetching stops:", error);
       }
-
     };
 
     getStops();
   }, []);
 
-  const handleEdit = (route) => {
-    setEditedStops(route);
+  const handleEdit = (stop) => {
+    setEditedStop(stop);
     setShowModal(true);
-    setUpdatedStopsInfo(route);
+    setUpdatedStopInfo(stop);
   };
 
   const handleCloseModal = () => {
-    setEditedStops(null);
+    setEditedStop(null);
     setShowModal(false);
-    setUpdatedStopsInfo({
+    setUpdatedStopInfo({
       count: "",
       stop_id: "",
       stop_lat: "",
@@ -70,84 +72,154 @@ function Stops1() {
       zone_id: "",
     });
   };
+
   const handleSaveChanges = async () => {
     try {
       const db = getFirestore();
-      const routeRef = doc(db, "stops", editedStops.id);
-      await updateDoc(routeRef, updatedStopsInfo);
-      const updatedStops = Stops.map((stop) =>
-        stop.id === editedStops.id ? { ...stop, ...updatedStopsInfo } : stop
+      const stopRef = doc(db, "stops", editedStop.id);
+      await updateDoc(stopRef, updatedStopInfo);
+      const updatedStops = stops.map((stop) =>
+        stop.id === editedStop.id ? { ...stop, ...updatedStopInfo } : stop
       );
       setStops(updatedStops);
       handleCloseModal();
-      toast.success("route updated successfully");
+      toast.success("Stop updated successfully");
     } catch (error) {
-      toast.error(" Error while updating Routes: ", error);
-      console.log(" Error while updating Routes: ", error);
+      toast.error("Error while updating stop:", error);
+      console.error("Error while updating stop:", error);
     }
   };
 
-  const handleDelete = async (index) => {
-    // Implement delete functionality here
-    const user = Stops[index];
+  const handleDelete = async (id) => {
     try {
       const db = getFirestore();
-      await deleteDoc(doc(db, "stops", user.id));
-      // Remove the user from the state
-      setStops((prevUsers) => prevUsers.filter((_, i) => i !== index));
-      console.log("User deleted successfully:", user);
+      await deleteDoc(doc(db, "stops", id));
+      setStops((prevStops) => prevStops.filter((stop) => stop.id !== id));
+      toast.success("Stop deleted successfully");
     } catch (error) {
-      console.error("Error deleting user:", error);
+      console.error("Error deleting stop:", error);
+      toast.error("Error deleting stop");
+    }
+  };
+
+  const handleSelectStop = (id) => {
+    const updatedStops = stops.map((stop) =>
+      stop.id === id ? { ...stop, isSelected: !stop.isSelected } : stop
+    );
+    setStops(updatedStops);
+    setSelectedStops(updatedStops.filter((stop) => stop.isSelected));
+    setSelectAll(updatedStops.every((stop) => stop.isSelected));
+  };
+
+  const handleSelectAll = () => {
+    const updatedStops = stops.map((stop) => ({ ...stop, isSelected: !selectAll }));
+    setStops(updatedStops);
+    setSelectedStops(updatedStops.filter((stop) => stop.isSelected));
+    setSelectAll(!selectAll);
+  };
+
+  const handleDeleteSelected = async () => {
+    try {
+      const db = getFirestore();
+      const batch = db.batch();
+
+      selectedStops.forEach((stop) => {
+        const stopRef = doc(db, "stops", stop.id);
+        batch.delete(stopRef);
+      });
+
+      await batch.commit();
+
+      const remainingStops = stops.filter((stop) => !stop.isSelected);
+      setStops(remainingStops);
+      setSelectedStops([]);
+      setSelectAll(false);
+      toast.success("Selected stops deleted successfully");
+    } catch (error) {
+      console.error("Error deleting selected stops:", error);
+      toast.error("Error deleting selected stops");
     }
   };
 
   return (
     <>
-    <ToastContainer />
-      <div className="container-fluid px-3 pt-4">
-        <div className="row">
-          <div className="col-lg-12 p-3">
-            <div className="text-center  ">
+      <ToastContainer />
+      <Container fluid>
+        <Row>
+          <Col lg={12} className="p-3">
+            <div className="text-center">
               <h5 className="text-uppercase p-2 page-title">Stops_1 Data</h5>
             </div>
-          </div>
-          <Table striped bordered hover responsive className=" overflow-scroll  ">
-            <thead>
-              <tr>
-                <th>Count</th>
-                <th>Stops Id</th>
-                <th>Stops_lat</th>
-                <th>Stops_lon</th>
-                <th>Stops_Name</th>
-                <th>Zone_Id</th>
-                <th>Modify</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Stops.map((stops, index) => (
-                <tr key={index}>
-                  <td className="text-secondary">
-                    <b>{stops.count}</b>
-                  </td>
-                  <td>{stops.stop_id}</td>
-                  <td>{stops.stop_lat}</td>
-                  <td>{stops.stop_lon}</td>
-                  <td>{stops.stop_name} </td>
-                  <td>{stops.zone_id} </td>
-                  <td className="d-flex gap-2">
-                    <Button variant="primary" onClick={() => handleEdit(stops)}>
-                      Edit
-                    </Button>
-                    <Button variant="danger" onClick={() => handleDelete(stops)}>
-                      Delete{" "}
-                    </Button>
-                  </td>
+          </Col>
+        </Row>
+        <Row>
+          <Col lg={12}>
+            <Button
+              variant="danger"
+              className="mb-3"
+              onClick={handleDeleteSelected}
+              disabled={selectedStops.length === 0}
+            >
+              Delete Selected
+            </Button>
+            <Table striped bordered hover className="overflow-scroll">
+              <thead>
+                <tr>
+                  <th>
+                    <Form.Check
+                      type="checkbox"
+                      checked={selectAll}
+                      onChange={handleSelectAll}
+                    />
+                  </th>
+                  <th>Count</th>
+                  <th>Stop Id</th>
+                  <th>Stop Lat</th>
+                  <th>Stop Lon</th>
+                  <th>Stop Name</th>
+                  <th>Zone Id</th>
+                  <th>Modify</th>
                 </tr>
-              ))}
-            </tbody>
-          </Table>
-        </div>
-      </div>
+              </thead>
+              <tbody>
+                {stops.map((stop) => (
+                  <tr key={stop.id}>
+                    <td>
+                      <Form.Check
+                        type="checkbox"
+                        checked={stop.isSelected}
+                        onChange={() => handleSelectStop(stop.id)}
+                      />
+                    </td>
+                    <td className="text-secondary">
+                      <b>{stop.count}</b>
+                    </td>
+                    <td>{stop.stop_id}</td>
+                    <td>{stop.stop_lat}</td>
+                    <td>{stop.stop_lon}</td>
+                    <td>{stop.stop_name}</td>
+                    <td>{stop.zone_id}</td>
+                    <td className="d-flex gap-2">
+                      <Button
+                        variant="primary"
+                        onClick={() => handleEdit(stop)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="danger"
+                        onClick={() => handleDelete(stop.id)}
+                      >
+                        Delete
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </Col>
+        </Row>
+      </Container>
       <Modal
         show={showModal}
         size="lg"
@@ -165,39 +237,39 @@ function Stops1() {
             <Row className="gap-3">
               <Col>
                 <Form.Group>
-                  <Form.Label>New Count </Form.Label>
+                  <Form.Label>New Count</Form.Label>
                   <Form.Control
                     type="text"
-                    value={updatedStopsInfo.count}
+                    value={updatedStopInfo.count}
                     onChange={(e) =>
-                      setUpdatedStopsInfo({
-                        ...updatedStopsInfo,
+                      setUpdatedStopInfo({
+                        ...updatedStopInfo,
                         count: e.target.value,
                       })
                     }
                   />
                 </Form.Group>
                 <Form.Group>
-                  <Form.Label>New Stops Id</Form.Label>
+                  <Form.Label>New Stop Id</Form.Label>
                   <Form.Control
                     type="text"
-                    value={updatedStopsInfo.stop_id}
+                    value={updatedStopInfo.stop_id}
                     onChange={(e) =>
-                      setUpdatedStopsInfo({
-                        ...updatedStopsInfo,
+                      setUpdatedStopInfo({
+                        ...updatedStopInfo,
                         stop_id: e.target.value,
                       })
                     }
                   />
                 </Form.Group>
                 <Form.Group>
-                  <Form.Label>New Stops_lat</Form.Label>
+                  <Form.Label>New Stop Lat</Form.Label>
                   <Form.Control
                     type="text"
-                    value={updatedStopsInfo.stop_lat}
+                    value={updatedStopInfo.stop_lat}
                     onChange={(e) =>
-                      setUpdatedStopsInfo({
-                        ...updatedStopsInfo,
+                      setUpdatedStopInfo({
+                        ...updatedStopInfo,
                         stop_lat: e.target.value,
                       })
                     }
@@ -206,39 +278,39 @@ function Stops1() {
               </Col>
               <Col>
                 <Form.Group>
-                  <Form.Label>New Stops_long</Form.Label>
+                  <Form.Label>New Stop Lon</Form.Label>
                   <Form.Control
                     type="text"
-                    value={updatedStopsInfo.stop_lon}
+                    value={updatedStopInfo.stop_lon}
                     onChange={(e) =>
-                      setUpdatedStopsInfo({
-                        ...updatedStopsInfo,
+                      setUpdatedStopInfo({
+                        ...updatedStopInfo,
                         stop_lon: e.target.value,
                       })
                     }
                   />
                 </Form.Group>
                 <Form.Group>
-                  <Form.Label>New Stops_Name</Form.Label>
+                  <Form.Label>New Stop Name</Form.Label>
                   <Form.Control
                     type="text"
-                    value={updatedStopsInfo.stop_name}
+                    value={updatedStopInfo.stop_name}
                     onChange={(e) =>
-                      setUpdatedStopsInfo({
-                        ...updatedStopsInfo,
+                      setUpdatedStopInfo({
+                        ...updatedStopInfo,
                         stop_name: e.target.value,
                       })
                     }
                   />
                 </Form.Group>
                 <Form.Group>
-                  <Form.Label>New Zone_Id</Form.Label>
+                  <Form.Label>New Zone Id</Form.Label>
                   <Form.Control
                     type="text"
-                    value={updatedStopsInfo.zone_id}
+                    value={updatedStopInfo.zone_id}
                     onChange={(e) =>
-                      setUpdatedStopsInfo({
-                        ...updatedStopsInfo,
+                      setUpdatedStopInfo({
+                        ...updatedStopInfo,
                         zone_id: e.target.value,
                       })
                     }

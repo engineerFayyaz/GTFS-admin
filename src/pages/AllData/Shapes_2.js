@@ -31,6 +31,8 @@ function Shapes2() {
     shape_pt_lon: "",
     shape_pt_sequence: "",
   });
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
 
   useEffect(() => {
     const getShapes = async () => {
@@ -43,7 +45,6 @@ function Shapes2() {
         querySnapshot.forEach((doc) => {
           fetchedData.push({ id: doc.id, ...doc.data() });
         });
-        //
         setShapes(fetchedData);
       } catch (error) {
         console.error("Error fetching users:", error);
@@ -70,6 +71,7 @@ function Shapes2() {
       shape_pt_sequence: "",
     });
   };
+
   const handleSaveChanges = async () => {
     try {
       const db = getFirestore();
@@ -80,26 +82,69 @@ function Shapes2() {
       );
       setShapes(updatedShapes);
       handleCloseModal();
-      toast.success("route updated successfully");
+      toast.success("Route updated successfully");
     } catch (error) {
-      toast.error(" Error while updating Routes: ", error);
-      console.log(" Error while updating Routes: ", error);
+      toast.error("Error while updating Routes: ", error);
+      console.log("Error while updating Routes: ", error);
     }
   };
 
-  const handleDelete = async (index) => {
-    // Implement delete functionality here
-    const user = Shapes[index];
+  const handleDelete = async (count) => {
     try {
       const db = getFirestore();
-      await deleteDoc(doc(db, "shapes2", user.id));
+      await deleteDoc(doc(db, "shapes2", count));
       // Remove the user from the state
-      setShapes((prevUsers) => prevUsers.filter((_, i) => i !== index));
-      console.log("deleted successfully:", user);
+      setShapes((prevShapes) => prevShapes.filter((shape) => shape.count !== count));
+      toast.success("Route deleted successfully");
     } catch (error) {
       console.error("Error deleting :", error);
     }
   };
+
+  const toggleRowSelection = (id) => {
+    if (selectedRows.includes(id)) {
+      setSelectedRows(selectedRows.filter((rowId) => rowId !== id));
+    } else {
+      setSelectedRows([...selectedRows, id]);
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedRows([]);
+    } else {
+      const allShapeIds = Shapes.map((shape) => shape.id);
+      setSelectedRows(allShapeIds);
+    }
+    setSelectAll(!selectAll);
+  };
+
+  const handleDeleteSelected = async () => {
+    try {
+      const db = getFirestore();
+  
+      for (const rowId of selectedRows) {
+        const shapeToDelete = Shapes.find((shape) => shape.id === rowId);
+        if (shapeToDelete) {
+          await deleteDoc(doc(db, "shapes2", shapeToDelete.id));
+        } else {
+          console.error("Shape with id", rowId, "not found.");
+        }
+      }
+  
+      setShapes((prevShapes) =>
+        prevShapes.filter((shape) => !selectedRows.includes(shape.id))
+      );
+      setSelectedRows([]);
+      setSelectAll(false);
+      toast.success("Selected routes deleted successfully");
+    } catch (error) {
+      console.error("Error deleting selected routes:", error);
+      toast.error("Error deleting selected routes");
+    }
+  };
+  ;
+  
 
   return (
     <>
@@ -111,9 +156,18 @@ function Shapes2() {
               <h5 className="text-uppercase p-2 page-title">Shapes_2 Data</h5>
             </div>
           </div>
+          <div className="col-lg-12 p-3">
+            <Button variant="danger" onClick={handleDeleteSelected}>
+              Delete Selected
+            </Button>
+            <Button variant="primary" onClick={handleSelectAll}>
+              {selectAll ? "Unselect All" : "Select All"}
+            </Button>
+          </div>
           <Table striped bordered hover className=" overflow-scroll  ">
             <thead>
               <tr>
+                <th>Select</th>
                 <th>Count</th>
                 <th>Shape Id</th>
                 <th>Shape_pt_lat</th>
@@ -125,6 +179,13 @@ function Shapes2() {
             <tbody>
               {Shapes.map((shapes) => (
                 <tr key={shapes.id}>
+                  <td>
+                    <Form.Check
+                      type="checkbox"
+                      checked={selectedRows.includes(shapes.id)}
+                      onChange={() => toggleRowSelection(shapes.id)}
+                    />
+                  </td>
                   <td className="text-secondary">
                     <b>{shapes.count}</b>
                   </td>
@@ -136,8 +197,8 @@ function Shapes2() {
                     <Button variant="primary" onClick={() => handleEdit(shapes)}>
                       Edit
                     </Button>
-                    <Button variant="danger" onClick={() => handleDelete(shapes)}>
-                      Delete{" "}
+                    <Button variant="danger" onClick={() => handleDelete(shapes.id)}>
+                      Delete
                     </Button>
                   </td>
                 </tr>

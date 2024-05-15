@@ -21,10 +21,10 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 function Trips1() {
-  const [Trips, setTrips] = useState([]);
+  const [trips, setTrips] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [editedTrips, setEditedTrips] = useState(null);
-  const [updatedTripsInfo, setUpdatedTripsInfo] = useState({
+  const [editedTrip, setEditedTrip] = useState(null);
+  const [updatedTripInfo, setUpdatedTripInfo] = useState({
     count: "",
     direction_id: "",
     route_id: "",
@@ -32,38 +32,39 @@ function Trips1() {
     shape_id: "",
     trip_id: "",
   });
+  const [selectedTrips, setSelectedTrips] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
+
   useEffect(() => {
     const getTrips = async () => {
       try {
-        const db = getFirestore(); // Initialize Firestore directly here
-        const TripsCollection = await getDocs(
-          collection(db, "trips")
-        );
-        const TripsData = TripsCollection.docs.map((doc) => ({
+        const db = getFirestore();
+        const tripsCollection = await getDocs(collection(db, "trips"));
+        const tripsData = tripsCollection.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
+          selected: false,
         }));
-        setTrips(TripsData);
-        toast.success("data saved successfully");
+        setTrips(tripsData);
+        toast.success("Data saved successfully");
       } catch (error) {
-        console.error("Error fetching users:", error);
+        console.error("Error fetching trips:", error);
       }
-
     };
 
     getTrips();
   }, []);
 
-  const handleEdit = (route) => {
-    setEditedTrips(route);
+  const handleEdit = (trip) => {
+    setEditedTrip(trip);
     setShowModal(true);
-    setUpdatedTripsInfo(route);
+    setUpdatedTripInfo(trip);
   };
 
   const handleCloseModal = () => {
-    setEditedTrips(null);
+    setEditedTrip(null);
     setShowModal(false);
-    setUpdatedTripsInfo({
+    setUpdatedTripInfo({
       count: "",
       direction_id: "",
       route_id: "",
@@ -72,86 +73,159 @@ function Trips1() {
       trip_id: "",
     });
   };
+
   const handleSaveChanges = async () => {
     try {
       const db = getFirestore();
-      const tripRef = doc(db, "trips", editedTrips.id);
-      await updateDoc(tripRef, updatedTripsInfo);
-      const updatedTrips = Trips.map((trip) =>
-        trip.id === editedTrips.id ? { ...trip, ...updatedTripsInfo } : trip
+      const tripRef = doc(db, "trips", editedTrip.id);
+      await updateDoc(tripRef, updatedTripInfo);
+      const updatedTrips = trips.map((trip) =>
+        trip.id === editedTrip.id ? { ...trip, ...updatedTripInfo } : trip
       );
       setTrips(updatedTrips);
       handleCloseModal();
       toast.success("Trips updated successfully");
     } catch (error) {
-      toast.error(" Error while updating Routes: ", error);
-      console.log(" Error while updating Routes: ", error);
+      toast.error("Error while updating trips: ", error);
+      console.log("Error while updating trips: ", error);
     }
   };
 
-  const handleDelete = async (index) => {
-    // Implement delete functionality here
-    const user = Trips[index];
+  const handleDelete = async (count) => {
     try {
       const db = getFirestore();
-      await deleteDoc(doc(db, "trips", user.id));
-      // Remove the user from the state
-      setTrips((prevUsers) => prevUsers.filter((_, i) => i !== index));
-      console.log("User deleted successfully:", user);
+      const tripToDelete = trips.find((trip) => trip.count === count);
+      if (!tripToDelete) {
+        toast.error("Trip not found for count: " + count);
+        return;
+      }
+      await deleteDoc(doc(db, "trips", tripToDelete.id));
+      const updatedTrips = trips.filter((trip) => trip.count !== count);
+      setTrips(updatedTrips);
+      setSelectedTrips(selectedTrips.filter((trip) => trip.count !== count));
+      toast.success("Trip deleted successfully for count: " + count);
     } catch (error) {
-      console.error("Error deleting user:", error);
+      console.error("Error deleting trip:", error);
+      toast.error("Error deleting trip for count: " + count);
+    }
+  };
+
+  const handleToggleAll = () => {
+    setSelectAll(!selectAll);
+    if (!selectAll) {
+      setSelectedTrips([...trips]);
+    } else {
+      setSelectedTrips([]);
+    }
+  };
+
+  const handleToggleSelect = (count) => {
+    const index = selectedTrips.findIndex((trip) => trip.count === count);
+    if (index === -1) {
+      const trip = trips.find((trip) => trip.count === count);
+      setSelectedTrips([...selectedTrips, trip]);
+    } else {
+      const updatedSelectedTrips = [...selectedTrips];
+      updatedSelectedTrips.splice(index, 1);
+      setSelectedTrips(updatedSelectedTrips);
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    const selectedCounts = selectedTrips.map((trip) => trip.count);
+    try {
+      const db = getFirestore();
+      await Promise.all(
+        selectedCounts.map((count) => handleDelete(count))
+      );
+      setSelectedTrips([]);
+    } catch (error) {
+      console.error("Error deleting selected trips:", error);
+      toast.error("Error deleting selected trips");
     }
   };
 
   return (
     <>
-    <ToastContainer />
-    <div className="container-fluid px-3 pt-4">
-      <div className="row">
-        <div className="col-lg-12 p-3">
-          <div className="text-center  ">
-            <h5 className="text-uppercase p-2 page-title">Trips_1 Data</h5>
+      <ToastContainer />
+      <div className="container-fluid px-3 pt-4">
+        <div className="row">
+          <div className="col-lg-12 p-3">
+            <div className="text-center  ">
+              <h5 className="text-uppercase p-2 page-title">Trips_1 Data</h5>
+            </div>
           </div>
-        </div>
-        <Table striped bordered hover className=" overflow-scroll  ">
-          <thead>
-            <tr>
-              <th>Count</th>
-              <th>Direction Id</th>
-              <th>Route Id</th>
-              <th>Service Id</th>
-              <th>Shape Id</th>
-              <th>Trip Id</th>
-              <th>Modify</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Trips.map((trips, index) => (
-              <tr key={index}>
-                <td className="text-secondary">
-                  <b>{trips.count}</b>
-                </td>
-                <td>{trips.direction_id}</td>
-                <td>{trips.route_id}</td>
-                <td>{trips.service_id}</td>
-                <td>{trips.shape_id} </td>
-                <td>{trips.trip_id} </td>
-                <td className="d-flex gap-2">
-                    <Button variant="primary" onClick={() => handleEdit(trips)}>
+          <div className="col-lg-12 p-3">
+            <Button
+              variant="danger"
+              onClick={handleDeleteSelected}
+              disabled={selectedTrips.length === 0}
+            >
+              Delete Selected
+            </Button>
+            <Button variant="info" onClick={handleToggleAll} className="ms-2">
+              {selectAll ? "Unselect All" : "Select All"}
+            </Button>
+          </div>
+          <Table striped bordered hover className="overflow-scroll">
+            <thead>
+              <tr>
+                <th>
+                  <Form.Check
+                    type="checkbox"
+                    checked={selectAll}
+                    onChange={handleToggleAll}
+                  />
+                </th>
+                <th>Count</th>
+                <th>Direction Id</th>
+                <th>Route Id</th>
+                <th>Service Id</th>
+                <th>Shape Id</th>
+                <th>Trip Id</th>
+                <th>Modify</th>
+              </tr>
+            </thead>
+            <tbody>
+              {trips.map((trip, index) => (
+                <tr key={index}>
+                  <td>
+                    <Form.Check
+                      type="checkbox"
+                      checked={selectedTrips.some((t) => t.count === trip.count)}
+                      onChange={() => handleToggleSelect(trip.count)}
+                    />
+                  </td>
+                  <td className="text-secondary">
+                    <b>{trip.count}</b>
+                  </td>
+                  <td>{trip.direction_id}</td>
+                  <td>{trip.route_id}</td>
+                  <td>{trip.service_id}</td>
+                  <td>{trip.shape_id}</td>
+                  <td>{trip.trip_id}</td>
+                  <td className="d-flex gap-2">
+                    <Button
+                      variant="primary"
+                      onClick={() => handleEdit(trip)}
+                    >
                       Edit
                     </Button>
-                    <Button variant="danger" onClick={() => handleDelete(trips)}>
-                      Delete{" "}
+                    <Button
+                      variant="danger"
+                      onClick={() => handleDelete(trip.count)}
+                    >
+                      Delete
                     </Button>
                   </td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </div>
       </div>
-    </div>
 
-    <Modal
+      <Modal
         show={showModal}
         size="lg"
         centered
@@ -168,13 +242,13 @@ function Trips1() {
             <Row className="gap-3">
               <Col>
                 <Form.Group>
-                  <Form.Label>New Count </Form.Label>
+                  <Form.Label>New Count</Form.Label>
                   <Form.Control
                     type="text"
-                    value={updatedTripsInfo.count}
+                    value={updatedTripInfo.count}
                     onChange={(e) =>
-                      setUpdatedTripsInfo({
-                        ...updatedTripsInfo,
+                      setUpdatedTripInfo({
+                        ...updatedTripInfo,
                         count: e.target.value,
                       })
                     }
@@ -184,10 +258,10 @@ function Trips1() {
                   <Form.Label>New Direction Id</Form.Label>
                   <Form.Control
                     type="text"
-                    value={updatedTripsInfo.direction_id}
+                    value={updatedTripInfo.direction_id}
                     onChange={(e) =>
-                      setUpdatedTripsInfo({
-                        ...updatedTripsInfo,
+                      setUpdatedTripInfo({
+                        ...updatedTripInfo,
                         direction_id: e.target.value,
                       })
                     }
@@ -197,10 +271,10 @@ function Trips1() {
                   <Form.Label>New Route_Id</Form.Label>
                   <Form.Control
                     type="text"
-                    value={updatedTripsInfo.route_id}
+                    value={updatedTripInfo.route_id}
                     onChange={(e) =>
-                      setUpdatedTripsInfo({
-                        ...updatedTripsInfo,
+                      setUpdatedTripInfo({
+                        ...updatedTripInfo,
                         route_id: e.target.value,
                       })
                     }
@@ -212,10 +286,10 @@ function Trips1() {
                   <Form.Label>New Service_Id</Form.Label>
                   <Form.Control
                     type="text"
-                    value={updatedTripsInfo.service_id}
+                    value={updatedTripInfo.service_id}
                     onChange={(e) =>
-                      setUpdatedTripsInfo({
-                        ...updatedTripsInfo,
+                      setUpdatedTripInfo({
+                        ...updatedTripInfo,
                         service_id: e.target.value,
                       })
                     }
@@ -225,10 +299,10 @@ function Trips1() {
                   <Form.Label>New Shape_Id</Form.Label>
                   <Form.Control
                     type="text"
-                    value={updatedTripsInfo.shape_id}
+                    value={updatedTripInfo.shape_id}
                     onChange={(e) =>
-                      setUpdatedTripsInfo({
-                        ...updatedTripsInfo,
+                      setUpdatedTripInfo({
+                        ...updatedTripInfo,
                         shape_id: e.target.value,
                       })
                     }
@@ -238,10 +312,10 @@ function Trips1() {
                   <Form.Label>New Trip_Id</Form.Label>
                   <Form.Control
                     type="text"
-                    value={updatedTripsInfo.trip_id}
+                    value={updatedTripInfo.trip_id}
                     onChange={(e) =>
-                      setUpdatedTripsInfo({
-                        ...updatedTripsInfo,
+                      setUpdatedTripInfo({
+                        ...updatedTripInfo,
                         trip_id: e.target.value,
                       })
                     }
