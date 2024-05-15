@@ -41,35 +41,7 @@ export const UploadGTFSFiles = () => {
   
   
 
-  // const parseGTFSFile = async (file) => {
-  //   let gtfsData = {};
-
-  //   const fileContent = await file.text(); 
-  //   const lines = fileContent.split("\n"); 
-
-  //   lines.forEach((line) => {
-  //     const fields = line.split(","); 
-
-  //     if (fields[0] === "count") {
-  //       gtfsData.count = parseInt(fields[1], 10);
-  //     }
-
-  //     if (fields[0] === "enddate" || fields[0] === "startdate") {
-  //       gtfsData[fields[0]] = fields[1];
-  //     }
-
-  //     if (["friday", "monday", "saturday", "sunday", "thursday", "tuesday", "wednesday"].includes(fields[0])) {
-  //       gtfsData[fields[0]] = fields[1];
-  //     }
-
-  //     if (fields[0] === "serviceid") {
-  //       gtfsData.serviceid = fields.slice(1).join(",");
-  //     }
-      
-  //   });
-
-  //   return gtfsData;
-  // };
+ 
 
   const handleSubmit = async (e) => {
     if (!file) {
