@@ -1,87 +1,115 @@
-import React,{useState} from "react";
-import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
-import {toast, ToastContainer} from "react-toastify"
-import { collection, addDoc, getFirestore } from "firebase/firestore";
-export const UploadGTFSFiles = () => {
+import React, { useState } from "react";
+import { getDownloadURL, getStorage, ref, uploadBytesResumable } from "firebase/storage";
+import { toast, ToastContainer } from "react-toastify";
+import { collection, getFirestore, doc, setDoc, writeBatch } from "firebase/firestore";
+import ProgressBar from 'react-bootstrap/ProgressBar';
 
+export const UploadGTFSFiles = () => {
   const [file, setFile] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const storage = getStorage();
   const db = getFirestore();
+
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
   };
 
-  // Example parseGTFSFile function to extract data from GTFS files
   const parseGTFSFile = async (file) => {
-    // Placeholder for parsed GTFS data
-    let gtfsData = [];
-    
-    // Read the GTFS file content
+    const gtfsData = [];
+
     const fileContent = await file.text();
-    
-    // Split the file content into lines
-    const lines = fileContent.split('\n');
-    
-    // Process each line of the GTFS file
-    lines.forEach((line) => {
-      // Split the line into fields (assuming CSV format)
-      const fields = line.split(',');
-    
-      // Extract information for each field
-      fields.forEach((value, index) => {
-        // Skip the first field which is often an identifier
-        if (index !== 0) {
-          gtfsData.push({ fieldIndex: index, value });
+    const lines = fileContent.split("\n");
+
+    // Assuming the first line contains the headers
+    const headers = lines[0].split(",").map(header => header.trim());
+
+    // Iterate over each line (excluding header) and create objects
+    for (let i = 1; i < lines.length; i++) {
+      const values = lines[i].split(",").map(value => value.trim());
+      const data = {};
+
+      headers.forEach((header, index) => {
+        // Check if value exists before assigning
+        if (values[index] !== undefined && values[index] !== "") {
+          data[header] = values[index];
         }
       });
-    });
-    
+
+      // Add data to gtfsData only if at least one field is present
+      if (Object.keys(data).length > 0) {
+        gtfsData.push(data);
+      }
+    }
+
     return gtfsData;
   };
-  
-  
 
- 
+  const uploadDataToFirestore = async (batchData, fileName) => {
+    const batch = writeBatch(db);
+    const gtfsDataCollectionRef = collection(db, `${fileName}-web-data`);
+
+    batchData.forEach((data) => {
+      const docRef = doc(gtfsDataCollectionRef);
+      batch.set(docRef, data);
+    });
+
+    await batch.commit();
+  };
 
   const handleSubmit = async (e) => {
     if (!file) {
       toast.error("Please select a file.");
       return;
     }
-  
-    const docRef = ref(storage, `gtfs/${file.name}`);
-  
+
     try {
-      await uploadBytes(docRef, file);
-      const gtfsData = await parseGTFSFile(file);
-  
-      // Add file fields to Firestore collection
-      const firestoreCollectionRef = collection(db, 'gtfs_files');
-      
-      // Upload each field as a separate document
-      gtfsData.forEach(async (field) => {
-        await addDoc(firestoreCollectionRef, field);
-      });
-  
-      setFile(null);
-      toast.success("File uploaded successfully");
-      console.log("File uploaded successfully");
-  
+      const docRef = ref(storage, `gtfs/${file.name}`);
+      const uploadTask = uploadBytesResumable(docRef, file);
+
+      uploadTask.on('state_changed',
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          setUploadProgress(progress);
+        },
+        (error) => {
+          toast.error("Error while uploading file");
+          console.error("Error while uploading file", error);
+        },
+        async () => {
+          try {
+            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+            const gtfsData = await parseGTFSFile(file);
+            const batchSize = 100; // Adjust the batch size as needed
+
+            for (let i = 0; i < gtfsData.length; i += batchSize) {
+              const batchData = gtfsData.slice(i, i + batchSize);
+              await uploadDataToFirestore(batchData, file.name.split('.').slice(0, -1).join('.'));
+            }
+
+            setFile(null);
+            toast.success("File uploaded successfully");
+            console.log("File uploaded successfully");
+            window.location.reload();
+          } catch (error) {
+            toast.error("Error while uploading file");
+            console.error("Error while uploading file", error);
+          }
+        }
+      );
     } catch (error) {
       toast.error("Error while uploading file");
-      console.log("Error while file uploading", error.message, " ", error.code);
+      console.error("Error while uploading file", error);
     }
   };
-  
-  
+
   return (
     <>
-    <ToastContainer />
-    <div>
-      
-      <input type="file" onChange={handleFileChange} accept=".txt" />
-      <button onClick={handleSubmit}>Upload</button>
-    </div>
+      <ToastContainer />
+      <div>
+        <input type="file" onChange={handleFileChange} accept=".txt" />
+        <button onClick={handleSubmit}>Upload</button>
+        {uploadProgress > 0 && <ProgressBar now={uploadProgress} label={`${uploadProgress}%`} />}
+      </div>
     </>
-  )
-}
+  );
+};

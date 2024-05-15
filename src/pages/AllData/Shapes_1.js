@@ -16,50 +16,51 @@ import {
   Col,
   Modal,
 } from "react-bootstrap/";
-import { db } from "../../Config";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 function Shapes1() {
-  const [Shapes, setShapes] = useState([]);
+  const [shapes, setShapes] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [editedShapes, setEditedShapes] = useState(null);
-  const [updatedShapesInfo, setUpdatedShapesInfo] = useState({
+  const [editedShapeIndex, setEditedShapeIndex] = useState(null);
+  const [updatedShapeInfo, setUpdatedShapeInfo] = useState({
     count: "",
     shape_id: "",
     shape_pt_lat: "",
     shape_pt_lon: "",
     shape_pt_sequence: "",
   });
+  const [selectedShapes, setSelectedShapes] = useState([]);
 
   useEffect(() => {
     const getShapes = async () => {
       try {
-        const db = getFirestore(); // Initialize Firestore directly here
-        const ShapesCollection = await getDocs(collection(db, "shapes"));
-        const ShapesData = ShapesCollection.docs.map((doc) => ({
+        const db = getFirestore();
+        const shapesCollection = await getDocs(collection(db, "shapes"));
+        const shapesData = shapesCollection.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
+          isSelected: false, // Add isSelected property to each shape
         }));
-        setShapes(ShapesData);
+        setShapes(shapesData);
       } catch (error) {
-        console.error("Error fetching users:", error);
+        console.error("Error fetching shapes:", error);
       }
     };
 
     getShapes();
   }, []);
 
-  const handleEdit = (route) => {
-    setEditedShapes(route);
+  const handleEdit = (index) => {
+    setEditedShapeIndex(index);
     setShowModal(true);
-    setUpdatedShapesInfo(route);
+    setUpdatedShapeInfo(shapes[index]);
   };
 
   const handleCloseModal = () => {
-    setEditedShapes(null);
+    setEditedShapeIndex(null);
     setShowModal(false);
-    setUpdatedShapesInfo({
+    setUpdatedShapeInfo({
       count: "",
       shape_id: "",
       shape_pt_lat: "",
@@ -67,82 +68,129 @@ function Shapes1() {
       shape_pt_sequence: "",
     });
   };
+
   const handleSaveChanges = async () => {
     try {
       const db = getFirestore();
-      const routeRef = doc(db, "shapes", editedShapes.id);
-      await updateDoc(routeRef, updatedShapesInfo);
-      const updatedShapes = Shapes.map((stop) =>
-        stop.id === editedShapes.id ? { ...stop, ...updatedShapesInfo } : stop
+      const shapeRef = doc(db, "shapes", shapes[editedShapeIndex].id);
+      await updateDoc(shapeRef, updatedShapeInfo);
+      const updatedShapes = shapes.map((shape, i) =>
+        i === editedShapeIndex ? { ...shape, ...updatedShapeInfo } : shape
       );
       setShapes(updatedShapes);
       handleCloseModal();
-      toast.success("route updated successfully");
+      toast.success("Shape updated successfully");
     } catch (error) {
-      toast.error(" Error while updating Routes: ", error);
-      console.log(" Error while updating Routes: ", error);
+      toast.error("Error while updating shape:", error);
+      console.error("Error while updating shape:", error);
     }
   };
 
-  const handleDelete = async (index) => {
-    // Implement delete functionality here
-    const user = Shapes[index];
+  const handleDelete = async () => {
+    const shapesToDelete = shapes.filter((shape) => shape.isSelected);
+    if (shapesToDelete.length === 0) {
+      toast.error("Please select shapes to delete.");
+      return;
+    }
     try {
       const db = getFirestore();
-      await deleteDoc(doc(db, "shapes", user.id));
-      // Remove the user from the state
-      setShapes((prevUsers) => prevUsers.filter((_, i) => i !== index));
-      console.log("deleted successfully:", user);
+      const batch = db.batch();
+      shapesToDelete.forEach((shape) => {
+        const shapeRef = doc(db, "shapes", shape.id);
+        batch.delete(shapeRef);
+      });
+      await batch.commit();
+      setShapes((prevShapes) => prevShapes.filter((shape) => !shape.isSelected));
+      setSelectedShapes([]);
+      toast.success("Selected shapes deleted successfully");
     } catch (error) {
-      console.error("Error deleting :", error);
+      toast.error("Error deleting shapes:", error);
+      console.error("Error deleting shapes:", error);
+    }
+  };
+
+  const handleSelectShape = (index) => {
+    const updatedShapes = [...shapes];
+    updatedShapes[index].isSelected = !updatedShapes[index].isSelected;
+    setShapes(updatedShapes);
+
+    if (updatedShapes[index].isSelected) {
+      setSelectedShapes((prevSelectedShapes) => [
+        ...prevSelectedShapes,
+        updatedShapes[index].id,
+      ]);
+    } else {
+      setSelectedShapes((prevSelectedShapes) =>
+        prevSelectedShapes.filter((shapeId) => shapeId !== updatedShapes[index].id)
+      );
     }
   };
 
   return (
     <>
-    <ToastContainer />
-      <div className="container-fluid px-3 pt-4">
-        <div className="row">
-          <div className="col-lg-12 p-3">
-            <div className="text-center  ">
+      <ToastContainer />
+      <Container fluid>
+        <Row>
+          <Col lg={12} className="p-3">
+            <div className="text-center">
               <h5 className="text-uppercase p-2 page-title">Shapes_1 Data</h5>
             </div>
-          </div>
-          <Table striped bordered hover className=" overflow-scroll  ">
-            <thead>
-              <tr>
-                <th>Count</th>
-                <th>Shape Id</th>
-                <th>Shape_pt_lat</th>
-                <th>Shape_pt_lon</th>
-                <th>Shape_pt_sequence</th>
-                <th>Modify</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Shapes.map((shapes) => (
-                <tr key={shapes.id}>
-                  <td className="text-secondary">
-                    <b>{shapes.count}</b>
-                  </td>
-                  <td>{shapes.shape_id}</td>
-                  <td>{shapes.shape_pt_lat}</td>
-                  <td>{shapes.shape_pt_lon}</td>
-                  <td>{shapes.shape_pt_sequence} </td>
-                  <td className="d-flex gap-2">
-                    <Button variant="primary" onClick={() => handleEdit(shapes)}>
-                      Edit
-                    </Button>
-                    <Button variant="danger" onClick={() => handleDelete(shapes)}>
-                      Delete{" "}
-                    </Button>
-                  </td>
+          </Col>
+        </Row>
+        <Row>
+          <Col lg={12}>
+            <Button
+              variant="danger"
+              className="mb-3"
+              onClick={handleDelete}
+              disabled={selectedShapes.length === 0}
+            >
+              Delete Selected
+            </Button>
+            <Table striped bordered hover className="overflow-scroll">
+              <thead>
+                <tr>
+                  <th>Select</th>
+                  <th>Count</th>
+                  <th>Shape Id</th>
+                  <th>Shape_pt_lat</th>
+                  <th>Shape_pt_lon</th>
+                  <th>Shape_pt_sequence</th>
+                  <th>Modify</th>
                 </tr>
-              ))}
-            </tbody>
-          </Table>
-        </div>
-      </div>
+              </thead>
+              <tbody>
+                {shapes.map((shape, index) => (
+                  <tr key={shape.id}>
+                    <td>
+                      <Form.Check
+                        type="checkbox"
+                        checked={shape.isSelected}
+                        onChange={() => handleSelectShape(index)}
+                      />
+                    </td>
+                    <td className="text-secondary">
+                      <b>{shape.count}</b>
+                    </td>
+                    <td>{shape.shape_id}</td>
+                    <td>{shape.shape_pt_lat}</td>
+                    <td>{shape.shape_pt_lon}</td>
+                    <td>{shape.shape_pt_sequence}</td>
+                    <td className="d-flex gap-2">
+                      <Button
+                        variant="primary"
+                        onClick={() => handleEdit(index)}
+                      >
+                        Edit
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </Col>
+        </Row>
+      </Container>
       <Modal
         show={showModal}
         size="lg"
@@ -153,75 +201,74 @@ function Shapes1() {
         className="editinfo_modal"
       >
         <Modal.Header closeButton>
-          <Modal.Title>Edit Shapes_1 Data </Modal.Title>
+          <Modal.Title>Edit Shapes_1 Data</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Container fluid>
             <Row className="gap-3">
               <Col>
                 <Form.Group>
-                  <Form.Label>New Count </Form.Label>
+                  <Form.Label>New Count</Form.Label>
                   <Form.Control
                     type="text"
-                    value={updatedShapesInfo.count}
+                    value={updatedShapeInfo.count}
                     onChange={(e) =>
-                      setUpdatedShapesInfo({
-                        ...updatedShapesInfo,
+                      setUpdatedShapeInfo({
+                        ...updatedShapeInfo,
                         count: e.target.value,
                       })
                     }
                   />
                 </Form.Group>
                 <Form.Group>
-                  <Form.Label>New Shapes Id</Form.Label>
+                  <Form.Label>New Shape Id</Form.Label>
                   <Form.Control
                     type="text"
-                    value={updatedShapesInfo.shape_id}
+                    value={updatedShapeInfo.shape_id}
                     onChange={(e) =>
-                      setUpdatedShapesInfo({
-                        ...updatedShapesInfo,
+                      setUpdatedShapeInfo({
+                        ...updatedShapeInfo,
                         shape_id: e.target.value,
                       })
                     }
                   />
                 </Form.Group>
                 <Form.Group>
-                  <Form.Label>New Shap_pt-lat</Form.Label>
+                  <Form.Label>New Shape_pt_lat</Form.Label>
                   <Form.Control
                     type="text"
-                    value={updatedShapesInfo.shape_pt_lat}
+                    value={updatedShapeInfo.shape_pt_lat}
                     onChange={(e) =>
-                      setUpdatedShapesInfo({
-                        ...updatedShapesInfo,
+                      setUpdatedShapeInfo({
+                        ...updatedShapeInfo,
                         shape_pt_lat: e.target.value,
                       })
                     }
                   />
                 </Form.Group>
-              
               </Col>
               <Col>
                 <Form.Group>
-                  <Form.Label>New Shape_pt-lon </Form.Label>
+                  <Form.Label>New Shape_pt_lon</Form.Label>
                   <Form.Control
                     type="text"
-                    value={updatedShapesInfo.shape_pt_lon}
+                    value={updatedShapeInfo.shape_pt_lon}
                     onChange={(e) =>
-                      setUpdatedShapesInfo({
-                        ...updatedShapesInfo,
+                      setUpdatedShapeInfo({
+                        ...updatedShapeInfo,
                         shape_pt_lon: e.target.value,
                       })
                     }
                   />
                 </Form.Group>
                 <Form.Group>
-                  <Form.Label>New Shape Sequence</Form.Label>
+                  <Form.Label>New Shape_pt_sequence</Form.Label>
                   <Form.Control
                     type="text"
-                    value={updatedShapesInfo.shape_pt_sequence}
+                    value={updatedShapeInfo.shape_pt_sequence}
                     onChange={(e) =>
-                      setUpdatedShapesInfo({
-                        ...updatedShapesInfo,
+                      setUpdatedShapeInfo({
+                        ...updatedShapeInfo,
                         shape_pt_sequence: e.target.value,
                       })
                     }
