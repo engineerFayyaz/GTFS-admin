@@ -63,11 +63,11 @@ const Dashboard = () => {
     data,
     xField: "type",
     yField: "sales",
-    color: "#ffd333",
+    color: "#013767",
     label: {
       position: "middle",
       style: {
-        fill: "#FFFFFF",
+        fill: "#fff",
         opacity: 1,
       },
     },
@@ -93,7 +93,7 @@ const Dashboard = () => {
         <h2 className="text-uppercase p-2 page-title">GTFS Admin Dashboard</h2>
       </div>
       <div className="mt-4">
-        <h3 className="mb-5 title">Pricing Packages</h3>
+        <h3 className="mb-3 title">Pricing Packages</h3>
         <Row className="pricing-packages">
           {pricingPackages.map((pricingPackage, index) => (
             <Col key={index} md={3} sm={6}>
@@ -107,8 +107,8 @@ const Dashboard = () => {
           ))}
         </Row>
       </div>
-      <div className="mt-4">
-        <h3 className="mb-5 title">Income Statistics</h3>
+      <div className="mt-5">
+        <h3 className="mb-3 title">Income Statistics</h3>
         <div>
           <Column {...config} />
         </div>
@@ -116,7 +116,7 @@ const Dashboard = () => {
       <div className="mt-4">
         <h3 className="mb-5 title">Recent Users</h3>
         <div>
-          <Table columns={columns} dataSource={recentUsers} />
+          <Table responsive striped bordered hover columns={columns} dataSource={recentUsers} />
         </div>
       </div>
     </Container>

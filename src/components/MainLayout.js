@@ -14,6 +14,7 @@ import {
   FaCalendar,
   FaCalendarDays,
   FaCalendarPlus,
+  FaGlobe,
   FaMapLocation,
   FaRegCalendarCheck,
   FaRoute,
@@ -188,9 +189,9 @@ const MainLayout = () => {
               ],
             },
             {
-              key: "All Routes Data",
+              key: "All Routes  Data",
               icon: <FaMapLocation className="fs-4" />,
-              label: "All Routes Data",
+              label: "All Routes Mobile Data",
               children: [
                 {
                   key: "Calendar",
@@ -300,19 +301,116 @@ const MainLayout = () => {
               ],
             },
             {
-              key: "customization",
-              icon: <BiCustomize className="fs-4" />,
-              label: "Customization",
-            },
-            {
-              key: "Configration",
-              icon: <FcDataConfiguration className="fs-4" />,
-              label: "Configration",
-            },
-            {
-              key: "settings",
-              icon: <AiOutlineSetting className="fs-4" />,
-              label: "Settings",
+              key: "All Routes  Data",
+              icon: <FaGlobe className="fs-4" />,
+              label: "All Routes Web Data",
+              children: [
+                {
+                  // key: "Calendar",
+                  icon: <FaCalendar className="fs-4" />,
+                  label: "Calendar",
+
+                  children: [
+                    {
+                      key: "All_Web_Data/CalendarWeb",
+                      icon: <FaCalendarPlus className="fs-4" />,
+                      label: "Calendar Web",
+                    },
+                    {
+                      key: "All_Web_Data/Calendar_Attributes_Web",
+                      icon: <FaRegCalendarCheck className="fs-4" />,
+                      label: "Calendar Attributes",
+                    },
+                    {
+                      key: "All_Web_Data/Calendar_Dates_Web",
+                      icon: <FaCalendarDays className="fs-4" />,
+                      label: "C_dates",
+                    },
+                  ],
+                },
+                {
+                  key: "Routes",
+                  icon: <FaRoute className="fs-4" />,
+                  label: "Routes",
+
+                  children: [
+                    {
+                      key: "All_Web_Data/Routes_Web",
+                      icon: <FaRoute className="fs-4" />,
+                      label: "Routes Web",
+                    },
+                    {
+                      key: "AllData/RoutesData2",
+                      icon: <BsMap className="fs-4" />,
+                      label: "Routes_02",
+                    },
+                  ],
+                },
+                {
+                  key: "Shapes",
+                  icon: <FaShapes className="fs-4" />,
+                  label: "Shapes",
+
+                  children: [
+                    {
+                      key: "AllData/Shapes",
+                      icon: <BiSolidShapes className="fs-4" />,
+                      label: "Shapes_01",
+                    },
+                    {
+                      key: "AllData/Shapes2",
+                      icon: <BiSolidShapes className="fs-4" />,
+                      label: "Shapes_02",
+                    },
+                  ],
+                },
+                {
+                  key: "Stops",
+                  icon: <FaStop className="fs-4" />,
+                  label: "Stops",
+
+                  children: [
+                    {
+                      key: "AllData/Stops1",
+                      icon: <BsStop className="fs-4" />,
+                      label: "Stops_01",
+                    },
+                    {
+                      key: "AllData/Stops2",
+                      icon: <FaStopCircle className="fs-4" />,
+                      label: "Stops_02",
+                    },
+                    {
+                      key: "AllData/Stops_Times1",
+                      icon: <BiSolidTime className="fs-4" />,
+                      label: "S_times-01",
+                    },
+                    {
+                      key: "AllData/Stops_Times2",
+                      icon: <FaBusinessTime className="fs-4" />,
+                      label: "S_times-02",
+                    },
+                  ],
+                },
+                {
+                  key: "Trips",
+                  icon: <FaTripadvisor className="fs-4" />,
+                  label: "Trips",
+
+                  children: [
+                    {
+                      key: "AllData/Trips1",
+                      icon: <FaTripadvisor className="fs-4" />,
+                      label: "Trips_01",
+                    },
+                    {
+                      key: "AllData/Trips2",
+                      icon: <FaTripadvisor className="fs-4" />,
+                      label: "Trips_02",
+                    },
+                  ],
+                },
+              ],
             },
             {
               key: "Vehicle-Tracking",

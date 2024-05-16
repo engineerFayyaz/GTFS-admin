@@ -46,6 +46,10 @@ import NotificationForm from "./pages/NotificationForm";
 import { UploadGTFSFiles } from "./pages/UploadGTFSFiles";
 import PartnersRequest from "./pages/Partners-Request";
 import ContactRequest from "./pages/Contact-Request";
+import { CalendarWeb } from "./pages/All_Web_Data/calendar_web_dat";
+import { CalendarAttributesWeb } from "./pages/All_Web_Data/calendar_attributes_web";
+import { CalendarDatesWeb } from "./pages/All_Web_Data/calendar_dates_web";
+import { RoutesWebData } from "./pages/All_Web_Data/routes_web_data";
 function App() {
   return (
     <Router>
@@ -98,6 +102,10 @@ function App() {
           <Route path="/admin/send-notification" element={<NotificationForm/>}/>
           <Route path="/admin/Partners-Request" element={<PartnersRequest/>}/>
           <Route path="/admin/Contact-Request" element={<ContactRequest/>}/>
+          <Route path="All_Web_Data/CalendarWeb" element={<CalendarWeb/>}/>
+          <Route path="All_Web_Data/Calendar_Attributes_Web" element={<CalendarAttributesWeb/>}/>
+          <Route path="All_Web_Data/Calendar_Dates_Web" element={<CalendarDatesWeb/>}/>
+          <Route path="All_Web_Data/Routes_Web" element={<RoutesWebData/>}/>
 
         </Route>
       </Routes>
