@@ -15,14 +15,10 @@ import ViewOrder from "./pages/AllData/Shapes_1";
 import AddEdits from "./pages/AllData/Calendar2";
 import RegisteredUser from "./pages/RegisteredUser";
 import ProductApproval from "./pages/AllData/Routes_1";
-import UploadVisitorCheels from "./pages/AccessPermissions/UploadVisitorCheels";
-import UploadVisitorGallery from "./pages/AccessPermissions/UserPermission";
 import Register from "./pages/Signup";
 import Settings from "./pages/Settings";
 import UserList from "./pages/UserList";
 import UserDetails from "./pages/UserDetails";
-import UserPermission from "./pages/AccessPermissions/UserPermission";
-import UserRole from "./pages/AccessPermissions/UserRole";
 import Customization from "./pages/Customization";
 import Configration from "./pages/Configration";
 import ManageMobileData from "./pages/ManageMobileData";
@@ -50,6 +46,7 @@ import { CalendarWeb } from "./pages/All_Web_Data/calendar_web_dat";
 import { CalendarAttributesWeb } from "./pages/All_Web_Data/calendar_attributes_web";
 import { CalendarDatesWeb } from "./pages/All_Web_Data/calendar_dates_web";
 import { RoutesWebData } from "./pages/All_Web_Data/routes_web_data";
+import { UploadMobileData } from "./pages/UploadGTFSMobileData";
 function App() {
   return (
     <Router>
@@ -66,6 +63,7 @@ function App() {
           <Route path="ManageMobileData" element={<ManageMobileData />} />
           <Route path="coupon/:id" element={<AddCoupon />} />
           <Route path="uploadgtfsfiles" element={<UploadGTFSFiles />} />
+          <Route path="upload_mobile_data" element={<UploadMobileData />} />
           <Route path="DeleteMobileData" element={<DeleteMobileData />} />
 
           <Route path="order/:id" element={<ViewOrder />} />
@@ -80,10 +78,7 @@ function App() {
           <Route path="add-designer" element={<Addbrand />} />
           <Route path="brand/:id" element={<Addbrand />} />
           <Route path="list-product" element={<Productlist />} />
-          <Route path="AccessPermissions/UserPermission" element={<UserPermission />} />
-          <Route path="AccessPermissions/UserRole" element={<UserRole />} />
-          <Route path="AccessPermissions/UploadVisitorCheels" element={<UploadVisitorCheels />} />
-          <Route path="AccessPermissions/UploadVisitorCheels" element={<UploadVisitorGallery />} />
+
 
           <Route path="AllData/Calendar" element={<Calendar />} />
           <Route path="AllData/Calendar2" element={<CalendarTwo />} />

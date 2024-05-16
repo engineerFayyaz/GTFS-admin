@@ -45,7 +45,7 @@ import {
 import { Layout, Menu, theme } from "antd";
 import { useNavigate } from "react-router-dom";
 import { BsCardList, BsMap, BsStop } from "react-icons/bs";
-import { MdOutlineDeleteSweep } from "react-icons/md";
+import { MdOutlineDeleteSweep, MdWeb } from "react-icons/md";
 import { getUserFromLocalStorage } from "../utils/localstorage";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 const { Header, Sider, Content } = Layout;
@@ -122,50 +122,9 @@ const MainLayout = () => {
                   icon: <BsCardList className="fs-4" />,
                   label: "All Users",
                 },
-                // {
-                //   key: "VisitorProfile/UploadVisitorCheels",
-                //   icon: <AiOutlineShoppingCart className="fs-4" />,
-                //   label: "Add Cheels",
-                // },
-                {
-                  key: "AccessPermissions/UserRole",
-                  icon: <AiOutlineUserSwitch className="fs-4" />,
-                  label: "User Role",
-                },
-                {
-                  key: "AccessPermissions/UserPermission",
-                  icon: <FaUserLock className="fs-4" />,
-                  label: "User Permission",
-                },
-                // {
-                //   key: "Add-Designer",
-                //   icon: <FaPenSquare className="fs-4" />,
-                //   label: "Add Designer",
-                // },
-
-                {
-                  key: "User-Details",
-                  icon: <BiCategoryAlt className="fs-4" />,
-                  label: "User Details",
-                },
-
-                // {
-                //   key: "Product-Type",
-                //   icon: <BsCardList className="fs-4" />,
-                //   label: "Product Type",
-                // },
-                // {
-                //   key: "Add-Edits",
-                //   icon: <BiEdit className="fs-4" />,
-                //   label: "Add Edits",
-                // },
               ],
             },
-            // {
-            //   key: "orders",
-            //   icon: <FcDataConfiguration className="fs-4" />,
-            //   label: "Orders",
-            // },
+
             {
               key: "Admin For Mobile",
               icon: <FaMobileAlt className="fs-4" />,
@@ -177,14 +136,26 @@ const MainLayout = () => {
                   label: "Manage Mobile Data",
                 },
                 {
-                  key: "uploadgtfsfiles",
+                  key: "upload_mobile_data",
                   icon: <FaUpload className="fs-4" />,
-                  label: "Upload GTFS Files",
+                  label: "Upload Mobile Data",
                 },
                 {
                   key: "DeleteMobileData",
                   icon: <MdOutlineDeleteSweep className="fs-4" />,
                   label: "Delete Mobile Data",
+                },
+              ],
+            },
+            {
+              key: "Admin For Web",
+              icon: <MdWeb className="fs-4" />,
+              label: "Admin For Web",
+              children: [
+                {
+                  key: "uploadgtfsfiles",
+                  icon: <FaUpload className="fs-4" />,
+                  label: "Upload GTFS Files",
                 },
               ],
             },
