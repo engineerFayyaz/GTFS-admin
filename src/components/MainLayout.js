@@ -301,7 +301,7 @@ const MainLayout = () => {
               ],
             },
             {
-              key: "All Routes  Data",
+              key: "All Routes Web Data",
               icon: <FaGlobe className="fs-4" />,
               label: "All Routes Web Data",
               children: [
@@ -347,9 +347,9 @@ const MainLayout = () => {
                   ],
                 },
                 {
-                  key: "Shapes",
+                  key: "Shapes Web",
                   icon: <FaShapes className="fs-4" />,
-                  label: "Shapes",
+                  label: "Shapes Web",
 
                   children: [
                     {
