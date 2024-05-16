@@ -299,21 +299,21 @@ const MainLayout = () => {
                 },
               ],
             },
-            {
-              key: "customization",
-              icon: <BiCustomize className="fs-4" />,
-              label: "Customization",
-            },
-            {
-              key: "Configration",
-              icon: <FcDataConfiguration className="fs-4" />,
-              label: "Configration",
-            },
-            {
-              key: "settings",
-              icon: <AiOutlineSetting className="fs-4" />,
-              label: "Settings",
-            },
+            // {
+            //   key: "customization",
+            //   icon: <BiCustomize className="fs-4" />,
+            //   label: "Customization",
+            // },
+            // {
+            //   key: "Configration",
+            //   icon: <FcDataConfiguration className="fs-4" />,
+            //   label: "Configration",
+            // },
+            // {
+            //   key: "settings",
+            //   icon: <AiOutlineSetting className="fs-4" />,
+            //   label: "Settings",
+            // },
             {
               key: "Vehicle-Tracking",
               icon: <AiOutlineHighlight className="fs-4" />,
