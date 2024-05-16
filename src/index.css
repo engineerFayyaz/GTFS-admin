@@ -9,7 +9,7 @@
   transition: all .5s ease-in-out;
 }
 .btn,button{
-  background: rgb(2, 143, 194);
+  /* background: rgb(2, 143, 194); */
   border: none !important;
   font-family: poppins;
   font-weight: 600;
