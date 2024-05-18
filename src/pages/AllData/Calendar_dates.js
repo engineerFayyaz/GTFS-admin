@@ -17,7 +17,7 @@ function CalendarDates() {
   const [editingCalendar, setEditingCalendar] = useState(null);
   const [updatedCalendarInfo, setUpdatedCalendarInfo] = useState({
     date: "",
-    service_Id: "",
+    exception_type: "",
   });
   const [selectedRows, setSelectedRows] = useState([]);
 
@@ -26,7 +26,7 @@ function CalendarDates() {
       try {
         const db = getFirestore();
         const calendarCollection = await getDocs(
-          collection(db, "calendar_dates")
+          collection(db, "calendar_dates2")
         );
         const calendarData = calendarCollection.docs.map((doc) => ({
           id: doc.id,
@@ -52,14 +52,14 @@ function CalendarDates() {
     setEditingCalendar(null);
     setUpdatedCalendarInfo({
       date: "",
-      service_Id: "",
+      exception_type: "",
     });
   };
 
   const handleSaveChanges = async () => {
     try {
       const db = getFirestore();
-      const calendarRef = doc(db, "calendar_dates", editingCalendar.id);
+      const calendarRef = doc(db, "calendar_dates2", editingCalendar.id);
       await updateDoc(calendarRef, updatedCalendarInfo);
       const updatedCalendars = calendar.map((calendarItem) =>
         calendarItem.id === editingCalendar.id
@@ -79,7 +79,7 @@ function CalendarDates() {
       const db = getFirestore();
       const calendarToDelete = calendar.find((calendarItem) => calendarItem.count === count);
       if (calendarToDelete) {
-        await deleteDoc(doc(db, "calendar_dates", calendarToDelete.id));
+        await deleteDoc(doc(db, "calendar_dates2", calendarToDelete.id));
         setCalendar((prevCalendar) =>
           prevCalendar.filter((calendarItem) => calendarItem.count !== count)
         );
@@ -107,7 +107,7 @@ function CalendarDates() {
       for (const count of selectedRows) {
         const calendarToDelete = calendar.find((calendarItem) => calendarItem.count === count);
         if (calendarToDelete) {
-          await deleteDoc(doc(db, "calendar_dates", calendarToDelete.id));
+          await deleteDoc(doc(db, "calendar_dates2", calendarToDelete.id));
         } else {
           console.error("Calendar with count", count, "not found.");
         }
@@ -158,7 +158,7 @@ function CalendarDates() {
                 <th>Select</th>
                 <th>Count</th>
                 <th>Date</th>
-                <th>Service Id</th>
+                <th>exception_type</th>
                 <th>Modify</th>
               </tr>
             </thead>
@@ -174,7 +174,7 @@ function CalendarDates() {
                   </td>
                   <td className="text-secondary">{calendarItem.count}</td>
                   <td>{calendarItem.date}</td>
-                  <td>{calendarItem.service_Id}</td>
+                  <td>{calendarItem.exception_type}</td>
                   <td>
                     <Button
                       variant="primary"
@@ -225,14 +225,14 @@ function CalendarDates() {
                   />
                 </Form.Group>
                 <Form.Group>
-                  <Form.Label>New Service ID</Form.Label>
+                  <Form.Label>exception_type</Form.Label>
                   <Form.Control
                     type="text"
-                    value={updatedCalendarInfo.service_Id}
+                    value={updatedCalendarInfo.exception_type}
                     onChange={(e) =>
                       setUpdatedCalendarInfo({
                         ...updatedCalendarInfo,
-                        service_Id: e.target.value,
+                        exception_type: e.target.value,
                       })
                     }
                   />

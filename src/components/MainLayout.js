@@ -20,7 +20,8 @@ import {
   FaRoute,
   FaShapes,
   FaUpload,
-  FaUserLock,
+  FaBuilding,
+  FaBusSimple, 
 } from "react-icons/fa6";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -34,6 +35,7 @@ import {
   FaStop,
   FaStopCircle,
   FaTripadvisor,
+  FaBusAlt,
 } from "react-icons/fa";
 import {
   BiCategoryAlt,
@@ -130,21 +132,21 @@ const MainLayout = () => {
               icon: <FaMobileAlt className="fs-4" />,
               label: "Admin For Mobile",
               children: [
-                {
-                  key: "ManageMobileData",
-                  icon: <FaDatabase className="fs-4" />,
-                  label: "Manage Mobile Data",
-                },
+                // {
+                //   key: "ManageMobileData",
+                //   icon: <FaDatabase className="fs-4" />,
+                //   label: "Manage Mobile Data",
+                // },
                 {
                   key: "upload_mobile_data",
                   icon: <FaUpload className="fs-4" />,
                   label: "Upload Mobile Data",
                 },
-                {
-                  key: "DeleteMobileData",
-                  icon: <MdOutlineDeleteSweep className="fs-4" />,
-                  label: "Delete Mobile Data",
-                },
+                // {
+                //   key: "DeleteMobileData",
+                //   icon: <MdOutlineDeleteSweep className="fs-4" />,
+                //   label: "Delete Mobile Data",
+                // },
               ],
             },
             {
@@ -267,6 +269,25 @@ const MainLayout = () => {
                       icon: <FaTripadvisor className="fs-4" />,
                       label: "Trips_02",
                     },
+                  ],
+                },
+
+                {
+                  key: "Agency",
+                  icon: <FaBuilding  className="fs-4" />,
+                  label: "Agency",
+
+                  children: [
+                    {
+                      key: "AllData/Agency1",
+                      icon: <FaBusSimple className="fs-4" />,
+                      label: "Agency1",
+                    },
+                     {
+                       key: "AllData/Agency2",
+                       icon: <FaBusAlt className="fs-4" />,
+                       label: "Agency2",
+                     },
                   ],
                 },
               ],

@@ -47,6 +47,8 @@ import { CalendarAttributesWeb } from "./pages/All_Web_Data/calendar_attributes_
 import { CalendarDatesWeb } from "./pages/All_Web_Data/calendar_dates_web";
 import { RoutesWebData } from "./pages/All_Web_Data/routes_web_data";
 import { UploadMobileData } from "./pages/UploadGTFSMobileData";
+import AgencyData from "./pages/AllData/AgencyData";
+import AgencyData2 from "./pages/AllData/AgencyData2";
 function App() {
   return (
     <Router>
@@ -93,6 +95,9 @@ function App() {
           <Route path="AllData/Stops_Times2" element={<StopsTime2 />} />
           <Route path="AllData/Trips1" element={<Trips1 />} />
           <Route path="AllData/Trips2" element={<Trips2 />} />
+          <Route path="AllData/Agency1" element={<AgencyData />} />
+          <Route path="AllData/Agency2" element={<AgencyData2 />} />
+
           <Route path="/admin/Vehicle-Tracking" element={<VehicleTracking/>}/>
           <Route path="/admin/send-notification" element={<NotificationForm/>}/>
           <Route path="/admin/Partners-Request" element={<PartnersRequest/>}/>
