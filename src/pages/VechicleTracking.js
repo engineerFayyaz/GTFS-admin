@@ -6,13 +6,16 @@ import { getFirestore, collection, getDocs } from "firebase/firestore";
 function PublicTransitStops() {
   const [stops, setStops] = useState([]);
   const [routes, setRoutes] = useState([]);
+  const [shapes, setShapes] = useState([]);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [map, setMap] = useState(null); // State to hold reference to the map
+  const [map, setMap] = useState(null);
+  const [mapsApi, setMapsApi] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const db = getFirestore();
+
         // Fetch stops
         const stopsCollection = await getDocs(collection(db, "stops2"));
         const stopsData = stopsCollection.docs.map((doc) => ({
@@ -28,6 +31,16 @@ function PublicTransitStops() {
           ...doc.data(),
         }));
         setRoutes(routesData);
+
+        // Fetch shapes
+        const shapesCollection = await getDocs(collection(db, "shapes2"));
+        const shapesData = shapesCollection.docs.map((doc) => ({
+          id: doc.id,
+          shapeId: doc.data().shape_id,
+          lat: doc.data().shape_pt_lat,
+          lng: doc.data().shape_pt_lon,
+        }));
+        setShapes(shapesData);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -46,30 +59,13 @@ function PublicTransitStops() {
 
   const upcomingRoutes = routes
     .filter((route) => {
-      // Filter routes based on their scheduled time
-      // For demonstration, let's assume routes are scheduled in the next 2 hours
       const scheduledTime = new Date(route.scheduled_time);
       return scheduledTime > currentTime && scheduledTime - currentTime <= 7200000; // 2 hours in milliseconds
     })
-    .sort((a, b) => {
-      // Sort routes by scheduled time
-      return new Date(a.scheduled_time) - new Date(b.scheduled_time);
-    })
-    .slice(0, 5); // Take the first 5 upcoming routes
+    .sort((a, b) => new Date(a.scheduled_time) - new Date(b.scheduled_time))
+    .slice(0, 5);
 
   const renderUpcomingRoutes = () => {
-    // Filter routes based on their scheduled time
-    const filteredRoutes = routes.filter((route) => {
-      const scheduledTime = new Date(route.scheduled_time);
-      return scheduledTime > currentTime && scheduledTime - currentTime <= 7200000; // 2 hours in milliseconds
-    });
-
-    // Sort filtered routes by scheduled time
-    const sortedRoutes = filteredRoutes.sort((a, b) => new Date(a.scheduled_time) - new Date(b.scheduled_time));
-
-    // Take the first 5 upcoming routes
-    const upcomingRoutes = sortedRoutes.slice(0, 5);
-
     if (upcomingRoutes.length === 0) {
       return <p>No routes available</p>;
     }
@@ -95,8 +91,8 @@ function PublicTransitStops() {
           padding: "5px",
           borderRadius: "50%",
           transform: "translate(-50%, -50%)",
-          position: "absolute", // Ensure proper positioning of the marker
-          zIndex: 1, // Ensure the marker is above the map
+          position: "absolute",
+          zIndex: 1,
         }}
       >
         {stop.stop_name}
@@ -104,37 +100,64 @@ function PublicTransitStops() {
     ));
   };
 
-  // Calculate bounds for highlighted routes
+  // Suppress ESLint warning for 'google' variable
+  /* eslint-disable no-undef */
+  const renderShapes = () => {
+    if (mapsApi && map && shapes) {
+      if (google && google.maps && google.maps.marker && google.maps.marker.AdvancedMarkerElement) {
+        shapes.forEach((shape) => {
+          new google.maps.marker.AdvancedMarkerElement({
+            position: { lat: parseFloat(shape.lat), lng: parseFloat(shape.lng) },
+            map,
+            title: shape.shapeId
+          });
+        });
+      } else {
+        console.error("Error: google.maps.marker.AdvancedMarkerElement is not available.");
+      }
+    } else {
+      console.error("Error: Necessary dependencies are not available.");
+    }
+  };
+  
+  
+  /* eslint-enable no-undef */
+  
   const calculateBounds = () => {
-    if (map && upcomingRoutes.length > 0) {
-      const bounds = new window.google.maps.LatLngBounds();
+    if (map && mapsApi && upcomingRoutes.length > 0) {
+      const bounds = new mapsApi.LatLngBounds();
       upcomingRoutes.forEach((route) => {
         route.coordinates.forEach((coordinate) => {
-          bounds.extend(coordinate);
+          bounds.extend(new mapsApi.LatLng(coordinate.lat, coordinate.lon));
         });
       });
       map.fitBounds(bounds);
     }
   };
 
+  useEffect(() => {
+    if (mapsApi && map) {
+      renderShapes();
+      calculateBounds();
+    }
+  }, [mapsApi, map, shapes, upcomingRoutes]);
+
   return (
     <Container>
-       <div className="text-center mt-3 ">
+      <div className="text-center mt-3">
         <h2 className="text-uppercase p-2 page-title">Public Transit Stops</h2>
-        </div>
+      </div>
       <Row>
         <Col md={8}>
           <div style={{ height: "80vh", width: "100%" }}>
             <GoogleMapReact
-              bootstrapURLKeys={{
-                key: "AIzaSyBDDCT1y6vpC4jJ3_LGzRnMF6OclbkDEfU", // Replace with your Google Maps API key
-              }}
+              bootstrapURLKeys={{ key: "AIzaSyBDDCT1y6vpC4jJ3_LGzRnMF6OclbkDEfU" }}
               defaultCenter={{ lat: 41.9028, lng: 12.4964 }}
               defaultZoom={10}
-              yesIWantToUseGoogleMapApiInternals // Allow access to Google Maps API internals
-              onGoogleApiLoaded={({ map }) => {
+              yesIWantToUseGoogleMapApiInternals
+              onGoogleApiLoaded={({ map, maps }) => {
                 setMap(map);
-                calculateBounds();
+                setMapsApi(maps);
               }}
             >
               {renderMarkers()}
