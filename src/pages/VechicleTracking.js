@@ -5,29 +5,31 @@ import { getFirestore, collection, getDocs } from "firebase/firestore";
 
 function PublicTransitStops() {
   const [stops, setStops] = useState([]);
-  const [routes, setRoutes] = useState([]);
+  const [trips, setTrips] = useState([]);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [map, setMap] = useState(null); // State to hold reference to the map
+  const [map, setMap] = useState(null);
+  const [mapsApi, setMapsApi] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const db = getFirestore();
+
         // Fetch stops
-        const stopsCollection = await getDocs(collection(db, "stops2"));
+        const stopsCollection = await getDocs(collection(db, "stops"));
         const stopsData = stopsCollection.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
         setStops(stopsData);
 
-        // Fetch routes
-        const routesCollection = await getDocs(collection(db, "routes"));
-        const routesData = routesCollection.docs.map((doc) => ({
+        // Fetch trips
+        const tripsCollection = await getDocs(collection(db, "trips"));
+        const tripsData = tripsCollection.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
-        setRoutes(routesData);
+        setTrips(tripsData);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -44,106 +46,80 @@ function PublicTransitStops() {
     return () => clearInterval(interval);
   }, []);
 
-  const upcomingRoutes = routes
-    .filter((route) => {
-      // Filter routes based on their scheduled time
-      // For demonstration, let's assume routes are scheduled in the next 2 hours
-      const scheduledTime = new Date(route.scheduled_time);
-      return scheduledTime > currentTime && scheduledTime - currentTime <= 7200000; // 2 hours in milliseconds
-    })
-    .sort((a, b) => {
-      // Sort routes by scheduled time
-      return new Date(a.scheduled_time) - new Date(b.scheduled_time);
-    })
-    .slice(0, 5); // Take the first 5 upcoming routes
+  const renderUpcomingBuses = (stopId) => {
+    const upcomingBuses = trips
+      .filter((trip) => {
+        const stopTime = new Date(trip.stop_times[stopId]);
+        return stopTime > currentTime && stopTime - currentTime <= 7200000; // 2 hours in milliseconds
+      })
+      .sort((a, b) => new Date(a.stop_times[stopId]) - new Date(b.stop_times[stopId]))
+      .slice(0, 5);
 
-  const renderUpcomingRoutes = () => {
-    // Filter routes based on their scheduled time
-    const filteredRoutes = routes.filter((route) => {
-      const scheduledTime = new Date(route.scheduled_time);
-      return scheduledTime > currentTime && scheduledTime - currentTime <= 7200000; // 2 hours in milliseconds
-    });
-
-    // Sort filtered routes by scheduled time
-    const sortedRoutes = filteredRoutes.sort((a, b) => new Date(a.scheduled_time) - new Date(b.scheduled_time));
-
-    // Take the first 5 upcoming routes
-    const upcomingRoutes = sortedRoutes.slice(0, 5);
-
-    if (upcomingRoutes.length === 0) {
-      return <p>No routes available</p>;
+    if (upcomingBuses.length === 0) {
+      return "No upcoming buses";
     }
 
-    return upcomingRoutes.map((route) => (
-      <div key={route.id}>
-        <p>Route Name: {route.route_name}</p>
-        <p>Scheduled Time: {new Date(route.scheduled_time).toLocaleTimeString()}</p>
-        {/* Add other route information here */}
-      </div>
-    ));
+    return upcomingBuses.map((bus) => (
+      `<div key=${bus.id}>
+        <p>Bus: ${bus.route_id}</p>
+        <p>Arrival Time: ${new Date(bus.stop_times[stopId]).toLocaleTimeString()}</p>
+      </div>`
+    )).join('');
   };
 
-  const renderMarkers = () => {
-    return stops.map((stop) => (
-      <div
-        key={stop.id}
-        lat={parseFloat(stop.stop_lat)}
-        lng={parseFloat(stop.stop_lon)}
-        style={{
-          color: "white",
-          background: "blue",
-          padding: "5px",
-          borderRadius: "50%",
-          transform: "translate(-50%, -50%)",
-          position: "absolute", // Ensure proper positioning of the marker
-          zIndex: 1, // Ensure the marker is above the map
-        }}
-      >
-        {stop.stop_name}
-      </div>
-    ));
-  };
-
-  // Calculate bounds for highlighted routes
-  const calculateBounds = () => {
-    if (map && upcomingRoutes.length > 0) {
-      const bounds = new window.google.maps.LatLngBounds();
-      upcomingRoutes.forEach((route) => {
-        route.coordinates.forEach((coordinate) => {
-          bounds.extend(coordinate);
-        });
+  const renderMarkers = (map, mapsApi) => {
+    stops.forEach((stop) => {
+      const infoWindow = new mapsApi.InfoWindow({
+        content: `<div><strong>${stop.stop_name}</strong><div id="info-${stop.id}">Loading...</div></div>`,
       });
-      map.fitBounds(bounds);
-    }
+
+      const marker = new mapsApi.Marker({
+        position: { lat: parseFloat(stop.stop_lat), lng: parseFloat(stop.stop_lon) },
+        map,
+        title: stop.stop_name,
+      });
+
+      marker.addListener("click", () => {
+        infoWindow.open(map, marker);
+        const infoContent = document.getElementById(`info-${stop.id}`);
+        if (infoContent) {
+          infoContent.innerHTML = renderUpcomingBuses(stop.id);
+        }
+      });
+    });
   };
+
+  useEffect(() => {
+    if (mapsApi && map) {
+      renderMarkers(map, mapsApi);
+    }
+  }, [mapsApi, map, stops, trips, currentTime]);
 
   return (
     <Container>
-       <div className="text-center mt-3 ">
+      <div className="text-center mt-3">
         <h2 className="text-uppercase p-2 page-title">Public Transit Stops</h2>
-        </div>
+      </div>
       <Row>
         <Col md={8}>
           <div style={{ height: "80vh", width: "100%" }}>
             <GoogleMapReact
-              bootstrapURLKeys={{
-                key: "AIzaSyBDDCT1y6vpC4jJ3_LGzRnMF6OclbkDEfU", // Replace with your Google Maps API key
-              }}
+              bootstrapURLKeys={{ key: "AIzaSyBDDCT1y6vpC4jJ3_LGzRnMF6OclbkDEfU", libraries: ['places'] }}
               defaultCenter={{ lat: 41.9028, lng: 12.4964 }}
-              defaultZoom={10}
-              yesIWantToUseGoogleMapApiInternals // Allow access to Google Maps API internals
-              onGoogleApiLoaded={({ map }) => {
+              defaultZoom={20}
+              yesIWantToUseGoogleMapApiInternals
+              onGoogleApiLoaded={({ map, maps }) => {
                 setMap(map);
-                calculateBounds();
+                setMapsApi(maps);
               }}
             >
-              {renderMarkers()}
+              {/* Markers are rendered by the useEffect hook */}
             </GoogleMapReact>
           </div>
         </Col>
         <Col md={4}>
-          <h2 className="mt-3">Upcoming Routes Information</h2>
-          {renderUpcomingRoutes()}
+          <h2 className="mt-3">Upcoming Buses Information</h2>
+          {/* You can also add a list of upcoming buses for all stops here */}
         </Col>
       </Row>
     </Container>

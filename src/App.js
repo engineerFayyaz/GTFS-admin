@@ -48,6 +48,8 @@ import RoutesMobileData from "./pages/All_Mobile_Data/Routes_data";
 import ShapesAppData from "./pages/All_Mobile_Data/Shapes_Data";
 import StopesAppData from "./pages/All_Mobile_Data/Stops_Data";
 import TripsAppData from "./pages/All_Mobile_Data/Trips_Data";
+import AgencyData from "./pages/AllData/AgencyData";
+import AgencyData2 from "./pages/AllData/AgencyData2";
 function App() {
   return (
     <Router>
@@ -80,7 +82,9 @@ function App() {
           <Route path="brand/:id" element={<Addbrand />} />
           <Route path="list-product" element={<Productlist />} />
 
-
+          <Route path="AllData/Agency1" element={<AgencyData />} />
+          <Route path="AllData/Agency2" element={<AgencyData2 />} />
+          
           <Route path="All_Mobile_Data/Calendar_Mobile" element={<CalendarMobile />} />
           <Route path="All_Mobile_Data/Calendar_Dates_Mobile" element={<CalendarDates />} />
           <Route path="All_Mobile_Data/Routes_Mobile" element={<RoutesMobileData />} />
