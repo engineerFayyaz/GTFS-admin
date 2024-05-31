@@ -160,7 +160,7 @@ const MainLayout = () => {
               ],
             },
             {
-              key: "All Routes  Data",
+              key: "All Routes Mobile Data",
               icon: <FaMapLocation className="fs-4" />,
               label: "All Routes Mobile Data",
               children: [
@@ -171,102 +171,88 @@ const MainLayout = () => {
 
                   children: [
                     {
-                      key: "AllData/calendar",
+                      key: "All_Mobile_Data/Calendar_Mobile",
                       icon: <FaCalendarPlus className="fs-4" />,
-                      label: "Calendar_01",
+                      label: "Calendar Data",
                     },
+                    // {
+                    //   key: "AllData/Calendar2",
+                    //   icon: <FaRegCalendarCheck className="fs-4" />,
+                    //   label: "Calendar_02",
+                    // },
                     {
-                      key: "AllData/Calendar2",
-                      icon: <FaRegCalendarCheck className="fs-4" />,
-                      label: "Calendar_02",
-                    },
-                    {
-                      key: "AllData/Calendar_dates",
+                      key: "All_Mobile_Data/Calendar_Dates_Mobile",
                       icon: <FaCalendarDays className="fs-4" />,
                       label: "C_dates",
                     },
                   ],
                 },
                 {
-                  key: "Routes",
+                  key: "Routes App",
                   icon: <FaRoute className="fs-4" />,
                   label: "Routes",
 
                   children: [
                     {
-                      key: "AllData/RoutesData",
+                      key: "All_Mobile_Data/Routes_Mobile",
                       icon: <FaRoute className="fs-4" />,
-                      label: "Routes_01",
-                    },
-                    {
-                      key: "AllData/RoutesData2",
-                      icon: <BsMap className="fs-4" />,
-                      label: "Routes_02",
+                      label: "Routes Data",
                     },
                   ],
                 },
                 {
-                  key: "Shapes",
+                  key: "Shapes App",
                   icon: <FaShapes className="fs-4" />,
                   label: "Shapes",
 
                   children: [
                     {
-                      key: "AllData/Shapes",
+                      key: "All_Mobile_Data/Shapes_Mobile",
                       icon: <BiSolidShapes className="fs-4" />,
-                      label: "Shapes_01",
+                      label: "Shapes Data",
                     },
-                    {
-                      key: "AllData/Shapes2",
-                      icon: <BiSolidShapes className="fs-4" />,
-                      label: "Shapes_02",
-                    },
+                    // {
+                    //   key: "AllData/Shapes2",
+                    //   icon: <BiSolidShapes className="fs-4" />,
+                    //   label: "Shapes_02",
+                    // },
                   ],
                 },
                 {
-                  key: "Stops",
+                  key: "Stops App",
                   icon: <FaStop className="fs-4" />,
                   label: "Stops",
-
                   children: [
                     {
-                      key: "AllData/Stops1",
+                      key: "All_Mobile_Data/Stops_Mobile",
                       icon: <BsStop className="fs-4" />,
-                      label: "Stops_01",
+                      label: "Stops Data",
                     },
+
                     {
-                      key: "AllData/Stops2",
-                      icon: <FaStopCircle className="fs-4" />,
-                      label: "Stops_02",
-                    },
-                    {
-                      key: "AllData/Stops_Times1",
+                      key: "All_Mobile_Data/Stops_Time_1_Mobile",
                       icon: <BiSolidTime className="fs-4" />,
                       label: "S_times-01",
                     },
                     {
-                      key: "AllData/Stops_Times2",
+                      key: "All_Mobile_Data/Stops_Time_2_Mobile",
                       icon: <FaBusinessTime className="fs-4" />,
                       label: "S_times-02",
                     },
                   ],
                 },
                 {
-                  key: "Trips",
+                  key: "Trips Mobile",
                   icon: <FaTripadvisor className="fs-4" />,
                   label: "Trips",
 
                   children: [
                     {
-                      key: "AllData/Trips1",
+                      key: "All_Mobile_Data/Trips_Mobile",
                       icon: <FaTripadvisor className="fs-4" />,
-                      label: "Trips_01",
+                      label: "Trips Data",
                     },
-                    {
-                      key: "AllData/Trips2",
-                      icon: <FaTripadvisor className="fs-4" />,
-                      label: "Trips_02",
-                    },
+
                   ],
                 },
               ],
@@ -287,16 +273,16 @@ const MainLayout = () => {
                       icon: <FaCalendarPlus className="fs-4" />,
                       label: "Calendar Web",
                     },
-                    {
-                      key: "All_Web_Data/Calendar_Attributes_Web",
-                      icon: <FaRegCalendarCheck className="fs-4" />,
-                      label: "Calendar Attributes",
-                    },
-                    {
-                      key: "All_Web_Data/Calendar_Dates_Web",
-                      icon: <FaCalendarDays className="fs-4" />,
-                      label: "C_dates",
-                    },
+                    // {
+                    //   key: "All_Web_Data/Calendar_Attributes_Web",
+                    //   icon: <FaRegCalendarCheck className="fs-4" />,
+                    //   label: "Calendar Attributes",
+                    // },
+                    // {
+                    //   key: "All_Web_Data/Calendar_Dates_Web",
+                    //   icon: <FaCalendarDays className="fs-4" />,
+                    //   label: "C_dates",
+                    // },
                   ],
                 },
                 {
@@ -310,11 +296,6 @@ const MainLayout = () => {
                       icon: <FaRoute className="fs-4" />,
                       label: "Routes Web",
                     },
-                    {
-                      key: "AllData/RoutesData2",
-                      icon: <BsMap className="fs-4" />,
-                      label: "Routes_02",
-                    },
                   ],
                 },
                 {
@@ -324,14 +305,9 @@ const MainLayout = () => {
 
                   children: [
                     {
-                      key: "AllData/Shapes",
+                      key: "All_Web_Data/Shapes_Time_Web",
                       icon: <BiSolidShapes className="fs-4" />,
-                      label: "Shapes_01",
-                    },
-                    {
-                      key: "AllData/Shapes2",
-                      icon: <BiSolidShapes className="fs-4" />,
-                      label: "Shapes_02",
+                      label: "Shapes Data",
                     },
                   ],
                 },
@@ -342,25 +318,25 @@ const MainLayout = () => {
 
                   children: [
                     {
-                      key: "AllData/Stops1",
+                      key: "All_Web_Data/Stopes_Web",
                       icon: <BsStop className="fs-4" />,
-                      label: "Stops_01",
+                      label: "Stops_Data",
                     },
+                    // {
+                    //   key: "AllData/Stops2",
+                    //   icon: <FaStopCircle className="fs-4" />,
+                    //   label: "Stops_02",
+                    // },
                     {
-                      key: "AllData/Stops2",
-                      icon: <FaStopCircle className="fs-4" />,
-                      label: "Stops_02",
-                    },
-                    {
-                      key: "AllData/Stops_Times1",
+                      key: "All_Web_Data/Stops_Time_Web",
                       icon: <BiSolidTime className="fs-4" />,
-                      label: "S_times-01",
+                      label: "Stop_times",
                     },
-                    {
-                      key: "AllData/Stops_Times2",
-                      icon: <FaBusinessTime className="fs-4" />,
-                      label: "S_times-02",
-                    },
+                    // {
+                    //   key: "AllData/Stops_Times2",
+                    //   icon: <FaBusinessTime className="fs-4" />,
+                    //   label: "S_times-02",
+                    // },
                   ],
                 },
                 {
@@ -370,14 +346,9 @@ const MainLayout = () => {
 
                   children: [
                     {
-                      key: "AllData/Trips1",
+                      key: "All_Web_Data/Trips_Web",
                       icon: <FaTripadvisor className="fs-4" />,
-                      label: "Trips_01",
-                    },
-                    {
-                      key: "AllData/Trips2",
-                      icon: <FaTripadvisor className="fs-4" />,
-                      label: "Trips_02",
+                      label: "Trips Data",
                     },
                   ],
                 },

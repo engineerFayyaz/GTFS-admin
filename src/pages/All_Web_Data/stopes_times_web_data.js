@@ -16,20 +16,21 @@ import {
   Col,
   Modal,
 } from "react-bootstrap/";
-import { db } from "../../Config";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-function StopsTime1() {
+function StopsTimeWeb() {
   const [stops, setStops] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editedStop, setEditedStop] = useState(null);
   const [updatedStopInfo, setUpdatedStopInfo] = useState({
-    count: "",
+    stop_id: "",
     arrival_time: "",
     departure_time: "",
+    drop_off_type: "",
     pickup_type: "",
-    stop_id: "",
+    shape_dist_traveled: "",
+    stop_headsign: "",
     stop_sequence: "",
     trip_id: "",
   });
@@ -39,21 +40,35 @@ function StopsTime1() {
   useEffect(() => {
     const getStops = async () => {
       try {
-        const db = getFirestore();
-        const stopsCollection = await getDocs(collection(db, "stop_times"));
-        const stopsData = stopsCollection.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+        const db = getFirestore(); // Initialize Firestore directly here
+        const stopsCollection = await getDocs(collection(db, "stop_times-web-data"));
+        const stopsData = stopsCollection.docs.map((doc) => {
+          const data = doc.data();
+          // Remove double quotes from all string properties
+          const cleanedData = {};
+          for (const key in data) {
+            if (typeof data[key] === "string") {
+              cleanedData[key] = data[key].replace(/"/g, "");
+            } else {
+              cleanedData[key] = data[key];
+            }
+          }
+          return {
+            id: doc.id,
+            ...cleanedData,
+            selected: false,
+          };
+        });
         setStops(stopsData);
-        toast.success("Data saved successfully");
+        toast.success("Data fetched successfully");
       } catch (error) {
         console.error("Error fetching stops:", error);
       }
     };
-
+  
     getStops();
   }, []);
+  
 
   const handleEdit = (stop) => {
     setEditedStop(stop);
@@ -65,11 +80,13 @@ function StopsTime1() {
     setEditedStop(null);
     setShowModal(false);
     setUpdatedStopInfo({
-      count: "",
+      stop_id: "",
       arrival_time: "",
       departure_time: "",
+      drop_off_type: "",
       pickup_type: "",
-      stop_id: "",
+      shape_dist_traveled: "",
+      stop_headsign: "",
       stop_sequence: "",
       trip_id: "",
     });
@@ -78,7 +95,7 @@ function StopsTime1() {
   const handleSaveChanges = async () => {
     try {
       const db = getFirestore();
-      const stopRef = doc(db, "stop_times", editedStop.id);
+      const stopRef = doc(db, "stop_times-web-data", editedStop.id);
       await updateDoc(stopRef, updatedStopInfo);
       const updatedStops = stops.map((stop) =>
         stop.id === editedStop.id ? { ...stop, ...updatedStopInfo } : stop
@@ -87,57 +104,67 @@ function StopsTime1() {
       handleCloseModal();
       toast.success("Stop times updated successfully");
     } catch (error) {
-      toast.error("Error while updating stop times: ", error);
-      console.log("Error while updating stop times: ", error);
+      toast.error("Error while updating stop times: " + error.message);
+      console.error("Error while updating stop times: ", error);
     }
   };
 
-  const handleDelete = async (index) => {
-    const stop = stops[index];
+  const handleSelectedDelete = async () => {
+    const selectedIds = selectedStops.map((stop) => stop.id);
     try {
       const db = getFirestore();
-      await deleteDoc(doc(db, "stop_times", stop.id));
-      setStops((prevStops) => prevStops.filter((_, i) => i !== index));
-      console.log("Deleted successfully:", stop);
-    } catch (error) {
-      console.error("Error deleting stop:", error);
-    }
-  };
-
-  const handleSelectAll = () => {
-    if (selectAll) {
-      setSelectedStops([]);
-      setSelectAll(false);
-    } else {
-      const allStopIds = stops.map((stop) => stop.id);
-      setSelectedStops(allStopIds);
-      setSelectAll(true);
-    }
-  };
-
-  const handleSelectStop = (id) => {
-    if (selectedStops.includes(id)) {
-      setSelectedStops(selectedStops.filter((stopId) => stopId !== id));
-    } else {
-      setSelectedStops([...selectedStops, id]);
-    }
-  };
-
-  const handleDeleteSelected = async () => {
-    try {
-      const db = getFirestore();
-      for (const stopId of selectedStops) {
-        await deleteDoc(doc(db, "stop_times", stopId));
-      }
-      setStops((prevStops) =>
-        prevStops.filter((stop) => !selectedStops.includes(stop.id))
+      await Promise.all(
+        selectedIds.map((id) => deleteDoc(doc(db, "stop_times-web-data", id)))
       );
+      const updatedStops = stops.filter(
+        (stop) => !selectedIds.includes(stop.id)
+      );
+      setStops(updatedStops);
       setSelectedStops([]);
-      setSelectAll(false);
       toast.success("Selected stops deleted successfully");
     } catch (error) {
-      console.error("Error deleting selected stops:", error);
+      console.error("Error deleting stops:", error);
       toast.error("Error deleting selected stops");
+    }
+  };
+
+  const handleToggleAll = () => {
+    setSelectAll(!selectAll);
+    if (!selectAll) {
+      setSelectedStops([...stops]);
+    } else {
+      setSelectedStops([]);
+    }
+  };
+
+  const handleToggleSelect = (id) => {
+    const index = selectedStops.findIndex((stop) => stop.id === id);
+    if (index === -1) {
+      const stop = stops.find((stop) => stop.id === id);
+      setSelectedStops([...selectedStops, stop]);
+    } else {
+      const updatedSelectedStops = [...selectedStops];
+      updatedSelectedStops.splice(index, 1);
+      setSelectedStops(updatedSelectedStops);
+    }
+  };
+
+  const handleDelete = async (count) => {
+    try {
+      const db = getFirestore();
+      const stopToDelete = stops.find((stop) => stop.count === count);
+      if (!stopToDelete) {
+        toast.error("Stop not found for count: " + count);
+        return;
+      }
+      await deleteDoc(doc(db, "stop_times-web-data", stopToDelete.id));
+      const updatedStops = stops.filter((stop) => stop.count !== count);
+      setStops(updatedStops);
+      setSelectedStops(selectedStops.filter((stop) => stop.count !== count));
+      toast.success("Stop deleted successfully for count: " + count);
+    } catch (error) {
+      console.error("Error deleting stop:", error);
+      toast.error("Error deleting stop for count: " + count);
     }
   };
 
@@ -148,16 +175,23 @@ function StopsTime1() {
         <div className="row">
           <div className="col-lg-12 p-3">
             <div className="text-center">
-              <h5 className="text-uppercase p-2 page-title">Stops Time 1</h5>
+              <h5 className="text-uppercase p-2 page-title">Stops Times Data</h5>
             </div>
           </div>
-          {selectedStops.length > 0 && (
-        <div className="container-fluid d-flex justify-content-end">
-          <Button variant="danger" onClick={handleDeleteSelected}>
-            Delete Selected
-          </Button>
-        </div>
-      )}
+
+          <div className="col-lg-12 p-3">
+            <Button
+              variant="danger"
+              onClick={handleSelectedDelete}
+              disabled={selectedStops.length === 0}
+            >
+              Delete Selected
+            </Button>
+
+            <Button variant="info" onClick={handleToggleAll} className="ms-2">
+              {selectAll ? "Unselect All" : "Select All"}
+            </Button>
+          </div>
           <Table striped bordered hover responsive className="overflow-scroll">
             <thead>
               <tr>
@@ -165,43 +199,48 @@ function StopsTime1() {
                   <Form.Check
                     type="checkbox"
                     checked={selectAll}
-                    onChange={handleSelectAll}
+                    onChange={handleToggleAll}
                   />
                 </th>
-                <th>Count</th>
+                <th>Stop ID</th>
                 <th>Arrival Time</th>
                 <th>Departure Time</th>
-                <th>Stop Id</th>
+                <th>Drop Off Type</th>
                 <th>Pickup Type</th>
+                <th>Shape Distance Traveled</th>
+                <th>Stop Headsign</th>
                 <th>Stop Sequence</th>
-                <th>Trip Id</th>
+                <th>Trip ID</th>
                 <th>Modify</th>
               </tr>
             </thead>
             <tbody>
-              {stops.map((stop, index) => (
-                <tr key={index}>
+              {stops.map((stop) => (
+                <tr key={stop.id}>
                   <td>
                     <Form.Check
                       type="checkbox"
-                      checked={selectedStops.includes(stop.id)}
-                      onChange={() => handleSelectStop(stop.id)}
+                      checked={selectedStops.some((s) => s.id === stop.id)}
+                      onChange={() => handleToggleSelect(stop.id)}
                     />
                   </td>
-                  <td className="text-secondary">
-                    <b>{stop.count}</b>
-                  </td>
+                  <td>{stop.stop_id}</td>
                   <td>{stop.arrival_time}</td>
                   <td>{stop.departure_time}</td>
-                  <td>{stop.stop_id}</td>
+                  <td>{stop.drop_off_type}</td>
                   <td>{stop.pickup_type}</td>
+                  <td>{stop.shape_dist_traveled}</td>
+                  <td>{stop.stop_headsign}</td>
                   <td>{stop.stop_sequence}</td>
                   <td>{stop.trip_id}</td>
                   <td className="d-flex gap-2">
                     <Button variant="primary" onClick={() => handleEdit(stop)}>
                       Edit
                     </Button>
-                    <Button variant="danger" onClick={() => handleDelete(index)}>
+                    <Button
+                      variant="danger"
+                      onClick={() => handleDelete(stop.count)}
+                    >
                       Delete
                     </Button>
                   </td>
@@ -228,20 +267,7 @@ function StopsTime1() {
             <Row className="gap-3">
               <Col>
                 <Form.Group>
-                  <Form.Label>New Count</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={updatedStopInfo.count}
-                    onChange={(e) =>
-                      setUpdatedStopInfo({
-                        ...updatedStopInfo,
-                        count: e.target.value,
-                      })
-                    }
-                  />
-                </Form.Group>
-                <Form.Group>
-                  <Form.Label>New Stop Id</Form.Label>
+                  <Form.Label>Stop ID</Form.Label>
                   <Form.Control
                     type="text"
                     value={updatedStopInfo.stop_id}
@@ -254,7 +280,7 @@ function StopsTime1() {
                   />
                 </Form.Group>
                 <Form.Group>
-                  <Form.Label>New Arrival Time</Form.Label>
+                  <Form.Label>Arrival Time</Form.Label>
                   <Form.Control
                     type="text"
                     value={updatedStopInfo.arrival_time}
@@ -267,7 +293,7 @@ function StopsTime1() {
                   />
                 </Form.Group>
                 <Form.Group>
-                  <Form.Label>New Departure Time</Form.Label>
+                  <Form.Label>Departure Time</Form.Label>
                   <Form.Control
                     type="text"
                     value={updatedStopInfo.departure_time}
@@ -279,10 +305,21 @@ function StopsTime1() {
                     }
                   />
                 </Form.Group>
-              </Col>
-              <Col>
                 <Form.Group>
-                  <Form.Label>New Pickup Type</Form.Label>
+                  <Form.Label>Drop Off Type</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={updatedStopInfo.drop_off_type}
+                    onChange={(e) =>
+                      setUpdatedStopInfo({
+                        ...updatedStopInfo,
+                        drop_off_type: e.target.value,
+                      })
+                    }
+                  />
+                </Form.Group>
+                <Form.Group>
+                  <Form.Label>Pickup Type</Form.Label>
                   <Form.Control
                     type="text"
                     value={updatedStopInfo.pickup_type}
@@ -294,8 +331,36 @@ function StopsTime1() {
                     }
                   />
                 </Form.Group>
+              </Col>
+              <Col>
                 <Form.Group>
-                  <Form.Label>New Stop Sequence</Form.Label>
+                  <Form.Label>Shape Distance Traveled</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={updatedStopInfo.shape_dist_traveled}
+                    onChange={(e) =>
+                      setUpdatedStopInfo({
+                        ...updatedStopInfo,
+                        shape_dist_traveled: e.target.value,
+                      })
+                    }
+                  />
+                </Form.Group>
+                <Form.Group>
+                  <Form.Label>Stop Headsign</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={updatedStopInfo.stop_headsign}
+                    onChange={(e) =>
+                      setUpdatedStopInfo({
+                        ...updatedStopInfo,
+                        stop_headsign: e.target.value,
+                      })
+                    }
+                  />
+                </Form.Group>
+                <Form.Group>
+                  <Form.Label>Stop Sequence</Form.Label>
                   <Form.Control
                     type="text"
                     value={updatedStopInfo.stop_sequence}
@@ -308,7 +373,7 @@ function StopsTime1() {
                   />
                 </Form.Group>
                 <Form.Group>
-                  <Form.Label>New Trip Id</Form.Label>
+                  <Form.Label>Trip ID</Form.Label>
                   <Form.Control
                     type="text"
                     value={updatedStopInfo.trip_id}
@@ -333,9 +398,9 @@ function StopsTime1() {
           </Button>
         </Modal.Footer>
       </Modal>
-      
     </>
   );
 }
 
-export default StopsTime1;
+export default StopsTimeWeb;
+

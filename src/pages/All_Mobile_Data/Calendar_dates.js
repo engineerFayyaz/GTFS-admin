@@ -17,7 +17,8 @@ function CalendarDates() {
   const [editingCalendar, setEditingCalendar] = useState(null);
   const [updatedCalendarInfo, setUpdatedCalendarInfo] = useState({
     date: "",
-    service_Id: "",
+    exception_type: "",
+    id: "",
   });
   const [selectedRows, setSelectedRows] = useState([]);
 
@@ -25,9 +26,7 @@ function CalendarDates() {
     const getCalendar = async () => {
       try {
         const db = getFirestore();
-        const calendarCollection = await getDocs(
-          collection(db, "calendar_dates")
-        );
+        const calendarCollection = await getDocs(collection(db, "calendar_dates2"));
         const calendarData = calendarCollection.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
@@ -43,7 +42,11 @@ function CalendarDates() {
 
   const handleEdit = (calendarItem) => {
     setEditingCalendar(calendarItem);
-    setUpdatedCalendarInfo(calendarItem);
+    setUpdatedCalendarInfo({
+      date: calendarItem.date,
+      id: calendarItem.id,
+      exception_type: calendarItem.exception_type,
+    });
     setShowModal(true);
   };
 
@@ -52,51 +55,44 @@ function CalendarDates() {
     setEditingCalendar(null);
     setUpdatedCalendarInfo({
       date: "",
-      service_Id: "",
+      exception_type: "",
+      id: "",
     });
   };
 
   const handleSaveChanges = async () => {
     try {
       const db = getFirestore();
-      const calendarRef = doc(db, "calendar_dates", editingCalendar.id);
+      const calendarRef = doc(db, "calendar_dates2", editingCalendar.id);
       await updateDoc(calendarRef, updatedCalendarInfo);
       const updatedCalendars = calendar.map((calendarItem) =>
-        calendarItem.id === editingCalendar.id
-          ? { ...calendarItem, ...updatedCalendarInfo }
-          : calendarItem
+        calendarItem.id === editingCalendar.id ? { ...calendarItem, ...updatedCalendarInfo } : calendarItem
       );
       setCalendar(updatedCalendars);
       handleCloseModal();
-      toast.success("Calendar updated successfully:", editingCalendar);
+      toast.success("Calendar updated successfully");
     } catch (error) {
       toast.error("Error updating calendar:", error);
     }
   };
 
-  const handleDelete = async (count) => {
+  const handleDelete = async (id) => {
     try {
       const db = getFirestore();
-      const calendarToDelete = calendar.find((calendarItem) => calendarItem.count === count);
-      if (calendarToDelete) {
-        await deleteDoc(doc(db, "calendar_dates", calendarToDelete.id));
-        setCalendar((prevCalendar) =>
-          prevCalendar.filter((calendarItem) => calendarItem.count !== count)
-        );
-        console.log("Calendar deleted successfully:", calendarToDelete);
-      } else {
-        console.error("Calendar with count", count, "not found.");
-      }
+      await deleteDoc(doc(db, "calendar_dates2", id));
+      setCalendar((prevCalendar) => prevCalendar.filter((calendarItem) => calendarItem.id !== id));
+      toast.success("Calendar deleted successfully");
     } catch (error) {
       console.error("Error deleting calendar:", error);
+      toast.error("Error deleting calendar");
     }
   };
 
-  const handleToggleRow = (count) => {
+  const handleToggleRow = (id) => {
     setSelectedRows((prevSelectedRows) =>
-      prevSelectedRows.includes(count)
-        ? prevSelectedRows.filter((selectedCount) => selectedCount !== count)
-        : [...prevSelectedRows, count]
+      prevSelectedRows.includes(id)
+        ? prevSelectedRows.filter((selectedId) => selectedId !== id)
+        : [...prevSelectedRows, id]
     );
   };
 
@@ -104,27 +100,21 @@ function CalendarDates() {
     try {
       const db = getFirestore();
 
-      for (const count of selectedRows) {
-        const calendarToDelete = calendar.find((calendarItem) => calendarItem.count === count);
-        if (calendarToDelete) {
-          await deleteDoc(doc(db, "calendar_dates", calendarToDelete.id));
-        } else {
-          console.error("Calendar with count", count, "not found.");
-        }
+      for (const id of selectedRows) {
+        await deleteDoc(doc(db, "calendar_dates2", id));
       }
 
-      setCalendar((prevCalendar) =>
-        prevCalendar.filter((calendarItem) => !selectedRows.includes(calendarItem.count))
-      );
-      console.log("Selected calendars deleted successfully:", selectedRows);
+      setCalendar((prevCalendar) => prevCalendar.filter((calendarItem) => !selectedRows.includes(calendarItem.id)));
+      toast.success("Selected calendars deleted successfully");
       setSelectedRows([]);
     } catch (error) {
       console.error("Error deleting selected calendars:", error);
+      toast.error("Error deleting selected calendars");
     }
   };
 
   const handleSelectAll = () => {
-    setSelectedRows(calendar.map((calendarItem) => calendarItem.count));
+    setSelectedRows(calendar.map((calendarItem) => calendarItem.id));
   };
 
   const handleUnselectAll = () => {
@@ -137,7 +127,7 @@ function CalendarDates() {
       <div className="container-fluid px-3 pt-4">
         <div className="row">
           <div className="col-lg-12 p-3">
-            <div className="text-center  ">
+            <div className="text-center">
               <h5 className="text-uppercase p-2 page-title">Calendar Dates</h5>
             </div>
           </div>
@@ -156,8 +146,8 @@ function CalendarDates() {
             <thead>
               <tr>
                 <th>Select</th>
-                <th>Count</th>
                 <th>Date</th>
+                <th>Exception Type</th>
                 <th>Service Id</th>
                 <th>Modify</th>
               </tr>
@@ -168,13 +158,13 @@ function CalendarDates() {
                   <td>
                     <input
                       type="checkbox"
-                      checked={selectedRows.includes(calendarItem.count)}
-                      onChange={() => handleToggleRow(calendarItem.count)}
+                      checked={selectedRows.includes(calendarItem.id)}
+                      onChange={() => handleToggleRow(calendarItem.id)}
                     />
                   </td>
-                  <td className="text-secondary">{calendarItem.count}</td>
-                  <td>{calendarItem.date}</td>
-                  <td>{calendarItem.service_Id}</td>
+                  <td className="text-secondary">{calendarItem.date}</td>
+                  <td>{calendarItem.exception_type}</td>
+                  <td>{calendarItem.id}</td>
                   <td>
                     <Button
                       variant="primary"
@@ -184,7 +174,7 @@ function CalendarDates() {
                     </Button>{" "}
                     <Button
                       variant="danger"
-                      onClick={() => handleDelete(calendarItem.count)}
+                      onClick={() => handleDelete(calendarItem.id)}
                     >
                       Delete
                     </Button>
@@ -225,14 +215,27 @@ function CalendarDates() {
                   />
                 </Form.Group>
                 <Form.Group>
-                  <Form.Label>New Service ID</Form.Label>
+                  <Form.Label>New Exception Type</Form.Label>
                   <Form.Control
                     type="text"
-                    value={updatedCalendarInfo.service_Id}
+                    value={updatedCalendarInfo.exception_type}
                     onChange={(e) =>
                       setUpdatedCalendarInfo({
                         ...updatedCalendarInfo,
-                        service_Id: e.target.value,
+                        exception_type: e.target.value,
+                      })
+                    }
+                  />
+                </Form.Group>
+                <Form.Group>
+                  <Form.Label>New ID</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={updatedCalendarInfo.id}
+                    onChange={(e) =>
+                      setUpdatedCalendarInfo({
+                        ...updatedCalendarInfo,
+                        id: e.target.value,
                       })
                     }
                   />

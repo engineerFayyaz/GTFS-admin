@@ -43,10 +43,10 @@ function PartnersRequest() {
           <Table striped bordered hover>
             <thead>
               <tr>
-                <th>Company Name</th>
-                <th>Contact Person</th>
+                <th>Company_Name</th>
+                <th>Contact_Person</th>
                 <th>Email</th>
-                <th>GTFS Files</th>
+                <th>GTFS_Files</th>
                 <th>Phone</th>
                 <th>Website</th>
               </tr>

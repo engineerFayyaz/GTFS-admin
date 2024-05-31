@@ -19,16 +19,15 @@ import {
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-function StopsTime2() {
+function StopsTime2Web() {
   const [stops, setStops] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editedStop, setEditedStop] = useState(null);
   const [updatedStopInfo, setUpdatedStopInfo] = useState({
-    count: "",
+    stop_id: "",
     arrival_time: "",
     departure_time: "",
     pickup_type: "",
-    stop_id: "",
     stop_sequence: "",
     trip_id: "",
   });
@@ -40,20 +39,34 @@ function StopsTime2() {
       try {
         const db = getFirestore(); // Initialize Firestore directly here
         const stopsCollection = await getDocs(collection(db, "stop_times2"));
-        const stopsData = stopsCollection.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          selected: false,
-        }));
+        const stopsData = stopsCollection.docs.map((doc) => {
+          const data = doc.data();
+          // Remove double quotes from all string properties
+          const cleanedData = {};
+          for (const key in data) {
+            if (typeof data[key] === "string") {
+              cleanedData[key] = data[key].replace(/"/g, "");
+            } else {
+              cleanedData[key] = data[key];
+            }
+          }
+          return {
+            id: doc.id,
+            ...cleanedData,
+            selected: false,
+          };
+        });
         setStops(stopsData);
-        toast.success("Data saved successfully");
+        console.log("stops loaded", stopsData)
+        toast.success("Data fetched successfully");
       } catch (error) {
         console.error("Error fetching stops:", error);
       }
     };
-
+  
     getStops();
   }, []);
+  
 
   const handleEdit = (stop) => {
     setEditedStop(stop);
@@ -65,11 +78,10 @@ function StopsTime2() {
     setEditedStop(null);
     setShowModal(false);
     setUpdatedStopInfo({
-      count: "",
+      stop_id: "",
       arrival_time: "",
       departure_time: "",
       pickup_type: "",
-      stop_id: "",
       stop_sequence: "",
       trip_id: "",
     });
@@ -87,8 +99,8 @@ function StopsTime2() {
       handleCloseModal();
       toast.success("Stop times updated successfully");
     } catch (error) {
-      toast.error("Error while updating stop times: ", error);
-      console.log("Error while updating stop times: ", error);
+      toast.error("Error while updating stop times: " + error.message);
+      console.error("Error while updating stop times: ", error);
     }
   };
 
@@ -158,7 +170,7 @@ function StopsTime2() {
         <div className="row">
           <div className="col-lg-12 p-3">
             <div className="text-center">
-              <h5 className="text-uppercase p-2 page-title">Stops_2 Time</h5>
+              <h5 className="text-uppercase p-2 page-title">Stops Times 2 Data</h5>
             </div>
           </div>
 
@@ -185,19 +197,18 @@ function StopsTime2() {
                     onChange={handleToggleAll}
                   />
                 </th>
-                <th>Count</th>
+                <th>Stop ID</th>
                 <th>Arrival Time</th>
                 <th>Departure Time</th>
-                <th>Stop Id</th>
-                <th>Pickup Type</th>
                 <th>Stop Sequence</th>
-                <th>Trip Id</th>
+                <th>Pickup Type</th>
+                <th>Trip ID</th>
                 <th>Modify</th>
               </tr>
             </thead>
             <tbody>
-              {stops.map((stop, index) => (
-                <tr key={index}>
+              {stops.map((stop) => (
+                <tr key={stop.id}>
                   <td>
                     <Form.Check
                       type="checkbox"
@@ -205,14 +216,11 @@ function StopsTime2() {
                       onChange={() => handleToggleSelect(stop.id)}
                     />
                   </td>
-                  <td className="text-secondary">
-                    <b>{stop.count}</b>
-                  </td>
+                  <td>{stop.stop_id}</td>
                   <td>{stop.arrival_time}</td>
                   <td>{stop.departure_time}</td>
-                  <td>{stop.stop_id}</td>
-                  <td>{stop.pickup_type}</td>
                   <td>{stop.stop_sequence}</td>
+                  <td>{stop.pickup_type}</td>
                   <td>{stop.trip_id}</td>
                   <td className="d-flex gap-2">
                     <Button variant="primary" onClick={() => handleEdit(stop)}>
@@ -248,20 +256,7 @@ function StopsTime2() {
             <Row className="gap-3">
               <Col>
                 <Form.Group>
-                  <Form.Label>New Count</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={updatedStopInfo.count}
-                    onChange={(e) =>
-                      setUpdatedStopInfo({
-                        ...updatedStopInfo,
-                        count: e.target.value,
-                      })
-                    }
-                  />
-                </Form.Group>
-                <Form.Group>
-                  <Form.Label>New Stop Id</Form.Label>
+                  <Form.Label>Stop ID</Form.Label>
                   <Form.Control
                     type="text"
                     value={updatedStopInfo.stop_id}
@@ -274,7 +269,7 @@ function StopsTime2() {
                   />
                 </Form.Group>
                 <Form.Group>
-                  <Form.Label>New Arrival Time</Form.Label>
+                  <Form.Label>Arrival Time</Form.Label>
                   <Form.Control
                     type="text"
                     value={updatedStopInfo.arrival_time}
@@ -287,7 +282,7 @@ function StopsTime2() {
                   />
                 </Form.Group>
                 <Form.Group>
-                  <Form.Label>New Departure Time</Form.Label>
+                  <Form.Label>Departure Time</Form.Label>
                   <Form.Control
                     type="text"
                     value={updatedStopInfo.departure_time}
@@ -299,10 +294,25 @@ function StopsTime2() {
                     }
                   />
                 </Form.Group>
+
+
               </Col>
               <Col>
-                <Form.Group>
-                  <Form.Label>New Pickup Type</Form.Label>
+              <Form.Group>
+                  <Form.Label>Trip ID</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={updatedStopInfo.trip_id}
+                    onChange={(e) =>
+                      setUpdatedStopInfo({
+                        ...updatedStopInfo,
+                        trip_id: e.target.value,
+                      })
+                    }
+                  />
+                </Form.Group>
+              <Form.Group>
+                  <Form.Label>Pickup Type</Form.Label>
                   <Form.Control
                     type="text"
                     value={updatedStopInfo.pickup_type}
@@ -315,7 +325,7 @@ function StopsTime2() {
                   />
                 </Form.Group>
                 <Form.Group>
-                  <Form.Label>New Stops Sequence</Form.Label>
+                  <Form.Label>Stop Sequence</Form.Label>
                   <Form.Control
                     type="text"
                     value={updatedStopInfo.stop_sequence}
@@ -323,19 +333,6 @@ function StopsTime2() {
                       setUpdatedStopInfo({
                         ...updatedStopInfo,
                         stop_sequence: e.target.value,
-                      })
-                    }
-                  />
-                </Form.Group>
-                <Form.Group>
-                  <Form.Label>New Trip Id</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={updatedStopInfo.trip_id}
-                    onChange={(e) =>
-                      setUpdatedStopInfo({
-                        ...updatedStopInfo,
-                        trip_id: e.target.value,
                       })
                     }
                   />
@@ -357,4 +354,5 @@ function StopsTime2() {
   );
 }
 
-export default StopsTime2;
+export default StopsTime2Web;
+

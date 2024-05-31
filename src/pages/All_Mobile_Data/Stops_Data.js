@@ -20,12 +20,11 @@ import { db } from "../../Config";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-function Stops1() {
+function StopesAppData() {
   const [stops, setStops] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editedStop, setEditedStop] = useState(null);
   const [updatedStopInfo, setUpdatedStopInfo] = useState({
-    count: "",
     stop_id: "",
     stop_lat: "",
     stop_lon: "",
@@ -38,19 +37,32 @@ function Stops1() {
   useEffect(() => {
     const getStops = async () => {
       try {
-        const db = getFirestore();
-        const stopsCollection = await getDocs(collection(db, "stops"));
-        const stopsData = stopsCollection.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          isSelected: false,
-        }));
+        const db = getFirestore(); // Initialize Firestore directly here
+        const stopsCollection = await getDocs(collection(db, "stops2"));
+        const stopsData = stopsCollection.docs.map((doc) => {
+          const data = doc.data();
+          // Remove double quotes from all string properties
+          const cleanedData = {};
+          for (const key in data) {
+            if (typeof data[key] === "string") {
+              cleanedData[key] = data[key].replace(/"/g, "");
+            } else {
+              cleanedData[key] = data[key];
+            }
+          }
+          return {
+            id: doc.id,
+            ...cleanedData,
+            selected: false,
+          };
+        });
         setStops(stopsData);
+        toast.success("Data fetched successfully");
       } catch (error) {
         console.error("Error fetching stops:", error);
       }
     };
-
+  
     getStops();
   }, []);
 
@@ -64,7 +76,6 @@ function Stops1() {
     setEditedStop(null);
     setShowModal(false);
     setUpdatedStopInfo({
-      count: "",
       stop_id: "",
       stop_lat: "",
       stop_lon: "",
@@ -75,8 +86,7 @@ function Stops1() {
 
   const handleSaveChanges = async () => {
     try {
-      const db = getFirestore();
-      const stopRef = doc(db, "stops", editedStop.id);
+      const stopRef = doc(db, "stops2", editedStop.id);
       await updateDoc(stopRef, updatedStopInfo);
       const updatedStops = stops.map((stop) =>
         stop.id === editedStop.id ? { ...stop, ...updatedStopInfo } : stop
@@ -92,8 +102,7 @@ function Stops1() {
 
   const handleDelete = async (id) => {
     try {
-      const db = getFirestore();
-      await deleteDoc(doc(db, "stops", id));
+      await deleteDoc(doc(db, "stops2", id));
       setStops((prevStops) => prevStops.filter((stop) => stop.id !== id));
       toast.success("Stop deleted successfully");
     } catch (error) {
@@ -120,18 +129,12 @@ function Stops1() {
 
   const handleDeleteSelected = async () => {
     try {
-      const db = getFirestore();
-      const batch = db.batch();
-
-      selectedStops.forEach((stop) => {
-        const stopRef = doc(db, "stops", stop.id);
-        batch.delete(stopRef);
-      });
-
-      await batch.commit();
-
-      const remainingStops = stops.filter((stop) => !stop.isSelected);
-      setStops(remainingStops);
+      for (const stop of selectedStops) {
+        await deleteDoc(doc(db, "stops2", stop.id));
+      }
+      setStops((prevStops) =>
+        prevStops.filter((stop) => !selectedStops.includes(stop))
+      );
       setSelectedStops([]);
       setSelectAll(false);
       toast.success("Selected stops deleted successfully");
@@ -148,7 +151,7 @@ function Stops1() {
         <Row>
           <Col lg={12} className="p-3">
             <div className="text-center">
-              <h5 className="text-uppercase p-2 page-title">Stops_1 Data</h5>
+              <h5 className="text-uppercase p-2 page-title">Stops_2 Data</h5>
             </div>
           </Col>
         </Row>
@@ -162,6 +165,13 @@ function Stops1() {
             >
               Delete Selected
             </Button>
+            <Button
+              variant="primary"
+              className="mb-3 ms-3"
+              onClick={handleSelectAll}
+            >
+              {selectAll ? "Unselect All" : "Select All"}
+            </Button>
             <Table striped bordered hover className="overflow-scroll">
               <thead>
                 <tr>
@@ -172,12 +182,11 @@ function Stops1() {
                       onChange={handleSelectAll}
                     />
                   </th>
-                  <th>Count</th>
-                  <th>Stop Id</th>
-                  <th>Stop Lat</th>
-                  <th>Stop Lon</th>
-                  <th>Stop Name</th>
-                  <th>Zone Id</th>
+                  <th>Stop_Id</th>
+                  <th>Stop_Name</th>
+                  <th>Stop_Lat</th>
+                  <th>Stop_Lon</th>
+                  <th>Zone_Id</th>
                   <th>Modify</th>
                 </tr>
               </thead>
@@ -192,12 +201,11 @@ function Stops1() {
                       />
                     </td>
                     <td className="text-secondary">
-                      <b>{stop.count}</b>
+                      <b>{stop.stop_id}</b>
                     </td>
-                    <td>{stop.stop_id}</td>
+                    <td>{stop.stop_name}</td>
                     <td>{stop.stop_lat}</td>
                     <td>{stop.stop_lon}</td>
-                    <td>{stop.stop_name}</td>
                     <td>{stop.zone_id}</td>
                     <td className="d-flex gap-2">
                       <Button
@@ -225,32 +233,18 @@ function Stops1() {
         size="lg"
         centered
         onHide={handleCloseModal}
-        large
         backdrop="static"
         className="editinfo_modal"
       >
         <Modal.Header closeButton>
-          <Modal.Title>Edit Stops Info</Modal.Title>
+          <Modal.Title>Edit Stop Info</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Container fluid>
             <Row className="gap-3">
               <Col>
                 <Form.Group>
-                  <Form.Label>New Count</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={updatedStopInfo.count}
-                    onChange={(e) =>
-                      setUpdatedStopInfo({
-                        ...updatedStopInfo,
-                        count: e.target.value,
-                      })
-                    }
-                  />
-                </Form.Group>
-                <Form.Group>
-                  <Form.Label>New Stop Id</Form.Label>
+                  <Form.Label>Stop Id</Form.Label>
                   <Form.Control
                     type="text"
                     value={updatedStopInfo.stop_id}
@@ -263,7 +257,7 @@ function Stops1() {
                   />
                 </Form.Group>
                 <Form.Group>
-                  <Form.Label>New Stop Lat</Form.Label>
+                  <Form.Label>Stop Lat</Form.Label>
                   <Form.Control
                     type="text"
                     value={updatedStopInfo.stop_lat}
@@ -275,10 +269,8 @@ function Stops1() {
                     }
                   />
                 </Form.Group>
-              </Col>
-              <Col>
                 <Form.Group>
-                  <Form.Label>New Stop Lon</Form.Label>
+                  <Form.Label>Stop Lon</Form.Label>
                   <Form.Control
                     type="text"
                     value={updatedStopInfo.stop_lon}
@@ -290,8 +282,10 @@ function Stops1() {
                     }
                   />
                 </Form.Group>
+              </Col>
+              <Col>
                 <Form.Group>
-                  <Form.Label>New Stop Name</Form.Label>
+                  <Form.Label>Stop Name</Form.Label>
                   <Form.Control
                     type="text"
                     value={updatedStopInfo.stop_name}
@@ -304,7 +298,7 @@ function Stops1() {
                   />
                 </Form.Group>
                 <Form.Group>
-                  <Form.Label>New Zone Id</Form.Label>
+                  <Form.Label>Zone Id</Form.Label>
                   <Form.Control
                     type="text"
                     value={updatedStopInfo.zone_id}
@@ -333,4 +327,4 @@ function Stops1() {
   );
 }
 
-export default Stops1;
+export default StopesAppData;

@@ -34,8 +34,8 @@ function ContactRequest() {
             <thead>
               <tr>
                 <th>Email</th>
-                <th>First Name</th>
-                <th>Last Name</th>
+                <th>First_Name</th>
+                <th>Last_Name</th>
                 <th>Message</th>
               </tr>
             </thead>

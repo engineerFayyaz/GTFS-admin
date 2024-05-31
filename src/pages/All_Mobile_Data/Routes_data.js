@@ -19,13 +19,13 @@ import {
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-function RoutesData() {
+function RoutesMobileData() {
   const [routes, setRoutes] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editedRoute, setEditedRoute] = useState(null);
   const [updatedRoute, setUpdatedRoute] = useState({
     count: "",
-    route_color: " ",
+    route_color: "",
     route_id: "",
     route_long_name: "",
   });
@@ -34,8 +34,8 @@ function RoutesData() {
   useEffect(() => {
     const getRoutes = async () => {
       try {
-        const db = getFirestore(); 
-        const routesCollection = await getDocs(collection(db, "routes"));
+        const db = getFirestore();
+        const routesCollection = await getDocs(collection(db, "routes2"));
         const routesData = routesCollection.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
@@ -60,7 +60,7 @@ function RoutesData() {
     setShowModal(false);
     setUpdatedRoute({
       count: "",
-      route_color: " ",
+      route_color: "",
       route_id: "",
       route_long_name: "",
     });
@@ -69,7 +69,7 @@ function RoutesData() {
   const saveChanges = async () => {
     try {
       const db = getFirestore();
-      const routeRef = doc(db, "routes", editedRoute.id);
+      const routeRef = doc(db, "routes2", editedRoute.id);
       await updateDoc(routeRef, updatedRoute);
 
       const updatedRoutes = routes.map((route) =>
@@ -77,36 +77,30 @@ function RoutesData() {
       );
       setRoutes(updatedRoutes);
       handleCloseModal();
-      toast.success("Routes updated successfully");
+      toast.success("Route updated successfully");
     } catch (error) {
-      toast.error("Error while updating routes:", error);
-      console.log("Error while updating routes:", error);
+      toast.error("Error while updating route:", error);
+      console.log("Error while updating route:", error);
     }
   };
 
-  const handleDelete = async (count) => {
+  const handleDelete = async (routeId) => {
     try {
       const db = getFirestore();
-      const routeToDelete = routes.find((route) => route.count === count);
-      if (routeToDelete) {
-        await deleteDoc(doc(db, "routes", routeToDelete.id));
-        setRoutes((prevRoutes) =>
-          prevRoutes.filter((route) => route.count !== count)
-        );
-        console.log("Route deleted successfully:", routeToDelete);
-      } else {
-        console.error("Route with count", count, "not found.");
-      }
+      await deleteDoc(doc(db, "routes2", routeId));
+      setRoutes((prevRoutes) => prevRoutes.filter((route) => route.id !== routeId));
+      toast.success("Route deleted successfully");
     } catch (error) {
       console.error("Error deleting route:", error);
+      toast.error("Error deleting route");
     }
   };
 
-  const handleToggleRow = (count) => {
+  const handleToggleRow = (routeId) => {
     setSelectedRows((prevSelectedRows) =>
-      prevSelectedRows.includes(count)
-        ? prevSelectedRows.filter((selectedCount) => selectedCount !== count)
-        : [...prevSelectedRows, count]
+      prevSelectedRows.includes(routeId)
+        ? prevSelectedRows.filter((selectedRouteId) => selectedRouteId !== routeId)
+        : [...prevSelectedRows, routeId]
     );
   };
 
@@ -114,27 +108,23 @@ function RoutesData() {
     try {
       const db = getFirestore();
 
-      for (const count of selectedRows) {
-        const routeToDelete = routes.find((route) => route.count === count);
-        if (routeToDelete) {
-          await deleteDoc(doc(db, "routes", routeToDelete.id));
-        } else {
-          console.error("Route with count", count, "not found.");
-        }
+      for (const routeId of selectedRows) {
+        await deleteDoc(doc(db, "routes2", routeId));
       }
 
       setRoutes((prevRoutes) =>
-        prevRoutes.filter((route) => !selectedRows.includes(route.count))
+        prevRoutes.filter((route) => !selectedRows.includes(route.id))
       );
-      console.log("Selected routes deleted successfully:", selectedRows);
+      toast.success("Selected routes deleted successfully");
       setSelectedRows([]);
     } catch (error) {
       console.error("Error deleting selected routes:", error);
+      toast.error("Error deleting selected routes");
     }
   };
 
   const handleSelectAll = () => {
-    setSelectedRows(routes.map((route) => route.count));
+    setSelectedRows(routes.map((route) => route.id));
   };
 
   const handleUnselectAll = () => {
@@ -179,8 +169,8 @@ function RoutesData() {
                   <td>
                     <input
                       type="checkbox"
-                      checked={selectedRows.includes(route.count)}
-                      onChange={() => handleToggleRow(route.count)}
+                      checked={selectedRows.includes(route.id)}
+                      onChange={() => handleToggleRow(route.id)}
                     />
                   </td>
                   <td className="text-secondary">{route.count}</td>
@@ -188,16 +178,10 @@ function RoutesData() {
                   <td>{route.route_id}</td>
                   <td>{route.route_long_name}</td>
                   <td>
-                    <Button
-                      variant="primary"
-                      onClick={() => handleEdit(route)}
-                    >
+                    <Button variant="primary" onClick={() => handleEdit(route)}>
                       Edit
                     </Button>{" "}
-                    <Button
-                      variant="danger"
-                      onClick={() => handleDelete(route.count)}
-                    >
+                    <Button variant="danger" onClick={() => handleDelete(route.id)}>
                       Delete
                     </Button>
                   </td>
@@ -295,4 +279,4 @@ function RoutesData() {
   );
 }
 
-export default RoutesData;
+export default RoutesMobileData;
