@@ -15,6 +15,7 @@ import {
   Row,
   Modal,
   Button,
+  Pagination,
 } from "react-bootstrap";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -30,6 +31,8 @@ function RoutesMobileData() {
     route_long_name: "",
   });
   const [selectedRows, setSelectedRows] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     const getRoutes = async () => {
@@ -131,6 +134,11 @@ function RoutesMobileData() {
     setSelectedRows([]);
   };
 
+  const handlePaginationClick = (page) => {
+    setCurrentPage(page);
+  };
+
+  const paginatedRoutes = routes.slice((currentPage - 1) * pageSize, currentPage * pageSize);
   return (
     <>
       <ToastContainer />
@@ -189,6 +197,19 @@ function RoutesMobileData() {
               ))}
             </tbody>
           </Table>
+          <div className="d-flex justify-content-center">
+            <Pagination>
+              {[...Array(Math.ceil(routes.length / pageSize)).keys()].map((page) => (
+                <Pagination.Item
+                  key={page + 1}
+                  active={page + 1 === currentPage}
+                  onClick={() => handlePaginationClick(page + 1)}
+                >
+                  {page + 1}
+                </Pagination.Item>
+              ))}
+            </Pagination>
+          </div>
         </div>
       </div>
 

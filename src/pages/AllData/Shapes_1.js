@@ -15,6 +15,7 @@ import {
   Row,
   Col,
   Modal,
+  Pagination,
 } from "react-bootstrap/";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -31,6 +32,8 @@ function Shapes1() {
     shape_pt_sequence: "",
   });
   const [selectedShapes, setSelectedShapes] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
 
   useEffect(() => {
     const getShapes = async () => {
@@ -126,6 +129,15 @@ function Shapes1() {
     }
   };
 
+  const handlePaginationClick = (page) => {
+    setCurrentPage(page);
+  };
+
+  const paginatedStops = shapes.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
   return (
     <>
       <ToastContainer />
@@ -160,7 +172,7 @@ function Shapes1() {
                 </tr>
               </thead>
               <tbody>
-                {shapes.map((shape, index) => (
+                {paginatedStops.map((shape, index) => (
                   <tr key={shape.id}>
                     <td>
                       <Form.Check
@@ -188,6 +200,34 @@ function Shapes1() {
                 ))}
               </tbody>
             </Table>
+
+            <div className="d-flex justify-content-center">
+              <Pagination>
+                <Pagination.Prev
+                  onClick={() => handlePaginationClick(currentPage - 1)}
+                  disabled={currentPage === 1}
+                />
+                {currentPage > 1 && (
+                  <Pagination.Item
+                    onClick={() => handlePaginationClick(currentPage - 1)}
+                  >
+                    {currentPage - 1}
+                  </Pagination.Item>
+                )}
+                <Pagination.Item active>{currentPage}</Pagination.Item>
+                {currentPage < Math.ceil(shapes.length / pageSize) && (
+                  <Pagination.Item
+                    onClick={() => handlePaginationClick(currentPage + 1)}
+                  >
+                    {currentPage + 1}
+                  </Pagination.Item>
+                )}
+                <Pagination.Next
+                  onClick={() => handlePaginationClick(currentPage + 1)}
+                  disabled={currentPage === Math.ceil(shapes.length / pageSize)}
+                />
+              </Pagination>
+            </div>
           </Col>
         </Row>
       </Container>

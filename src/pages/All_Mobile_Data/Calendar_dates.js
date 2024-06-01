@@ -6,13 +6,21 @@ import {
   deleteDoc,
   updateDoc,
   doc,
+  query,
+  orderBy,
+  startAfter,
+  endBefore,
+  limit,
 } from "firebase/firestore";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Col, Container, Row, Modal, Form, Button, Table } from "react-bootstrap";
+import { Col, Container, Row, Modal, Form, Button, Table, Pagination } from "react-bootstrap";
 
 function CalendarDates() {
   const [calendar, setCalendar] = useState([]);
+  const [lastVisible, setLastVisible] = useState(null);
+  const [firstVisible, setFirstVisible] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingCalendar, setEditingCalendar] = useState(null);
   const [updatedCalendarInfo, setUpdatedCalendarInfo] = useState({
@@ -21,24 +29,54 @@ function CalendarDates() {
     id: "",
   });
   const [selectedRows, setSelectedRows] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    const getCalendar = async () => {
-      try {
-        const db = getFirestore();
-        const calendarCollection = await getDocs(collection(db, "calendar_dates2"));
-        const calendarData = calendarCollection.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setCalendar(calendarData);
-      } catch (error) {
-        console.error("Error fetching calendar:", error);
-      }
-    };
-
     getCalendar();
   }, []);
+
+  const getCalendar = async (next = false, previous = false) => {
+    setLoading(true);
+    try {
+      const db = getFirestore();
+      let calendarQuery = query(
+        collection(db, "calendar_dates2"),
+        orderBy("date"),
+        limit(50)
+      );
+
+      if (next && lastVisible) {
+        calendarQuery = query(
+          collection(db, "calendar_dates2"),
+          orderBy("date"),
+          startAfter(lastVisible),
+          limit(50)
+        );
+      } else if (previous && firstVisible) {
+        calendarQuery = query(
+          collection(db, "calendar_dates2"),
+          orderBy("date"),
+          endBefore(firstVisible),
+          limit(50)
+        );
+      }
+
+      const calendarCollection = await getDocs(calendarQuery);
+      const calendarData = calendarCollection.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      setCalendar(calendarData);
+      setFirstVisible(calendarCollection.docs[0]);
+      setLastVisible(calendarCollection.docs[calendarCollection.docs.length - 1]);
+    } catch (error) {
+      console.error("Error fetching calendar:", error);
+      toast.error("Error fetching calendar data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleEdit = (calendarItem) => {
     setEditingCalendar(calendarItem);
@@ -121,6 +159,16 @@ function CalendarDates() {
     setSelectedRows([]);
   };
 
+  const handleNextPage = () => {
+    setCurrentPage((prevPage) => prevPage + 1);
+    getCalendar(true, false);
+  };
+
+  const handlePreviousPage = () => {
+    setCurrentPage((prevPage) => (prevPage > 1 ? prevPage - 1 : 1));
+    getCalendar(false, true);
+  };
+
   return (
     <>
       <ToastContainer />
@@ -183,6 +231,12 @@ function CalendarDates() {
               ))}
             </tbody>
           </Table>
+          {loading && <p>Loading...</p>}
+          <Pagination style={{justifyContent:"center"}}>
+            <Pagination.Prev onClick={handlePreviousPage} disabled={currentPage === 1 || loading} />
+            <Pagination.Item>{currentPage}</Pagination.Item>
+            <Pagination.Next onClick={handleNextPage} disabled={loading} />
+          </Pagination>
         </div>
       </div>
       {/* Edit Calendar Modal */}

@@ -15,6 +15,7 @@ import {
   Row,
   Col,
   Modal,
+  Pagination,
 } from "react-bootstrap/";
 import { db } from "../../Config";
 import { toast, ToastContainer } from "react-toastify";
@@ -34,6 +35,9 @@ function Trips1() {
   });
   const [selectedTrips, setSelectedTrips] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
+
 
   useEffect(() => {
     const getTrips = async () => {
@@ -145,6 +149,15 @@ function Trips1() {
     }
   };
 
+  const handlePaginationClick = (page) => {
+    setCurrentPage(page);
+  };
+
+  const paginatedStops = trips.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
   return (
     <>
       <ToastContainer />
@@ -187,7 +200,7 @@ function Trips1() {
               </tr>
             </thead>
             <tbody>
-              {trips.map((trip, index) => (
+              {paginatedStops.map((trip, index) => (
                 <tr key={index}>
                   <td>
                     <Form.Check
@@ -222,6 +235,33 @@ function Trips1() {
               ))}
             </tbody>
           </Table>
+          <div className="d-flex justify-content-center">
+              <Pagination>
+                <Pagination.Prev
+                  onClick={() => handlePaginationClick(currentPage - 1)}
+                  disabled={currentPage === 1}
+                />
+                {currentPage > 1 && (
+                  <Pagination.Item
+                    onClick={() => handlePaginationClick(currentPage - 1)}
+                  >
+                    {currentPage - 1}
+                  </Pagination.Item>
+                )}
+                <Pagination.Item active>{currentPage}</Pagination.Item>
+                {currentPage < Math.ceil(trips.length / pageSize) && (
+                  <Pagination.Item
+                    onClick={() => handlePaginationClick(currentPage + 1)}
+                  >
+                    {currentPage + 1}
+                  </Pagination.Item>
+                )}
+                <Pagination.Next
+                  onClick={() => handlePaginationClick(currentPage + 1)}
+                  disabled={currentPage === Math.ceil(trips.length / pageSize)}
+                />
+              </Pagination>
+            </div>
         </div>
       </div>
 

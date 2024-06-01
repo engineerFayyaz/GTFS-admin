@@ -15,6 +15,7 @@ import {
   Row,
   Col,
   Modal,
+  Pagination,
 } from "react-bootstrap/";
 import { db } from "../../Config";
 import { toast, ToastContainer } from "react-toastify";
@@ -33,6 +34,9 @@ function ShapesAppData() {
   });
   const [selectedShapes, setSelectedShapes] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(50);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const getShapes = async () => {
@@ -57,9 +61,11 @@ function ShapesAppData() {
           };
         });
         setShapes(shapesData);
+        setLoading(false);
         toast.success("Data fetched successfully");
       } catch (error) {
         console.error("Error fetching shapes:", error);
+        setLoading(false);
       }
     };
 
@@ -144,6 +150,13 @@ function ShapesAppData() {
     }
   };
 
+  const handlePaginationClick = (page) => {
+    setCurrentPage(page);
+  };
+
+  const paginatedShapes = shapes.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const totalPages = Math.ceil(shapes.length / pageSize);
+
   return (
     <>
       <ToastContainer />
@@ -172,59 +185,88 @@ function ShapesAppData() {
             >
               {selectAll ? "Unselect All" : "Select All"}
             </Button>
-            <Table striped bordered hover className="overflow-scroll">
-              <thead>
-                <tr>
-                  <th>
-                    <Form.Check
-                      type="checkbox"
-                      checked={selectAll}
-                      onChange={handleSelectAll}
+            {loading ? (
+              <div className="col-lg-12 text-center">Loading...</div>
+            ) : (
+              <>
+                <Table striped bordered hover className="overflow-scroll">
+                  <thead>
+                    <tr>
+                      <th>
+                        <Form.Check
+                          type="checkbox"
+                          checked={selectAll}
+                          onChange={handleSelectAll}
+                        />
+                      </th>
+                      <th>Shape_Id</th>
+                      <th>Shape_Lat</th>
+                      <th>Shape_Lon</th>
+                      <th>Shape_Sequence</th>
+                      <th>Dist_Traveled</th>
+                      <th>Modify</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedShapes.map((shape) => (
+                      <tr key={shape.id}>
+                        <td>
+                          <Form.Check
+                            type="checkbox"
+                            checked={shape.isSelected}
+                            onChange={() => handleSelectShape(shape.id)}
+                          />
+                        </td>
+                        <td className="text-secondary">
+                          <b>{shape.shape_id}</b>
+                        </td>
+                        <td>{shape.shape_pt_lat}</td>
+                        <td>{shape.shape_pt_lon}</td>
+                        <td>{shape.shape_pt_sequence}</td>
+                        <td>{shape.shape_dist_traveled}</td>
+                        <td className="d-flex gap-2">
+                          <Button
+                            variant="primary"
+                            onClick={() => handleEdit(shape)}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="danger"
+                            onClick={() => handleDelete(shape.id)}
+                          >
+                            Delete
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+                <div className="d-flex justify-content-center">
+                  <Pagination>
+                    <Pagination.Prev
+                      onClick={() => handlePaginationClick(currentPage - 1)}
+                      disabled={currentPage === 1}
                     />
-                  </th>
-                  <th>Shape_Id</th>
-                  <th>Shape_Lat</th>
-                  <th>Shape_Lon</th>
-                  <th>Shape_Sequence</th>
-                  <th>Dist_Traveled</th>
-                  <th>Modify</th>
-                </tr>
-              </thead>
-              <tbody>
-                {shapes.map((shape) => (
-                  <tr key={shape.id}>
-                    <td>
-                      <Form.Check
-                        type="checkbox"
-                        checked={shape.isSelected}
-                        onChange={() => handleSelectShape(shape.id)}
-                      />
-                    </td>
-                    <td className="text-secondary">
-                      <b>{shape.shape_id}</b>
-                    </td>
-                    <td>{shape.shape_pt_lat}</td>
-                    <td>{shape.shape_pt_lon}</td>
-                    <td>{shape.shape_pt_sequence}</td>
-                    <td>{shape.shape_dist_traveled}</td>
-                    <td className="d-flex gap-2">
-                      <Button
-                        variant="primary"
-                        onClick={() => handleEdit(shape)}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="danger"
-                        onClick={() => handleDelete(shape.id)}
-                      >
-                        Delete
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
+                    {currentPage > 1 && (
+                      <Pagination.Item onClick={() => handlePaginationClick(currentPage - 1)}>
+                        {currentPage - 1}
+                      </Pagination.Item>
+                    )}
+                    <Pagination.Item active>{currentPage}</Pagination.Item>
+                    {currentPage < totalPages && (
+                      <Pagination.Item onClick={() => handlePaginationClick(currentPage + 1)}>
+                        {currentPage + 1}
+                      </Pagination.Item>
+                    )}
+                    <Pagination.Next
+                      onClick={() => handlePaginationClick(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                    />
+                  </Pagination>
+                </div>
+              </>
+            )}
           </Col>
         </Row>
       </Container>

@@ -7,7 +7,7 @@ import {
   deleteDoc,
   doc,
 } from "firebase/firestore";
-import { Table, Form, Container, Col, Row, Modal, Button } from "react-bootstrap";
+import { Table, Form, Container, Col, Row, Modal, Button,Pagination } from "react-bootstrap";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -29,6 +29,8 @@ function CalendarTwo() {
     sunday: "",
   });
   const [selectedRows, setSelectedRows] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
 
   useEffect(() => {
     const getCalendar = async () => {
@@ -138,6 +140,16 @@ function CalendarTwo() {
     }
   };
 
+
+  const handlePaginationClick = (page) => {
+    setCurrentPage(page);
+  };
+
+  const paginatedStops = Calendar.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
   return (
     <>
       <ToastContainer />
@@ -174,7 +186,7 @@ function CalendarTwo() {
               </tr>
             </thead>
             <tbody>
-              {Calendar.map((calendar, index) => (
+              {paginatedStops.map((calendar, index) => (
                 <tr key={index}>
                   <td>
                     <input
@@ -208,6 +220,33 @@ function CalendarTwo() {
               ))}
             </tbody>
           </Table>
+          <div className="d-flex justify-content-center">
+              <Pagination>
+                <Pagination.Prev
+                  onClick={() => handlePaginationClick(currentPage - 1)}
+                  disabled={currentPage === 1}
+                />
+                {currentPage > 1 && (
+                  <Pagination.Item
+                    onClick={() => handlePaginationClick(currentPage - 1)}
+                  >
+                    {currentPage - 1}
+                  </Pagination.Item>
+                )}
+                <Pagination.Item active>{currentPage}</Pagination.Item>
+                {currentPage < Math.ceil(Calendar.length / pageSize) && (
+                  <Pagination.Item
+                    onClick={() => handlePaginationClick(currentPage + 1)}
+                  >
+                    {currentPage + 1}
+                  </Pagination.Item>
+                )}
+                <Pagination.Next
+                  onClick={() => handlePaginationClick(currentPage + 1)}
+                  disabled={currentPage === Math.ceil(Calendar.length / pageSize)}
+                />
+              </Pagination>
+            </div>
         </div>
       </div>
       <Modal
