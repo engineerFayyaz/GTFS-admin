@@ -11,7 +11,7 @@ import Table from "react-bootstrap/Table";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import Form from "react-bootstrap/Form";
-import { Col, Container, ModalHeader } from "react-bootstrap";
+import { Col, Container, ModalHeader,Pagination } from "react-bootstrap";
 import { Row } from "antd";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -40,6 +40,9 @@ function UserList() {
     phoneNumber: "",
     username: "",
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
 
   useEffect(() => {
     const getUsers = async () => {
@@ -111,6 +114,14 @@ function UserList() {
   //   await sendNotificationToAllUsers();
   // };
 
+  const handlePaginationClick = (page) => {
+    setCurrentPage(page);
+  };
+
+  const paginatedStops = users.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
  
 
   return (
@@ -137,7 +148,7 @@ function UserList() {
             </tr>
           </thead>
           <tbody>
-            {users.map((user, index) => (
+            {paginatedStops.map((user, index) => (
               <tr key={index}>
                 <td>{user.businessName}</td>
                 <td>{user.country}</td>
@@ -156,6 +167,34 @@ function UserList() {
             ))}
           </tbody>
         </Table>
+
+        <div className="d-flex justify-content-center">
+              <Pagination>
+                <Pagination.Prev
+                  onClick={() => handlePaginationClick(currentPage - 1)}
+                  disabled={currentPage === 1}
+                />
+                {currentPage > 1 && (
+                  <Pagination.Item
+                    onClick={() => handlePaginationClick(currentPage - 1)}
+                  >
+                    {currentPage - 1}
+                  </Pagination.Item>
+                )}
+                <Pagination.Item active>{currentPage}</Pagination.Item>
+                {currentPage < Math.ceil(users.length / pageSize) && (
+                  <Pagination.Item
+                    onClick={() => handlePaginationClick(currentPage + 1)}
+                  >
+                    {currentPage + 1}
+                  </Pagination.Item>
+                )}
+                <Pagination.Next
+                  onClick={() => handlePaginationClick(currentPage + 1)}
+                  disabled={currentPage === Math.ceil(users.length / pageSize)}
+                />
+              </Pagination>
+            </div>
         {/* Edit User Modal */}
         <Modal
           show={showModal}

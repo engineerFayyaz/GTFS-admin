@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Table } from "react-bootstrap";
+import { Table,Pagination } from "react-bootstrap";
 
 const RegisteredUser = () => {
   const [users, setUsers] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+
 
   useEffect(() => {
     fetchUsers();
@@ -20,6 +23,15 @@ const RegisteredUser = () => {
       console.error("Error fetching users:", error);
     }
   };
+
+  const handlePaginationClick = (page) => {
+    setCurrentPage(page);
+  };
+
+  const paginatedStops = users.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   return (
     <>
@@ -48,7 +60,7 @@ const RegisteredUser = () => {
                 </tr>
               </thead>
               <tbody>
-                {users.map((user) => (
+                {paginatedStops.map((user) => (
                   <tr key={user.id}>
                     <td>{user.id}</td>
                     <td>{user.email}</td>
@@ -64,6 +76,33 @@ const RegisteredUser = () => {
                 ))}
               </tbody>
             </Table>
+            <div className="d-flex justify-content-center">
+              <Pagination>
+                <Pagination.Prev
+                  onClick={() => handlePaginationClick(currentPage - 1)}
+                  disabled={currentPage === 1}
+                />
+                {currentPage > 1 && (
+                  <Pagination.Item
+                    onClick={() => handlePaginationClick(currentPage - 1)}
+                  >
+                    {currentPage - 1}
+                  </Pagination.Item>
+                )}
+                <Pagination.Item active>{currentPage}</Pagination.Item>
+                {currentPage < Math.ceil(users.length / pageSize) && (
+                  <Pagination.Item
+                    onClick={() => handlePaginationClick(currentPage + 1)}
+                  >
+                    {currentPage + 1}
+                  </Pagination.Item>
+                )}
+                <Pagination.Next
+                  onClick={() => handlePaginationClick(currentPage + 1)}
+                  disabled={currentPage === Math.ceil(users.length / pageSize)}
+                />
+              </Pagination>
+            </div>
           </div>
         </div>
         </div>
