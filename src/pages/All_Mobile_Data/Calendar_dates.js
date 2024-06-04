@@ -14,7 +14,7 @@ import {
 } from "firebase/firestore";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Col, Container, Row, Modal, Form, Button, Table, Pagination } from "react-bootstrap";
+import { Col, Container, Row, Modal, Form, Button, Table, Pagination,InputGroup } from "react-bootstrap";
 
 function CalendarDates() {
   const [calendar, setCalendar] = useState([]);
@@ -30,10 +30,29 @@ function CalendarDates() {
   });
   const [selectedRows, setSelectedRows] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchDate, setSearchDate] = useState("");
+  const [searchExceptionType, setSearchExceptionType] = useState("");
 
   useEffect(() => {
     getCalendar();
   }, []);
+
+  const handleSearch = () => {
+    // Filter calendar data based on search criteria
+    const filteredCalendar = calendar.filter(item => {
+      return (
+        item.date.toLowerCase().includes(searchDate.toLowerCase()) &&
+        item.exception_type.toLowerCase().includes(searchExceptionType.toLowerCase())
+      );
+    });
+    setCalendar(filteredCalendar);
+  };
+
+  const handleClearSearch = () => {
+    setSearchDate("");
+    setSearchExceptionType("");
+    getCalendar();
+  };
 
   const getCalendar = async (next = false, previous = false) => {
     setLoading(true);
@@ -189,6 +208,17 @@ function CalendarDates() {
             <Button variant="info" onClick={handleUnselectAll} className="ms-2">
               Unselect All
             </Button>
+          </div>
+         
+          <div className="col-lg-8 p-3 d-flex align-items-center">
+            <Form.Label className="mr-2">Date:</Form.Label>
+            <Form.Control
+              type="text"
+              value={searchDate}
+              onChange={(e) => setSearchDate(e.target.value)}
+            />
+            <Button variant="primary" className="ml-2" onClick={handleSearch}>Search</Button>
+            <Button variant="secondary" className="ml-2" onClick={handleClearSearch}>Clear</Button>
           </div>
           <Table striped bordered hover className="overflow-scroll">
             <thead>

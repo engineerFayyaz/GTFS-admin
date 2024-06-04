@@ -104,7 +104,7 @@ function PublicTransitStops() {
         <Col md={8}>
           <div style={{ height: "80vh", width: "100%" }}>
             <GoogleMapReact
-              bootstrapURLKeys={{ key: "AIzaSyBDDCT1y6vpC4jJ3_LGzRnMF6OclbkDEfU", libraries: ['places'] }}
+              bootstrapURLKeys={{ key: "AIzaSyA6SzmrYZ9l1sxEev_InIxKI9aCwjlRAq0", libraries: ['places'] }}
               defaultCenter={{ lat: 41.9028, lng: 12.4964 }}
               defaultZoom={20}
               yesIWantToUseGoogleMapApiInternals
