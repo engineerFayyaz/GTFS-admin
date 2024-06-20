@@ -122,13 +122,13 @@ function RoutesMobileData() {
 
   // Function to delete selected routes
   const handleDeleteSelected = async () => {
+    const firestore = getFirestore();
     try {
       setLoading(true);
-      const db = getFirestore();
-      const batch = db.batch();
+      const batch = firestore.batch(); // Access batch() from Firestore instance
 
       selectedRows.forEach((routeId) => {
-        const routeRef = doc(db, "routes2", routeId);
+        const routeRef = doc(firestore, "routes2", routeId);
         batch.delete(routeRef);
       });
 
@@ -145,6 +145,10 @@ function RoutesMobileData() {
       setLoading(false);
     }
   };
+
+  
+  
+
 
   // Function to select all rows
   const handleSelectAll = () => {

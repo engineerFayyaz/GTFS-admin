@@ -23,6 +23,7 @@ import {
   Button,
   Table,
   Pagination,
+  Spinner
 } from "react-bootstrap";
 import DeleteData from "../../components/DeleteData";
 function CalendarDates() {
@@ -41,6 +42,7 @@ function CalendarDates() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchDate, setSearchDate] = useState("");
   const [searchExceptionType, setSearchExceptionType] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     getCalendar();
@@ -139,6 +141,7 @@ function CalendarDates() {
 
   const handleDelete = async (id) => {
     try {
+      isLoading(true);
       const db = getFirestore();
       await deleteDoc(doc(db, "calendar_dates2", id));
       setCalendar((prevCalendar) => prevCalendar.filter((calendarItem) => calendarItem.id !== id));
@@ -146,6 +149,8 @@ function CalendarDates() {
     } catch (error) {
       console.error("Error deleting calendar:", error);
       toast.error("Error deleting calendar");
+    }finally {
+      setIsLoading(false);
     }
   };
 
@@ -159,6 +164,7 @@ function CalendarDates() {
 
   const handleDeleteSelected = async () => {
     try {
+      setLoading(true);
       const db = getFirestore();
 
       for (const id of selectedRows) {
@@ -171,6 +177,8 @@ function CalendarDates() {
     } catch (error) {
       console.error("Error deleting selected calendars:", error);
       toast.error("Error deleting selected calendars");
+    }finally {
+      setLoading(false);
     }
   };
 
@@ -203,8 +211,13 @@ function CalendarDates() {
             </div>
           </div>
           <div className="col-lg-12 p-3">
-            <Button variant="danger" onClick={handleDeleteSelected}>
-              Delete Selected
+          <Button
+              variant="danger"
+              className="mb-3"
+              onClick={handleDeleteSelected}
+              disabled={isLoading || selectedRows.length === 0} // Disable button when isLoading is true or no shapes are selected
+            >
+              {isLoading ? "Deleting..." : "Delete Selected"}
             </Button>
             <Button variant="info" onClick={handleSelectAll} className="ms-2">
               Select All

@@ -36,6 +36,7 @@ function StopsTime2Web() {
   const [selectAll, setSelectAll] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
+  const [isLoading,setIsLoading]= useState(false)
 
 
   useEffect(() => {
@@ -109,6 +110,7 @@ function StopsTime2Web() {
   };
 
   const handleSelectedDelete = async () => {
+    setIsLoading(true)
     const selectedIds = selectedStops.map((stop) => stop.id);
     try {
       const db = getFirestore();
@@ -124,6 +126,8 @@ function StopsTime2Web() {
     } catch (error) {
       console.error("Error deleting stops:", error);
       toast.error("Error deleting selected stops");
+    }finally{
+      setIsLoading(false)
     }
   };
 
@@ -149,6 +153,7 @@ function StopsTime2Web() {
   };
 
   const handleDelete = async (count) => {
+    setIsLoading(true)
     try {
       const db = getFirestore();
       const stopToDelete = stops.find((stop) => stop.count === count);
@@ -164,6 +169,8 @@ function StopsTime2Web() {
     } catch (error) {
       console.error("Error deleting stop:", error);
       toast.error("Error deleting stop for count: " + count);
+    }finally{
+      setIsLoading(false)
     }
   };
 
@@ -192,9 +199,9 @@ function StopsTime2Web() {
             <Button
               variant="danger"
               onClick={handleSelectedDelete}
-              disabled={selectedStops.length === 0}
+              disabled={isLoading||selectedStops.length === 0}
             >
-              Delete Selected
+             {isLoading ? "Deleting..." : "Delete Selected"}
             </Button>
 
             <Button variant="info" onClick={handleToggleAll} className="ms-2">

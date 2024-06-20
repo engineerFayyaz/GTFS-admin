@@ -36,6 +36,8 @@ function StopesAppData() {
   const [selectAll, setSelectAll] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
+  const [isLoading, setIsLoading] = useState(false);
+
 
   useEffect(() => {
     const getStops = async () => {
@@ -104,6 +106,7 @@ function StopesAppData() {
   };
 
   const handleDelete = async (id) => {
+    setIsLoading(true)
     try {
       await deleteDoc(doc(db, "stops2", id));
       setStops((prevStops) => prevStops.filter((stop) => stop.id !== id));
@@ -111,6 +114,8 @@ function StopesAppData() {
     } catch (error) {
       console.error("Error deleting stop:", error);
       toast.error("Error deleting stop");
+    }finally{
+      setIsLoading(false)
     }
   };
 
@@ -134,6 +139,7 @@ function StopesAppData() {
   };
 
   const handleDeleteSelected = async () => {
+    setIsLoading(true)
     try {
       for (const stop of selectedStops) {
         await deleteDoc(doc(db, "stops2", stop.id));
@@ -147,6 +153,8 @@ function StopesAppData() {
     } catch (error) {
       console.error("Error deleting selected stops:", error);
       toast.error("Error deleting selected stops");
+    }finally{
+      setIsLoading(false)
     }
   };
 
@@ -176,9 +184,10 @@ function StopesAppData() {
               variant="danger"
               className="mb-3"
               onClick={handleDeleteSelected}
-              disabled={selectedStops.length === 0}
+              disabled={isLoading || selectedStops.length === 0} // Disable button when isLoading is true or no shapes are selected
+
             >
-              Delete Selected
+              {isLoading ? "Deleting..." : "Delete Selected"}
             </Button>
             <Button
               variant="primary"

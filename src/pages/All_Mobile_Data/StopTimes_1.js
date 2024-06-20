@@ -38,6 +38,7 @@ function StopsTimeWeb() {
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
+  const [isLoading,setIsLoading] = useState(false);
 
 
   useEffect(() => {
@@ -110,6 +111,7 @@ function StopsTimeWeb() {
   };
 
   const handleSelectedDelete = async () => {
+    setIsLoading(true)
     const selectedIds = selectedStops.map((stop) => stop.id);
     try {
       const db = getFirestore();
@@ -125,6 +127,8 @@ function StopsTimeWeb() {
     } catch (error) {
       console.error("Error deleting stops:", error);
       toast.error("Error deleting selected stops");
+    }finally{
+      setIsLoading(false)
     }
   };
 
@@ -150,6 +154,7 @@ function StopsTimeWeb() {
   };
 
   const handleDelete = async (id) => {
+    setIsLoading(true)
     try {
       const db = getFirestore();
       await deleteDoc(doc(db, "stop_times", id));
@@ -160,6 +165,8 @@ function StopsTimeWeb() {
     } catch (error) {
       console.error("Error deleting stop:", error);
       toast.error("Error deleting stop");
+    }finally{
+      setIsLoading(false)
     }
   };
 
@@ -189,9 +196,10 @@ function StopsTimeWeb() {
             <Button
               variant="danger"
               onClick={handleSelectedDelete}
-              disabled={selectedStops.length === 0}
+              disabled={isLoading || selectedStops.length === 0} // Disable button when isLoading is true or no shapes are selected
+
             >
-              Delete Selected
+              {isLoading ? "Deleting..." : "Delete Selected"}
             </Button>
 
             <Button variant="info" onClick={handleToggleAll} className="ms-2">
