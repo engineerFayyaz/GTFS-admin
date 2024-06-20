@@ -126,7 +126,7 @@ export const UploadMobileData = () => {
           <div className="col-lg-12 p-3">
             <div className="text-center  ">
               <h5 className="text-uppercase p-2 page-title">
-                Upload GTFS Web Data
+                Upload GTFS Mobile Data
               </h5>
               <div className="upload_data mt-4">
                 <input type="file" className=" shadow py-2 px-3" style={{borderRadius:"10px 0px 0px 10px"}} onChange={handleFileChange} accept=".txt" />
