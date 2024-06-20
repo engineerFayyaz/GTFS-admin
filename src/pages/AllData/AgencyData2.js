@@ -6,6 +6,7 @@ import {
   deleteDoc,
   updateDoc,
   doc,
+  writeBatch
 } from "firebase/firestore";
 import {
   Table,
@@ -16,6 +17,8 @@ import {
   Modal,
   Button,
   Pagination,
+  ProgressBar,
+  Spinner,
 } from "react-bootstrap";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -38,7 +41,8 @@ function AgencyData2() {
   const [selectedRows, setSelectedRows] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
-
+  const [deleting, setDeleting] = useState(false); // State to manage delete progress
+  const [deleteProgress, setDeleteProgress] = useState(0); // State to track delete progress
   useEffect(() => {
     const getRoutes = async () => {
       try {
@@ -99,6 +103,7 @@ function AgencyData2() {
 
   const handleDelete = async (count) => {
     try {
+      setDeleting(true); // Start delete operation
       const db = getFirestore();
       const routeToDelete = routes.find((route) => route.count === count);
       if (routeToDelete) {
@@ -106,12 +111,16 @@ function AgencyData2() {
         setRoutes((prevRoutes) =>
           prevRoutes.filter((route) => route.count !== count)
         );
+        toast.success("Route deleted successfully");
         console.log("Route deleted successfully:", routeToDelete);
       } else {
         console.error("Route with count", count, "not found.");
       }
     } catch (error) {
       console.error("Error deleting route:", error);
+      toast.error("Error deleting route");
+    } finally {
+      setDeleting(false); // End delete operation
     }
   };
 
@@ -125,26 +134,37 @@ function AgencyData2() {
 
   const handleDeleteSelected = async () => {
     try {
+      setDeleting(true); // Start delete operation
       const db = getFirestore();
-
+  
+      const batch = writeBatch(db);
+  
       for (const count of selectedRows) {
         const routeToDelete = routes.find((route) => route.count === count);
         if (routeToDelete) {
-          await deleteDoc(doc(db, "agency2", routeToDelete.id));
+          const routeRef = doc(db, "agency2", routeToDelete.id);
+          batch.delete(routeRef);
         } else {
           console.error("Route with count", count, "not found.");
         }
       }
-
+  
+      await batch.commit(); // Commit the batch operation
+  
       setRoutes((prevRoutes) =>
         prevRoutes.filter((route) => !selectedRows.includes(route.count))
       );
+      toast.success("Selected routes deleted successfully");
       console.log("Selected routes deleted successfully:", selectedRows);
       setSelectedRows([]);
     } catch (error) {
       console.error("Error deleting selected routes:", error);
+      toast.error("Error deleting selected routes");
+    } finally {
+      setDeleting(false); // End delete operation
     }
   };
+  
 
   const handleSelectAll = () => {
     setSelectedRows(routes.map((route) => route.count));
@@ -174,8 +194,19 @@ function AgencyData2() {
             </div>
           </div>
           <div className="col-lg-12 p-3">
-            <Button variant="danger" onClick={handleDeleteSelected}>
-              Delete Selected
+          <Button
+              variant="danger"
+              onClick={handleDeleteSelected}
+              disabled={deleting}
+            >
+              {deleting ? (
+                <>
+                  <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete Selected"
+              )}
             </Button>
             <Button variant="info" onClick={handleSelectAll} className="ms-2">
               Select All

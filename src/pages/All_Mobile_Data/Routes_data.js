@@ -16,6 +16,8 @@ import {
   Modal,
   Button,
   Pagination,
+  Spinner,
+  ProgressBar,
 } from "react-bootstrap";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -33,9 +35,12 @@ function RoutesMobileData() {
   const [selectedRows, setSelectedRows] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [loading, setLoading] = useState(false);
+  const [deleteProgress, setDeleteProgress] = useState(0);
 
+  // Fetch routes from Firestore on component mount
   useEffect(() => {
-    const getRoutes = async () => {
+    const fetchRoutes = async () => {
       try {
         const db = getFirestore();
         const routesCollection = await getDocs(collection(db, "routes2"));
@@ -49,15 +54,17 @@ function RoutesMobileData() {
       }
     };
 
-    getRoutes();
-  }, []);
+    fetchRoutes();
+  }, []); // Empty dependency array ensures this effect runs only once on mount
 
+  // Function to handle editing a route
   const handleEdit = (route) => {
     setEditedRoute(route);
     setUpdatedRoute(route);
     setShowModal(true);
   };
 
+  // Function to close the edit modal
   const handleCloseModal = () => {
     setEditedRoute(null);
     setShowModal(false);
@@ -69,6 +76,7 @@ function RoutesMobileData() {
     });
   };
 
+  // Function to save changes to a route
   const saveChanges = async () => {
     try {
       const db = getFirestore();
@@ -83,12 +91,14 @@ function RoutesMobileData() {
       toast.success("Route updated successfully");
     } catch (error) {
       toast.error("Error while updating route:", error);
-      console.log("Error while updating route:", error);
+      console.error("Error while updating route:", error);
     }
   };
 
+  // Function to handle deleting a route
   const handleDelete = async (routeId) => {
     try {
+      setLoading(true);
       const db = getFirestore();
       await deleteDoc(doc(db, "routes2", routeId));
       setRoutes((prevRoutes) => prevRoutes.filter((route) => route.id !== routeId));
@@ -96,9 +106,12 @@ function RoutesMobileData() {
     } catch (error) {
       console.error("Error deleting route:", error);
       toast.error("Error deleting route");
+    } finally {
+      setLoading(false);
     }
   };
 
+  // Function to toggle selection of a row
   const handleToggleRow = (routeId) => {
     setSelectedRows((prevSelectedRows) =>
       prevSelectedRows.includes(routeId)
@@ -107,38 +120,50 @@ function RoutesMobileData() {
     );
   };
 
+  // Function to delete selected routes
   const handleDeleteSelected = async () => {
     try {
+      setLoading(true);
       const db = getFirestore();
+      const batch = db.batch();
 
-      for (const routeId of selectedRows) {
-        await deleteDoc(doc(db, "routes2", routeId));
-      }
+      selectedRows.forEach((routeId) => {
+        const routeRef = doc(db, "routes2", routeId);
+        batch.delete(routeRef);
+      });
 
-      setRoutes((prevRoutes) =>
-        prevRoutes.filter((route) => !selectedRows.includes(route.id))
-      );
-      toast.success("Selected routes deleted successfully");
+      await batch.commit();
+
+      const updatedRoutes = routes.filter((route) => !selectedRows.includes(route.id));
+      setRoutes(updatedRoutes);
       setSelectedRows([]);
+      toast.success("Selected routes deleted successfully");
     } catch (error) {
       console.error("Error deleting selected routes:", error);
       toast.error("Error deleting selected routes");
+    } finally {
+      setLoading(false);
     }
   };
 
+  // Function to select all rows
   const handleSelectAll = () => {
     setSelectedRows(routes.map((route) => route.id));
   };
 
+  // Function to unselect all rows
   const handleUnselectAll = () => {
     setSelectedRows([]);
   };
 
+  // Function to handle pagination click
   const handlePaginationClick = (page) => {
     setCurrentPage(page);
   };
 
+  // Calculate paginated routes based on currentPage and pageSize
   const paginatedRoutes = routes.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
   return (
     <>
       <ToastContainer />
@@ -150,8 +175,15 @@ function RoutesMobileData() {
             </div>
           </div>
           <div className="col-lg-12 p-3">
-            <Button variant="danger" onClick={handleDeleteSelected}>
-              Delete Selected
+          <Button variant="danger" onClick={handleDeleteSelected} disabled={loading}>
+              {loading ? (
+                <>
+                  <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete Selected"
+              )}
             </Button>
             <Button variant="info" onClick={handleSelectAll} className="ms-2">
               Select All
@@ -172,7 +204,7 @@ function RoutesMobileData() {
               </tr>
             </thead>
             <tbody>
-              {routes.map((route) => (
+              {paginatedRoutes.map((route) => (
                 <tr key={route.id}>
                   <td>
                     <input

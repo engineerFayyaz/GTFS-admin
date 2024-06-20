@@ -14,8 +14,17 @@ import {
 } from "firebase/firestore";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Col, Container, Row, Modal, Form, Button, Table, Pagination,InputGroup } from "react-bootstrap";
-
+import {
+  Col,
+  Container,
+  Row,
+  Modal,
+  Form,
+  Button,
+  Table,
+  Pagination,
+} from "react-bootstrap";
+import DeleteData from "../../components/DeleteData";
 function CalendarDates() {
   const [calendar, setCalendar] = useState([]);
   const [lastVisible, setLastVisible] = useState(null);
@@ -38,8 +47,7 @@ function CalendarDates() {
   }, []);
 
   const handleSearch = () => {
-    // Filter calendar data based on search criteria
-    const filteredCalendar = calendar.filter(item => {
+    const filteredCalendar = calendar.filter((item) => {
       return (
         item.date.toLowerCase().includes(searchDate.toLowerCase()) &&
         item.exception_type.toLowerCase().includes(searchExceptionType.toLowerCase())
@@ -58,11 +66,7 @@ function CalendarDates() {
     setLoading(true);
     try {
       const db = getFirestore();
-      let calendarQuery = query(
-        collection(db, "calendar_dates2"),
-        orderBy("date"),
-        limit(50)
-      );
+      let calendarQuery = query(collection(db, "calendar_dates2"), orderBy("date"), limit(50));
 
       if (next && lastVisible) {
         calendarQuery = query(
@@ -269,6 +273,9 @@ function CalendarDates() {
           </Pagination>
         </div>
       </div>
+      {/* Delete Data Component */}
+      {/* <DeleteData /> */}
+
       {/* Edit Calendar Modal */}
       <Modal
         show={showModal}

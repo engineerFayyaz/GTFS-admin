@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import {getFirestore,collection, addDoc, getDocs, deleteDoc,doc} from "firebase/firestore"
+import {getFirestore,collection, addDoc, getDocs, deleteDoc,doc,writeBatch} from "firebase/firestore"
 import {getStorage} from 'firebase/storage';
 import { getAuth } from 'firebase/auth'; // Import Firebase Authentication
 import {getMessaging, getToken, onMessage} from 'firebase/messaging'
@@ -103,11 +103,9 @@ const deleteNotification = async (id) => {
   }
 };
 
+const batch = writeBatch(db);
 
-
-
-
-export {storage, db,app ,auth, messaging,getNotifications, deleteNotification};
+export {storage, db,app ,auth, messaging,getNotifications, deleteNotification,doc,deleteDoc,getDocs,collection};
 // export const onMessageListener = () => {
 
 //   return new Promise((resolve) => {

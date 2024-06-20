@@ -6,6 +6,7 @@ import {
   deleteDoc,
   updateDoc,
   doc,
+  writeBatch,
 } from "firebase/firestore";
 import {
   Table,
@@ -20,6 +21,7 @@ import {
 import { db } from "../../Config";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 
 function ShapesAppData() {
   const [shapes, setShapes] = useState([]);
@@ -37,6 +39,7 @@ function ShapesAppData() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(50);
   const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const getShapes = async () => {
@@ -107,13 +110,17 @@ function ShapesAppData() {
   };
 
   const handleDelete = async (id) => {
+    setIsLoading(true);
     try {
+      const db = getFirestore();
       await deleteDoc(doc(db, "shapes2", id));
       setShapes((prevShapes) => prevShapes.filter((shape) => shape.id !== id));
       toast.success("Shape deleted successfully");
     } catch (error) {
       console.error("Error deleting shape:", error);
       toast.error("Error deleting shape");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -127,34 +134,67 @@ function ShapesAppData() {
   };
 
   const handleSelectAll = () => {
-    const updatedShapes = shapes.map((shape) => ({ ...shape, isSelected: !selectAll }));
+    const updatedShapes = shapes.map((shape) => ({
+      ...shape,
+      isSelected: !selectAll,
+    }));
     setShapes(updatedShapes);
     setSelectedShapes(updatedShapes.filter((shape) => shape.isSelected));
     setSelectAll(!selectAll);
   };
 
-  const handleDeleteSelected = async () => {
-    try {
-      for (const shape of selectedShapes) {
-        await deleteDoc(doc(db, "shapes2", shape.id));
-      }
-      setShapes((prevShapes) =>
-        prevShapes.filter((shape) => !selectedShapes.includes(shape))
-      );
-      setSelectedShapes([]);
-      setSelectAll(false);
-      toast.success("Selected shapes deleted successfully");
-    } catch (error) {
-      console.error("Error deleting selected shapes:", error);
-      toast.error("Error deleting selected shapes");
-    }
-  };
 
+  const handleDeleteSelected = async () => {
+    setIsLoading(true);
+    try {
+        const db = getFirestore();
+
+        // Check if selectedShapes is an array
+        if (!Array.isArray(selectedShapes)) {
+            console.error("selectedShapes is not an array");
+            return; // or handle the error accordingly
+        }
+
+        // Log the value of selectedShapes
+        console.log("selectedShapes:", selectedShapes);
+
+        const deletedRows = [];
+
+        for (const shape of selectedShapes) {
+            await deleteDoc(doc(db, "shapes2", shape.id));
+            deletedRows.push(shape); // Add the deleted shape to the array
+            console.log("Deleted row:", shape); // Log the individual deleted row
+        }
+
+        // Filter out the deleted shapes from the state
+        setShapes((prevShapes) => prevShapes.filter((shape) => !selectedShapes.some((selectedShape) => selectedShape.id === shape.id)));
+        
+        // Clear the selected shapes array
+        setSelectedShapes([]);
+        
+        toast.success("Selected shapes deleted successfully");
+    } catch (error) {
+        console.error("Error deleting selected shapes:", error);
+        toast.error("Error deleting selected shapes");
+    } finally {
+        setIsLoading(false);
+    }
+};
+
+
+  
+
+
+ 
+  
   const handlePaginationClick = (page) => {
     setCurrentPage(page);
   };
 
-  const paginatedShapes = shapes.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const paginatedShapes = shapes.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
   const totalPages = Math.ceil(shapes.length / pageSize);
 
   return (
@@ -174,10 +214,11 @@ function ShapesAppData() {
               variant="danger"
               className="mb-3"
               onClick={handleDeleteSelected}
-              disabled={selectedShapes.length === 0}
+              disabled={isLoading || selectedShapes.length === 0} // Disable button when isLoading is true or no shapes are selected
             >
-              Delete Selected
+              {isLoading ? "Deleting..." : "Delete Selected"}
             </Button>
+
             <Button
               variant="primary"
               className="mb-3 ms-3"
@@ -249,13 +290,17 @@ function ShapesAppData() {
                       disabled={currentPage === 1}
                     />
                     {currentPage > 1 && (
-                      <Pagination.Item onClick={() => handlePaginationClick(currentPage - 1)}>
+                      <Pagination.Item
+                        onClick={() => handlePaginationClick(currentPage - 1)}
+                      >
                         {currentPage - 1}
                       </Pagination.Item>
                     )}
                     <Pagination.Item active>{currentPage}</Pagination.Item>
                     {currentPage < totalPages && (
-                      <Pagination.Item onClick={() => handlePaginationClick(currentPage + 1)}>
+                      <Pagination.Item
+                        onClick={() => handlePaginationClick(currentPage + 1)}
+                      >
                         {currentPage + 1}
                       </Pagination.Item>
                     )}

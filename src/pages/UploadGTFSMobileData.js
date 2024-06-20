@@ -8,7 +8,7 @@ export const UploadMobileData = () => {
               <h5 className="text-uppercase p-2 page-title">
                 Upload Mobile Data
               </h5>
-              <a href="https://gtfs.codegifted.com/"><button className="btn btn-success px-5 py-3">Upload Mobile Data</button></a>
+              <a href="#"><button className="btn btn-success px-5 py-3">Upload Mobile Data</button></a>
             </div>
           </div>
         </div>
