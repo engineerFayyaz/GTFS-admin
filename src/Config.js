@@ -22,9 +22,6 @@ const auth = getAuth(app); // Initialize Firebase Authentication
 const messaging = getMessaging(app);
 
 
-console.log('Firestore instance:', db);
-
-
 export const generateToken = async () => {
   try {
     const token = await messaging.getToken({

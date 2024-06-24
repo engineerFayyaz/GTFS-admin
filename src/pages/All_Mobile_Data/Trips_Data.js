@@ -16,6 +16,7 @@ import {
   Col,
   Modal,
   Pagination,
+  Spinner,
 } from "react-bootstrap/";
 import { db } from "../../Config";
 import { toast, ToastContainer } from "react-toastify";
@@ -36,6 +37,7 @@ function TripsAppData() {
   const [selectAll, setSelectAll] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
+  const [loading, setLoading] = useState(false);
 
 
   useEffect(() => {
@@ -60,7 +62,6 @@ function TripsAppData() {
             selected: false,
           };
         });
-        console.log("Fetched stops data:", stopsData);
         setStops(stopsData);
         toast.success("Data fetched successfully");
       } catch (error) {
@@ -107,12 +108,15 @@ function TripsAppData() {
 
   const handleDelete = async (id) => {
     try {
+      setLoading(true);
       await deleteDoc(doc(db, "trips2", id));
       setStops((prevStops) => prevStops.filter((stop) => stop.id !== id));
       toast.success("Stop deleted successfully");
     } catch (error) {
       console.error("Error deleting stop:", error);
       toast.error("Error deleting stop");
+    }finally {
+      setLoading(false);
     }
   };
 
@@ -134,6 +138,7 @@ function TripsAppData() {
 
   const handleDeleteSelected = async () => {
     try {
+      setLoading(true);
       for (const stop of selectedStops) {
         await deleteDoc(doc(db, "trips2", stop.id));
       }
@@ -146,6 +151,8 @@ function TripsAppData() {
     } catch (error) {
       console.error("Error deleting selected stops:", error);
       toast.error("Error deleting selected stops");
+    }finally {
+      setLoading(false);
     }
   };
 
@@ -177,7 +184,14 @@ function TripsAppData() {
               onClick={handleDeleteSelected}
               disabled={selectedStops.length === 0}
             >
-              Delete Selected
+              {loading ? (
+                <>
+                  <Spinner animation="border" size="sm" role="status" aria-hidden="true" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete Selected"
+              )}
             </Button>
             <Button
               variant="primary"

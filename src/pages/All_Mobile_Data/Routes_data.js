@@ -6,6 +6,7 @@ import {
   deleteDoc,
   updateDoc,
   doc,
+  writeBatch
 } from "firebase/firestore";
 import {
   Table,
@@ -125,15 +126,15 @@ function RoutesMobileData() {
     const firestore = getFirestore();
     try {
       setLoading(true);
-      const batch = firestore.batch(); // Access batch() from Firestore instance
-
+      const batch = writeBatch(firestore); // Corrected the method to create a batch
+  
       selectedRows.forEach((routeId) => {
         const routeRef = doc(firestore, "routes2", routeId);
         batch.delete(routeRef);
       });
-
+  
       await batch.commit();
-
+  
       const updatedRoutes = routes.filter((route) => !selectedRows.includes(route.id));
       setRoutes(updatedRoutes);
       setSelectedRows([]);
