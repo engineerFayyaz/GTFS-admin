@@ -22,7 +22,7 @@ import { db } from "../../Config";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
-
+import SearchFilter from "../../components/SearchFilter";
 function ShapesAppData() {
   const [shapes, setShapes] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -39,6 +39,7 @@ function ShapesAppData() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(50);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -191,11 +192,19 @@ function ShapesAppData() {
     setCurrentPage(page);
   };
 
-  const paginatedShapes = shapes.slice(
+  const filteredShapesData = shapes.filter((item) => {
+    const searchTermLower = searchTerm.toLowerCase();
+    return ['shapeId', 'Shape_Lat', 'Shape_Lon', 'Dist_Traveled'].some((field) =>
+      item[field]
+        ? item[field].toLowerCase().includes(searchTermLower)
+        : false
+    );
+  });
+  const paginatedShapes = filteredShapesData.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
-  const totalPages = Math.ceil(shapes.length / pageSize);
+  const totalPages = Math.ceil(filteredShapesData.length / pageSize);
 
   return (
     <>
@@ -206,6 +215,11 @@ function ShapesAppData() {
             <div className="text-center">
               <h5 className="text-uppercase p-2 page-title">Shapes App Data</h5>
             </div>
+            <SearchFilter 
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            fields={['shapeId', 'Shape_Lat', 'Shape_Lon', 'Dist_Traveled']}
+            />
           </Col>
         </Row>
         <Row>

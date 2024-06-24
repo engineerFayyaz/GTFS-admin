@@ -20,6 +20,7 @@ import {
 import { db } from "../../Config";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import SearchFilter from "../../components/SearchFilter";
 
 function ShapesWebData() {
   const [shapes, setShapes] = useState([]);
@@ -35,9 +36,8 @@ function ShapesWebData() {
   const [selectedShapes, setSelectedShapes] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
-
-
+  const [pageSize, setPageSize] = useState(50); 
+  const [searchTerm, setSearchTerm] = useState("");
   useEffect(() => {
     const getShapes = async () => {
       try {
@@ -152,7 +152,15 @@ function ShapesWebData() {
     setCurrentPage(page);
   };
 
-  const paginatedStops = shapes.slice(
+  const filteredShapesData = shapes.filter((item) => {
+    const searchTermLower = searchTerm.toLowerCase();
+    return ['shapeId', 'Shape_Lat', 'Shape_Lon', 'Dist_Traveled'].some((field) =>
+      item[field]
+        ? item[field].toLowerCase().includes(searchTermLower)
+        : false
+    );
+  });
+  const paginatedStops = filteredShapesData.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
@@ -166,6 +174,11 @@ function ShapesWebData() {
             <div className="text-center">
               <h5 className="text-uppercase p-2 page-title">Shapes Data</h5>
             </div>
+            <SearchFilter 
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            fields={['shapeId', 'Shape_Lat', 'Shape_Lon', 'Dist_Traveled']}
+            />
           </Col>
         </Row>
         <Row>
@@ -252,7 +265,7 @@ function ShapesWebData() {
                   </Pagination.Item>
                 )}
                 <Pagination.Item active>{currentPage}</Pagination.Item>
-                {currentPage < Math.ceil(shapes.length / pageSize) && (
+                {currentPage < Math.ceil(filteredShapesData.length / pageSize) && (
                   <Pagination.Item
                     onClick={() => handlePaginationClick(currentPage + 1)}
                   >
@@ -261,7 +274,7 @@ function ShapesWebData() {
                 )}
                 <Pagination.Next
                   onClick={() => handlePaginationClick(currentPage + 1)}
-                  disabled={currentPage === Math.ceil(shapes.length / pageSize)}
+                  disabled={currentPage === Math.ceil(filteredShapesData.length / pageSize)}
                 />
               </Pagination>
             </div>

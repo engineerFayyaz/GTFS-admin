@@ -21,7 +21,7 @@ import {
 import { db } from "../../Config";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
+import SearchFilter from "../../components/SearchFilter";
 function TripsAppData() {
   const [stops, setStops] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -38,7 +38,7 @@ function TripsAppData() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const [loading, setLoading] = useState(false);
-
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const getStops = async () => {
@@ -161,7 +161,15 @@ function TripsAppData() {
     setCurrentPage(page);
   };
 
-  const paginatedStops = stops.slice(
+  const filteredStopsData = stops.filter((item) => {
+    const searchTermLower = searchTerm.toLowerCase();
+    return ['tripId', 'directionId', 'routeId', 'serviceId', 'shapId'].some((field) =>
+      item[field]
+        ? item[field].toLowerCase().includes(searchTermLower)
+        : false
+    );
+  });
+  const paginatedStops = filteredStopsData.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
@@ -174,6 +182,11 @@ function TripsAppData() {
             <div className="text-center">
               <h5 className="text-uppercase p-2 page-title">Trips Data</h5>
             </div>
+            <SearchFilter 
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            fields={['tripId', 'directionId', 'routeId', 'serviceId', 'shapId']}
+            />
           </Col>
         </Row>
         <Row>
@@ -267,7 +280,7 @@ function TripsAppData() {
                   </Pagination.Item>
                 )}
                 <Pagination.Item active>{currentPage}</Pagination.Item>
-                {currentPage < Math.ceil(stops.length / pageSize) && (
+                {currentPage < Math.ceil(filteredStopsData.length / pageSize) && (
                   <Pagination.Item
                     onClick={() => handlePaginationClick(currentPage + 1)}
                   >
@@ -276,7 +289,7 @@ function TripsAppData() {
                 )}
                 <Pagination.Next
                   onClick={() => handlePaginationClick(currentPage + 1)}
-                  disabled={currentPage === Math.ceil(stops.length / pageSize)}
+                  disabled={currentPage === Math.ceil(filteredStopsData.length / pageSize)}
                 />
               </Pagination>
             </div>

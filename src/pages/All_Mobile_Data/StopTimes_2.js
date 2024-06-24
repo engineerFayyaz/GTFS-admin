@@ -19,7 +19,7 @@ import {
 } from "react-bootstrap/";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
+import SearchFilter from "../../components/SearchFilter";
 function StopsTime2Web() {
   const [stops, setStops] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -37,7 +37,7 @@ function StopsTime2Web() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const [isLoading,setIsLoading]= useState(false)
-
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const getStops = async () => {
@@ -178,7 +178,15 @@ function StopsTime2Web() {
     setCurrentPage(page);
   };
 
-  const paginatedStops = stops.slice(
+  const filteredStopsData = stops.filter((item) => {
+    const searchTermLower = searchTerm.toLowerCase();
+    return ['arrivalTime', 'departureTime', 'tripId'].some((field) =>
+      item[field]
+        ? item[field].toLowerCase().includes(searchTermLower)
+        : false
+    );
+  });
+  const paginatedStops = filteredStopsData.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
@@ -193,6 +201,11 @@ function StopsTime2Web() {
             <div className="text-center">
               <h5 className="text-uppercase p-2 page-title">Stops Times 2 Data</h5>
             </div>
+            <SearchFilter 
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            fields={['arrivalTime', 'departureTime', 'tripId']}
+            />
           </div>
 
           <div className="col-lg-12 p-3">
@@ -272,7 +285,7 @@ function StopsTime2Web() {
                   </Pagination.Item>
                 )}
                 <Pagination.Item active>{currentPage}</Pagination.Item>
-                {currentPage < Math.ceil(stops.length / pageSize) && (
+                {currentPage < Math.ceil(filteredStopsData.length / pageSize) && (
                   <Pagination.Item
                     onClick={() => handlePaginationClick(currentPage + 1)}
                   >
@@ -281,7 +294,7 @@ function StopsTime2Web() {
                 )}
                 <Pagination.Next
                   onClick={() => handlePaginationClick(currentPage + 1)}
-                  disabled={currentPage === Math.ceil(stops.length / pageSize)}
+                  disabled={currentPage === Math.ceil(filteredStopsData.length / pageSize)}
                 />
               </Pagination>
             </div>

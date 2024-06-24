@@ -1,33 +1,52 @@
 import React, { useEffect, useState } from "react";
-import {
-  getFirestore,
-  collection,
-  getDocs,
-} from "firebase/firestore";
+import { getFirestore, collection, getDocs } from "firebase/firestore";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Col, Container, Row, Modal, Form, Button, Table } from "react-bootstrap";
-
+import {
+  Col,
+  Container,
+  Row,
+  Modal,
+  Form,
+  Button,
+  Table,
+} from "react-bootstrap";
+import SearchFilter from "../components/SearchFilter";
 function ContactRequest() {
   const [contactRequests, setContactRequests] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const fetchContactRequests = async () => {
       const db = getFirestore();
       const contactRequestsRef = collection(db, "ContactInfo");
       const contactRequestsSnapshot = await getDocs(contactRequestsRef);
-      const contactRequestsList = contactRequestsSnapshot.docs.map(doc => doc.data());
+      const contactRequestsList = contactRequestsSnapshot.docs.map((doc) =>
+        doc.data()
+      );
       setContactRequests(contactRequestsList);
     };
 
     fetchContactRequests();
   }, []);
 
+  const filteredContacts = contactRequests.filter((request) => {
+    const searchTermLower = searchTerm.toLowerCase();
+
+    return ["email", "message"].some((field) =>
+      request[field] ? request[field].toLowerCase().includes(searchTermLower) : false
+    );
+  });
   return (
     <Container>
-       <div className="text-center  mt-3">
+      <div className="text-center  mt-3">
         <h2 className="text-uppercase p-2 page-title">Contact Requests</h2>
-        </div>
+        <SearchFilter 
+        searchTerm={searchTerm} 
+        setSearchTerm={setSearchTerm}
+        field = {["email", "message"]}
+        />
+      </div>
       <Row>
         <Col>
           <Table striped bordered hover>
@@ -40,7 +59,7 @@ function ContactRequest() {
               </tr>
             </thead>
             <tbody>
-              {contactRequests.map((request, index) => (
+              {filteredContacts.map((request, index) => (
                 <tr key={index}>
                   <td>{request.email}</td>
                   <td>{request.firstname}</td>

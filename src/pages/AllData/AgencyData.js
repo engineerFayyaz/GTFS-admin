@@ -19,6 +19,7 @@ import {
 } from "react-bootstrap";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import SearchFilter from "../../components/SearchFilter";
 
 function AgencyData() {
   const [routes, setRoutes] = useState([]);
@@ -38,7 +39,7 @@ function AgencyData() {
   const [selectedRows, setSelectedRows] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
-
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const getRoutes = async () => {
@@ -155,12 +156,17 @@ function AgencyData() {
     setSelectedRows([]);
   };
 
-
   const handlePaginationClick = (page) => {
     setCurrentPage(page);
   };
 
-  const paginatedStops = routes.slice(
+  const filteredRoutesData = routes.filter((item) => {
+    const searchTermLower = searchTerm.toLowerCase();
+    return ["agencyName", "agencyPhone", "agencyUrl", "routeId"].some((field) =>
+      item[field] ? item[field].toLowerCase().includes(searchTermLower) : false
+    );
+  });
+  const paginatedStops = filteredRoutesData.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
@@ -172,8 +178,13 @@ function AgencyData() {
         <div className="row">
           <div className="col-lg-12 p-3">
             <div className="text-center">
-              <h5 className="text-uppercase p-2 page-title">Routes Data</h5>
+              <h5 className="text-uppercase p-2 page-title">Agency Data</h5>
             </div>
+            <SearchFilter
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              fields={["agencyName", "agencyPhone", "agencyUrl", "routeId"]}
+            />
           </div>
           <div className="col-lg-12 p-3">
             <Button variant="danger" onClick={handleDeleteSelected}>
@@ -237,32 +248,32 @@ function AgencyData() {
             </tbody>
           </Table>
           <div className="d-flex justify-content-center">
-              <Pagination>
-                <Pagination.Prev
+            <Pagination>
+              <Pagination.Prev
+                onClick={() => handlePaginationClick(currentPage - 1)}
+                disabled={currentPage === 1}
+              />
+              {currentPage > 1 && (
+                <Pagination.Item
                   onClick={() => handlePaginationClick(currentPage - 1)}
-                  disabled={currentPage === 1}
-                />
-                {currentPage > 1 && (
-                  <Pagination.Item
-                    onClick={() => handlePaginationClick(currentPage - 1)}
-                  >
-                    {currentPage - 1}
-                  </Pagination.Item>
-                )}
-                <Pagination.Item active>{currentPage}</Pagination.Item>
-                {currentPage < Math.ceil(routes.length / pageSize) && (
-                  <Pagination.Item
-                    onClick={() => handlePaginationClick(currentPage + 1)}
-                  >
-                    {currentPage + 1}
-                  </Pagination.Item>
-                )}
-                <Pagination.Next
+                >
+                  {currentPage - 1}
+                </Pagination.Item>
+              )}
+              <Pagination.Item active>{currentPage}</Pagination.Item>
+              {currentPage < Math.ceil(filteredRoutesData.length / pageSize) && (
+                <Pagination.Item
                   onClick={() => handlePaginationClick(currentPage + 1)}
-                  disabled={currentPage === Math.ceil(routes.length / pageSize)}
-                />
-              </Pagination>
-            </div>
+                >
+                  {currentPage + 1}
+                </Pagination.Item>
+              )}
+              <Pagination.Next
+                onClick={() => handlePaginationClick(currentPage + 1)}
+                disabled={currentPage === Math.ceil(filteredRoutesData.length / pageSize)}
+              />
+            </Pagination>
+          </div>
         </div>
       </div>
       <Modal

@@ -20,6 +20,7 @@ import {
 import { db } from "../../Config";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import SearchFilter from "../../components/SearchFilter";
 
 function StopesWebData() {
   const [stops, setStops] = useState([]);
@@ -39,6 +40,7 @@ function StopesWebData() {
   const [selectedStops, setSelectedStops] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
   const [pageSize, setPageSize] = useState(50);
 
 
@@ -160,7 +162,15 @@ function StopesWebData() {
     setCurrentPage(page);
   };
 
-  const paginatedStops = stops.slice(
+  const filteredStopsData = stops.filter((item) => {
+    const searchTermLower = searchTerm.toLowerCase();
+    return ['stopId', 'stopName', 'Platform_code'].some((field) =>
+      item[field]
+        ? item[field].toLowerCase().includes(searchTermLower)
+        : false
+    );
+  });
+  const paginatedStops = filteredStopsData.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
@@ -174,6 +184,11 @@ function StopesWebData() {
             <div className="text-center">
               <h5 className="text-uppercase p-2 page-title">Stops_2 Data</h5>
             </div>
+            <SearchFilter 
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            fields={['stopId', 'stopName', 'Platform_code']}
+            />
           </Col>
         </Row>
         <Row>
@@ -268,7 +283,7 @@ function StopesWebData() {
                   </Pagination.Item>
                 )}
                 <Pagination.Item active>{currentPage}</Pagination.Item>
-                {currentPage < Math.ceil(stops.length / pageSize) && (
+                {currentPage < Math.ceil(filteredStopsData.length / pageSize) && (
                   <Pagination.Item
                     onClick={() => handlePaginationClick(currentPage + 1)}
                   >
@@ -277,7 +292,7 @@ function StopesWebData() {
                 )}
                 <Pagination.Next
                   onClick={() => handlePaginationClick(currentPage + 1)}
-                  disabled={currentPage === Math.ceil(stops.length / pageSize)}
+                  disabled={currentPage === Math.ceil(filteredStopsData.length / pageSize)}
                 />
               </Pagination>
             </div>

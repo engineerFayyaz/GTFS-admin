@@ -20,6 +20,7 @@ import {
 import { db } from "../../Config";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import SearchFilter from "../../components/SearchFilter";
 
 function TripsWebData() {
   const [stops, setStops] = useState([]);
@@ -39,7 +40,7 @@ function TripsWebData() {
   const [selectAll, setSelectAll] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
-
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const getStops = async () => {
@@ -158,7 +159,15 @@ function TripsWebData() {
     setCurrentPage(page);
   };
 
-  const paginatedStops = stops.slice(
+  const filteredStopsData = stops.filter((item) => {
+    const searchTermLower = searchTerm.toLowerCase();
+    return ['tripId', 'blockId', 'directionId', 'routeId', 'serviceId', 'shapId'].some((field) =>
+      item[field]
+        ? item[field].toLowerCase().includes(searchTermLower)
+        : false
+    );
+  });
+  const paginatedStops = filteredStopsData.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
@@ -172,6 +181,11 @@ function TripsWebData() {
             <div className="text-center">
               <h5 className="text-uppercase p-2 page-title">Trips Data</h5>
             </div>
+            <SearchFilter 
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            fields={['tripId', 'blockId', 'directionId', 'routeId', 'serviceId', 'shapId']}
+            />
           </Col>
         </Row>
         <Row>
@@ -264,7 +278,7 @@ function TripsWebData() {
                   </Pagination.Item>
                 )}
                 <Pagination.Item active>{currentPage}</Pagination.Item>
-                {currentPage < Math.ceil(stops.length / pageSize) && (
+                {currentPage < Math.ceil(filteredStopsData.length / pageSize) && (
                   <Pagination.Item
                     onClick={() => handlePaginationClick(currentPage + 1)}
                   >
@@ -273,7 +287,7 @@ function TripsWebData() {
                 )}
                 <Pagination.Next
                   onClick={() => handlePaginationClick(currentPage + 1)}
-                  disabled={currentPage === Math.ceil(stops.length / pageSize)}
+                  disabled={currentPage === Math.ceil(filteredStopsData.length / pageSize)}
                 />
               </Pagination>
             </div>
@@ -333,7 +347,7 @@ function TripsWebData() {
                       })
                     }
                   />
-                </Form.Group>
+                </Form.Group> 
                 <Form.Group>
                   <Form.Label>Route Id</Form.Label>
                   <Form.Control

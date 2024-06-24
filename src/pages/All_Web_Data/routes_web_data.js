@@ -19,6 +19,7 @@ import {
 } from "react-bootstrap";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import SearchFilter from "../../components/SearchFilter";
 
 export function RoutesWebData() {
   const [routes, setRoutes] = useState([]);
@@ -36,7 +37,7 @@ export function RoutesWebData() {
   const [selectedRows, setSelectedRows] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
-
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const getRoutes = async () => {
@@ -50,6 +51,7 @@ export function RoutesWebData() {
           ...doc.data(),
         }));
         setRoutes(routesData);
+        console.log("Route data is:", routesData);
       } catch (error) {
         console.error("Error fetching routes:", error);
       }
@@ -157,7 +159,16 @@ export function RoutesWebData() {
     setCurrentPage(page);
   };
 
-  const paginatedStops = routes.slice(
+  const filteredRoutesData = routes.filter((item) => {
+    const searchTermLower = searchTerm.toLowerCase();
+    return ["routeShortName", "routeId", "routeUrl", "routeLongName"].some(
+      (field) =>
+        item[field]
+          ? item[field].toLowerCase().includes(searchTermLower)
+          : false
+    );
+  });
+  const paginatedStops = filteredRoutesData.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
@@ -170,6 +181,16 @@ export function RoutesWebData() {
             <div className="text-center">
               <h5 className="text-uppercase p-2 page-title">Routes Web Data</h5>
             </div>
+            <SearchFilter
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              fields={[
+                "routeShortName",
+                "routeId",
+                "routeUrl",
+                "routeLongName",
+              ]}
+            />
           </div>
           <div className="col-lg-12 p-3">
             <Button variant="danger" onClick={handleDeleteSelected}>
@@ -221,32 +242,32 @@ export function RoutesWebData() {
             </tbody>
           </Table>
           <div className="d-flex justify-content-center">
-              <Pagination>
-                <Pagination.Prev
+            <Pagination>
+              <Pagination.Prev
+                onClick={() => handlePaginationClick(currentPage - 1)}
+                disabled={currentPage === 1}
+              />
+              {currentPage > 1 && (
+                <Pagination.Item
                   onClick={() => handlePaginationClick(currentPage - 1)}
-                  disabled={currentPage === 1}
-                />
-                {currentPage > 1 && (
-                  <Pagination.Item
-                    onClick={() => handlePaginationClick(currentPage - 1)}
-                  >
-                    {currentPage - 1}
-                  </Pagination.Item>
-                )}
-                <Pagination.Item active>{currentPage}</Pagination.Item>
-                {currentPage < Math.ceil(routes.length / pageSize) && (
-                  <Pagination.Item
-                    onClick={() => handlePaginationClick(currentPage + 1)}
-                  >
-                    {currentPage + 1}
-                  </Pagination.Item>
-                )}
-                <Pagination.Next
+                >
+                  {currentPage - 1}
+                </Pagination.Item>
+              )}
+              <Pagination.Item active>{currentPage}</Pagination.Item>
+              {currentPage < Math.ceil(filteredRoutesData.length / pageSize) && (
+                <Pagination.Item
                   onClick={() => handlePaginationClick(currentPage + 1)}
-                  disabled={currentPage === Math.ceil(routes.length / pageSize)}
-                />
-              </Pagination>
-            </div>
+                >
+                  {currentPage + 1}
+                </Pagination.Item>
+              )}
+              <Pagination.Next
+                onClick={() => handlePaginationClick(currentPage + 1)}
+                disabled={currentPage === Math.ceil(filteredRoutesData.length / pageSize)}
+              />
+            </Pagination>
+          </div>
         </div>
       </div>
 

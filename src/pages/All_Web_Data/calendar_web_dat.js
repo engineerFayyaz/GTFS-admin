@@ -7,21 +7,13 @@ import {
   deleteDoc,
   doc,
 } from "firebase/firestore";
-import {
-  Table,
-  Form,
-  Container,
-  Col,
-  Row,
-  Modal,
-  Button,
-  Pagination,
-} from "react-bootstrap";
+import { Table, Form, Container, Col, Row, Modal, Button, Pagination } from "react-bootstrap";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import SearchFilter from "../../components/SearchFilter";
 
 export function CalendarWeb() {
-  const [Calendar, setCalendar] = useState([]);
+  const [calendar, setCalendar] = useState([]);
   const [editingCalendar, setEditingCalendar] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [updatedCalendar, setUpdatedCalendar] = useState({
@@ -38,27 +30,24 @@ export function CalendarWeb() {
   });
   const [selectedRows, setSelectedRows] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
   const [pageSize, setPageSize] = useState(50);
 
-
   useEffect(() => {
-    const getCalendar = async () => {
+    const fetchCalendar = async () => {
+      const db = getFirestore();
       try {
-        const db = getFirestore();
-        const CalendarCollection = await getDocs(
-          collection(db, "calendar-web-data")
-        );
-        const CalendarData = CalendarCollection.docs.map((doc) => ({
+        const calendarCollection = await getDocs(collection(db, "calendar-web-data"));
+        const calendarData = calendarCollection.docs.map(doc => ({
           id: doc.id,
-          ...doc.data(),
+          ...doc.data()
         }));
-        setCalendar(CalendarData);
+        setCalendar(calendarData);
       } catch (error) {
-        console.error("Error fetching users:", error);
+        console.error("Error fetching calendar:", error);
       }
     };
-
-    getCalendar();
+    fetchCalendar();
   }, []);
 
   const handleEdit = (calendar) => {
@@ -87,13 +76,11 @@ export function CalendarWeb() {
   const handleDelete = async (countToDelete) => {
     try {
       const db = getFirestore();
-      const calendarToDelete = Calendar.find(
-        (calendar) => calendar.count === countToDelete
-      );
+      const calendarToDelete = calendar.find((item) => item.count === countToDelete);
       if (calendarToDelete) {
         await deleteDoc(doc(db, "calendar-web-data", calendarToDelete.id));
         setCalendar((prevCalendar) =>
-          prevCalendar.filter((calendar) => calendar.count !== countToDelete)
+          prevCalendar.filter((item) => item.count !== countToDelete)
         );
         console.log("Calendar deleted successfully:", calendarToDelete);
       } else {
@@ -110,10 +97,8 @@ export function CalendarWeb() {
       const calendarRef = doc(db, "calendar-web-data", editingCalendar.id);
       await updateDoc(calendarRef, updatedCalendar);
 
-      const updatedCalendars = Calendar.map((calendar) =>
-        calendar.id === editingCalendar.id
-          ? { ...calendar, ...updatedCalendar }
-          : calendar
+      const updatedCalendars = calendar.map((item) =>
+        item.id === editingCalendar.id ? { ...item, ...updatedCalendar } : item
       );
       setCalendar(updatedCalendars);
       handleCloseModal();
@@ -134,22 +119,16 @@ export function CalendarWeb() {
   const handleDeleteSelected = async () => {
     try {
       const db = getFirestore();
-
       for (const count of selectedRows) {
-        const calendarToDelete = Calendar.find(
-          (calendar) => calendar.count === count
-        );
+        const calendarToDelete = calendar.find((item) => item.count === count);
         if (calendarToDelete) {
           await deleteDoc(doc(db, "calendar-web-data", calendarToDelete.id));
         } else {
           console.error("Calendar with count", count, "not found.");
         }
       }
-
       setCalendar((prevCalendar) =>
-        prevCalendar.filter(
-          (calendar) => !selectedRows.includes(calendar.count)
-        )
+        prevCalendar.filter((item) => !selectedRows.includes(item.count))
       );
       console.log("Selected calendars deleted successfully:", selectedRows);
       setSelectedRows([]);
@@ -162,7 +141,16 @@ export function CalendarWeb() {
     setCurrentPage(page);
   };
 
-  const paginatedStops = Calendar.slice(
+  const filteredWebData = calendar.filter((item) => {
+    const searchTermLower = searchTerm.toLowerCase();
+    return ['serviceId', 'endDate', 'startDate'].some((field) =>
+      item[field]
+        ? item[field].toLowerCase().includes(searchTermLower)
+        : false
+    );
+  });
+
+  const paginatedStops = filteredWebData.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
@@ -173,11 +161,16 @@ export function CalendarWeb() {
       <div className="container-fluid px-3 pt-4">
         <div className="row">
           <div className="col-lg-12 p-3">
-            <div className="text-center  ">
+            <div className="text-center">
               <h5 className="text-uppercase p-2 page-title">
                 Calendar Web Data
               </h5>
             </div>
+            <SearchFilter
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              field={['serviceId', 'endDate', 'startDate']}
+            />
           </div>
           <div className="col-lg-12 p-3">
             {selectedRows.length > 0 && (
@@ -190,9 +183,9 @@ export function CalendarWeb() {
             <thead>
               <tr>
                 <th>Select</th>
-                <th>Start_Date</th>
-                <th>End_Date</th>
-                <th>Service_Id</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Service ID</th>
                 <th>Monday</th>
                 <th>Tuesday</th>
                 <th>Wednesday</th>
@@ -204,36 +197,30 @@ export function CalendarWeb() {
               </tr>
             </thead>
             <tbody>
-              {paginatedStops.map((calendar, index) => (
+              {paginatedStops.map((item, index) => (
                 <tr key={index}>
                   <td>
                     <input
                       type="checkbox"
-                      checked={selectedRows.includes(calendar.count)}
-                      onChange={() => handleToggleRow(calendar.count)}
+                      checked={selectedRows.includes(item.count)}
+                      onChange={() => handleToggleRow(item.count)}
                     />
                   </td>
-                  <td>{calendar.start_date}</td>
-                  <td>{calendar.end_date}</td>
-                  <td>{calendar.service_id}</td>
-                  <td>{calendar.monday}</td>
-                  <td>{calendar.tuesday}</td>
-                  <td>{calendar.wednesday}</td>
-                  <td>{calendar.thursday}</td>
-                  <td>{calendar.friday}</td>
-                  <td>{calendar.saturday}</td>
-                  <td>{calendar.sunday}</td>
+                  <td>{item.start_date}</td>
+                  <td>{item.end_date}</td>
+                  <td>{item.service_id}</td>
+                  <td>{item.monday}</td>
+                  <td>{item.tuesday}</td>
+                  <td>{item.wednesday}</td>
+                  <td>{item.thursday}</td>
+                  <td>{item.friday}</td>
+                  <td>{item.saturday}</td>
+                  <td>{item.sunday}</td>
                   <td className="d-flex gap-2">
-                    <Button
-                      variant="primary"
-                      onClick={() => handleEdit(calendar)}
-                    >
+                    <Button variant="primary" onClick={() => handleEdit(item)}>
                       Edit
                     </Button>{" "}
-                    <Button
-                      variant="danger"
-                      onClick={() => handleDelete(calendar.count)}
-                    >
+                    <Button variant="danger" onClick={() => handleDelete(item.count)}>
                       Delete
                     </Button>
                   </td>
@@ -242,32 +229,28 @@ export function CalendarWeb() {
             </tbody>
           </Table>
           <div className="d-flex justify-content-center">
-              <Pagination>
-                <Pagination.Prev
-                  onClick={() => handlePaginationClick(currentPage - 1)}
-                  disabled={currentPage === 1}
-                />
-                {currentPage > 1 && (
-                  <Pagination.Item
-                    onClick={() => handlePaginationClick(currentPage - 1)}
-                  >
-                    {currentPage - 1}
-                  </Pagination.Item>
-                )}
-                <Pagination.Item active>{currentPage}</Pagination.Item>
-                {currentPage < Math.ceil(Calendar.length / pageSize) && (
-                  <Pagination.Item
-                    onClick={() => handlePaginationClick(currentPage + 1)}
-                  >
-                    {currentPage + 1}
-                  </Pagination.Item>
-                )}
-                <Pagination.Next
-                  onClick={() => handlePaginationClick(currentPage + 1)}
-                  disabled={currentPage === Math.ceil(Calendar.length / pageSize)}
-                />
-              </Pagination>
-            </div>
+            <Pagination>
+              <Pagination.Prev
+                onClick={() => handlePaginationClick(currentPage - 1)}
+                disabled={currentPage === 1}
+              />
+              {currentPage > 1 && (
+                <Pagination.Item onClick={() => handlePaginationClick(currentPage - 1)}>
+                  {currentPage - 1}
+                </Pagination.Item>
+              )}
+              <Pagination.Item active>{currentPage}</Pagination.Item>
+              {currentPage < Math.ceil(filteredWebData.length / pageSize) && (
+                <Pagination.Item onClick={() => handlePaginationClick(currentPage + 1)}>
+                  {currentPage + 1}
+                </Pagination.Item>
+              )}
+              <Pagination.Next
+                onClick={() => handlePaginationClick(currentPage + 1)}
+                disabled={currentPage === Math.ceil(filteredWebData.length / pageSize)}
+              />
+            </Pagination>
+          </div>
         </div>
       </div>
       <Modal
@@ -316,3 +299,5 @@ export function CalendarWeb() {
     </>
   );
 }
+
+export default CalendarWeb;

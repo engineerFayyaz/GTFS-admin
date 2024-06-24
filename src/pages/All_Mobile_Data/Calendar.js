@@ -15,6 +15,7 @@ import { Table, Button, Modal, Form, Container, Col, Row, Pagination } from "rea
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { db } from "../../Config";
+import SearchFilter from "../../components/SearchFilter";
 
 function CalendarMobile() {
   const [stops, setStops] = useState([]);
@@ -37,7 +38,9 @@ function CalendarMobile() {
   const [selectAll, setSelectAll] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     getStops();
@@ -172,17 +175,19 @@ function CalendarMobile() {
     setCurrentPage(page);
   };
 
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
+  const filteredAppData = stops.filter((stop) => {
+    const searchTermLower = searchTerm.toLowerCase();
+    return ['startDate', 'endDate', 'startDate'].some((field) =>
+      stop[field]
+        ? stop[field].toLowerCase().includes(searchTermLower)
+        : false
+    );
+  });
 
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
+  const paginatedStops = filteredAppData.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   return (
     <>
@@ -193,6 +198,11 @@ function CalendarMobile() {
             <div className="text-center">
               <h5 className="text-uppercase p-2 page-title">Calendar Mobile Data</h5>
             </div>
+            <SearchFilter
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              field={['serviceId', 'endDate', 'startDate']}
+            />
           </Col>
         </Row>
         <Row>
@@ -238,8 +248,8 @@ function CalendarMobile() {
                 </tr>
               </thead>
               <tbody>
-                {stops.map((stop) => (
-                  <tr key={stop.id}>
+                {paginatedStops.map((stop, index) => (
+                  <tr key={index}>
                     <td>
                       <Form.Check
                         type="checkbox"
@@ -281,34 +291,28 @@ function CalendarMobile() {
             <Col lg={12}>
             {/* Pagination */}
             <div className="d-flex justify-content-center">
-              <Button
-                variant="primary"
-                className="me-2"
-                onClick={handlePrevPage}
+            <Pagination>
+              <Pagination.Prev
+                onClick={() => handlePaginationClick(currentPage - 1)}
                 disabled={currentPage === 1}
-              >
-                Previous
-              </Button>
-              <Pagination>
-                {[...Array(totalPages).keys()].map((page) => (
-                  <Pagination.Item
-                    key={page + 1}
-                    active={page + 1 === currentPage}
-                    onClick={() => handlePaginationClick(page + 1)}
-                  >
-                    {page + 1}
-                  </Pagination.Item>
-                ))}
-              </Pagination>
-              <Button
-                variant="primary"
-                className="ms-2"
-                onClick={handleNextPage}
-                disabled={currentPage === totalPages}
-              >
-                Next
-              </Button>
-            </div>
+              />
+              {currentPage > 1 && (
+                <Pagination.Item onClick={() => handlePaginationClick(currentPage - 1)}>
+                  {currentPage - 1}
+                </Pagination.Item>
+              )}
+              <Pagination.Item active>{currentPage}</Pagination.Item>
+              {currentPage < Math.ceil(filteredAppData.length / pageSize) && (
+                <Pagination.Item onClick={() => handlePaginationClick(currentPage + 1)}>
+                  {currentPage + 1}
+                </Pagination.Item>
+              )}
+              <Pagination.Next
+                onClick={() => handlePaginationClick(currentPage + 1)}
+                disabled={currentPage === Math.ceil(filteredAppData.length / pageSize)}
+              />
+            </Pagination>
+          </div>
           </Col>
           </Col>
         </Row>

@@ -10,6 +10,7 @@ import {
 import { Table, Form, Container, Col, Row, Modal, Button,Pagination } from "react-bootstrap";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import SearchFilter from "../../components/SearchFilter";
 
 export function CalendarAttributesWeb() {
   const [Calendar, setCalendar] = useState([]);
@@ -22,7 +23,7 @@ export function CalendarAttributesWeb() {
   const [selectedRows, setSelectedRows] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
-
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const getCalendar = async () => {
@@ -128,7 +129,14 @@ export function CalendarAttributesWeb() {
     setCurrentPage(page);
   };
 
-  const paginatedStops = Calendar.slice(
+  const filteredAttributes = Calendar.filter((calendar) => {
+    const searchTermLower = searchTerm.toLowerCase();
+    return ['Service_Id', 'Service_Description'].some((field) =>
+      calendar[field] ? calendar[field].toLowerCase().includes(searchTermLower) : false
+    );
+  });
+
+  const paginatedStops = filteredAttributes.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
@@ -142,6 +150,11 @@ export function CalendarAttributesWeb() {
             <div className="text-center  ">
               <h5 className="text-uppercase p-2 page-title">Calendar Attributes Web Data</h5>
             </div>
+            <SearchFilter
+             searchTerm={searchTerm}
+             setSearchTerm={setSearchTerm}
+             fields={['Service_Id', 'Service_Description']}
+            />
           </div>
           <div className="col-lg-12 p-3">
             {selectedRows.length > 0 && (
@@ -196,7 +209,7 @@ export function CalendarAttributesWeb() {
                   </Pagination.Item>
                 )}
                 <Pagination.Item active>{currentPage}</Pagination.Item>
-                {currentPage < Math.ceil(Calendar.length / pageSize) && (
+                {currentPage < Math.ceil(filteredAttributes.length / pageSize) && (
                   <Pagination.Item
                     onClick={() => handlePaginationClick(currentPage + 1)}
                   >
@@ -205,7 +218,7 @@ export function CalendarAttributesWeb() {
                 )}
                 <Pagination.Next
                   onClick={() => handlePaginationClick(currentPage + 1)}
-                  disabled={currentPage === Math.ceil(Calendar.length / pageSize)}
+                  disabled={currentPage === Math.ceil(filteredAttributes.length / pageSize)}
                 />
               </Pagination>
             </div>

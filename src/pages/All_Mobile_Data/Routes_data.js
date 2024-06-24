@@ -22,6 +22,7 @@ import {
 } from "react-bootstrap";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import SearchFilter from "../../components/SearchFilter";
 
 function RoutesMobileData() {
   const [routes, setRoutes] = useState([]);
@@ -38,6 +39,7 @@ function RoutesMobileData() {
   const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(false);
   const [deleteProgress, setDeleteProgress] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Fetch routes from Firestore on component mount
   useEffect(() => {
@@ -166,8 +168,17 @@ function RoutesMobileData() {
     setCurrentPage(page);
   };
 
+  const filteredRoutesData = routes.filter((item) => {
+    const searchTermLower = searchTerm.toLowerCase();
+    return ["routeColor", "routeId", "routeLongName"].some(
+      (field) =>
+        item[field]
+          ? item[field].toLowerCase().includes(searchTermLower)
+          : false
+    );
+  });
   // Calculate paginated routes based on currentPage and pageSize
-  const paginatedRoutes = routes.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const paginatedRoutes = filteredRoutesData.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
     <>
@@ -178,6 +189,15 @@ function RoutesMobileData() {
             <div className="text-center">
               <h5 className="text-uppercase p-2 page-title">Routes Data</h5>
             </div>
+            <SearchFilter
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              fields={[
+                "routeColor",
+                "routeId",
+                "routeLongName",
+              ]}
+            />
           </div>
           <div className="col-lg-12 p-3">
           <Button variant="danger" onClick={handleDeleteSelected} disabled={loading}>
@@ -236,7 +256,7 @@ function RoutesMobileData() {
           </Table>
           <div className="d-flex justify-content-center">
             <Pagination>
-              {[...Array(Math.ceil(routes.length / pageSize)).keys()].map((page) => (
+              {[...Array(Math.ceil(filteredRoutesData.length / pageSize)).keys()].map((page) => (
                 <Pagination.Item
                   key={page + 1}
                   active={page + 1 === currentPage}
