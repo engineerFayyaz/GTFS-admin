@@ -163,7 +163,7 @@ function TripsAppData() {
 
   const filteredStopsData = stops.filter((item) => {
     const searchTermLower = searchTerm.toLowerCase();
-    return ['tripId', 'directionId', 'routeId', 'serviceId', 'shapId'].some((field) =>
+    return ['trip_id', 'direction_id', 'route_id', 'service_id', 'shap_id'].some((field) =>
       item[field]
         ? item[field].toLowerCase().includes(searchTermLower)
         : false
@@ -185,7 +185,7 @@ function TripsAppData() {
             <SearchFilter 
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
-            fields={['tripId', 'directionId', 'routeId', 'serviceId', 'shapId']}
+            fields={['trip_id', 'direction_id', 'route_id', 'service_id', 'shap_id']}
             />
           </Col>
         </Row>

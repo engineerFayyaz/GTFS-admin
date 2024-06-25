@@ -170,7 +170,7 @@ function RoutesMobileData() {
 
   const filteredRoutesData = routes.filter((item) => {
     const searchTermLower = searchTerm.toLowerCase();
-    return ["routeColor", "routeId", "routeLongName"].some(
+    return ["route_long_name", "route_id", "route_color"].some(
       (field) =>
         item[field]
           ? item[field].toLowerCase().includes(searchTermLower)
@@ -193,9 +193,9 @@ function RoutesMobileData() {
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
               fields={[
-                "routeColor",
-                "routeId",
-                "routeLongName",
+                "route_long_name",
+                "route_id",
+                "route_color",
               ]}
             />
           </div>

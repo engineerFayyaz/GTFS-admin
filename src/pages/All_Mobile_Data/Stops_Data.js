@@ -165,7 +165,7 @@ function StopesAppData() {
 
   const filteredStopsData = stops.filter((item) => {
     const searchTermLower = searchTerm.toLowerCase();
-    return ['stopId', 'stopName', 'zoneId'].some((field) =>
+    return ['stop_id', 'stop_name', 'zone_id'].some((field) =>
       item[field]
         ? item[field].toLowerCase().includes(searchTermLower)
         : false
@@ -188,7 +188,7 @@ function StopesAppData() {
             <SearchFilter 
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
-            fields={['stopId', 'stopName', 'zoneId']}
+            fields={['stop_id', 'stop_name', 'zone_id']}
             />
           </Col>
         </Row>

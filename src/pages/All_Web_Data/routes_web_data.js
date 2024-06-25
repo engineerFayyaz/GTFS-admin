@@ -161,7 +161,7 @@ export function RoutesWebData() {
 
   const filteredRoutesData = routes.filter((item) => {
     const searchTermLower = searchTerm.toLowerCase();
-    return ["routeShortName", "routeId", "routeUrl", "routeLongName"].some(
+    return ["route_short_name", "route_id", "route_url", "route_long_name"].some(
       (field) =>
         item[field]
           ? item[field].toLowerCase().includes(searchTermLower)
@@ -184,12 +184,7 @@ export function RoutesWebData() {
             <SearchFilter
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
-              fields={[
-                "routeShortName",
-                "routeId",
-                "routeUrl",
-                "routeLongName",
-              ]}
+              fields={["route_short_name", "route_id", "route_url", "route_long_name"]}
             />
           </div>
           <div className="col-lg-12 p-3">

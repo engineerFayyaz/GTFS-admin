@@ -61,6 +61,7 @@ function ShapesWebData() {
           };
         });
         setShapes(shapesData);
+        
         toast.success("Data fetched successfully");
       } catch (error) {
         console.error("Error fetching shapes:", error);
@@ -154,7 +155,7 @@ function ShapesWebData() {
 
   const filteredShapesData = shapes.filter((item) => {
     const searchTermLower = searchTerm.toLowerCase();
-    return ['shapeId', 'Shape_Lat', 'Shape_Lon', 'Dist_Traveled'].some((field) =>
+    return ['shape_id', 'shape_lat', 'shape_lon'].some((field) =>
       item[field]
         ? item[field].toLowerCase().includes(searchTermLower)
         : false
@@ -177,10 +178,11 @@ function ShapesWebData() {
             <SearchFilter 
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
-            fields={['shapeId', 'Shape_Lat', 'Shape_Lon', 'Dist_Traveled']}
+            fields={['shape_id', 'shape_lat', 'shape_lon']}
             />
           </Col>
         </Row>
+        {console.log("shapesData: ", shapes)}
         <Row>
           <Col lg={12}>
             <Button

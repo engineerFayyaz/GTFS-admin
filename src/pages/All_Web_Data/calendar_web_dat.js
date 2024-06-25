@@ -143,7 +143,7 @@ export function CalendarWeb() {
 
   const filteredWebData = calendar.filter((item) => {
     const searchTermLower = searchTerm.toLowerCase();
-    return ['serviceId', 'endDate', 'startDate'].some((field) =>
+    return ['service_id', 'end_date', 'start_date'].some((field) =>
       item[field]
         ? item[field].toLowerCase().includes(searchTermLower)
         : false
@@ -169,7 +169,7 @@ export function CalendarWeb() {
             <SearchFilter
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
-              field={['serviceId', 'endDate', 'startDate']}
+              field={['service_id', 'end_date', 'start_date']}
             />
           </div>
           <div className="col-lg-12 p-3">

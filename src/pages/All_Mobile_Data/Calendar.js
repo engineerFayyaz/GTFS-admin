@@ -177,7 +177,7 @@ function CalendarMobile() {
 
   const filteredAppData = stops.filter((stop) => {
     const searchTermLower = searchTerm.toLowerCase();
-    return ['startDate', 'endDate', 'startDate'].some((field) =>
+    return ['startdate', 'enddate', 'serviceid'].some((field) =>
       stop[field]
         ? stop[field].toLowerCase().includes(searchTermLower)
         : false
@@ -201,7 +201,7 @@ function CalendarMobile() {
             <SearchFilter
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
-              field={['serviceId', 'endDate', 'startDate']}
+              field={['startdate', 'enddate', 'serviceid']}
             />
           </Col>
         </Row>

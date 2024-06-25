@@ -178,7 +178,7 @@ function StopsTimeWeb() {
 
   const filteredStopsData = stops.filter((item) => {
     const searchTermLower = searchTerm.toLowerCase();
-    return ['arrivalTime', 'departureTime', 'tripId'].some((field) =>
+    return ['trip_id', 'departure_time', 'stop_id'].some((field) =>
       item[field]
         ? item[field].toLowerCase().includes(searchTermLower)
         : false
@@ -202,7 +202,7 @@ function StopsTimeWeb() {
             <SearchFilter 
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
-            fields={['arrivalTime', 'departureTime', 'tripId']}
+            fields={['trip_id', 'departure_time', 'stop_id']}
             />
           </div>
 

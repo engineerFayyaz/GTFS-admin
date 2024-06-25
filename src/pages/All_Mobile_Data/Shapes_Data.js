@@ -182,19 +182,13 @@ function ShapesAppData() {
     }
 };
 
-
-  
-
-
- 
-  
   const handlePaginationClick = (page) => {
     setCurrentPage(page);
   };
 
   const filteredShapesData = shapes.filter((item) => {
     const searchTermLower = searchTerm.toLowerCase();
-    return ['shapeId', 'Shape_Lat', 'Shape_Lon', 'Dist_Traveled'].some((field) =>
+    return ['shape_id', 'shape_pt_lat', 'Shape_Lon', 'Dist_Traveled'].some((field) =>
       item[field]
         ? item[field].toLowerCase().includes(searchTermLower)
         : false
