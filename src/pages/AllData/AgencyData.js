@@ -6,170 +6,212 @@ import {
   deleteDoc,
   updateDoc,
   doc,
+  query,
+  orderBy,
+  startAfter,
+  endBefore,
+  limit,
 } from "firebase/firestore";
-import {
-  Table,
-  Form,
-  Container,
-  Col,
-  Row,
-  Modal,
-  Button,
-  Pagination,
-} from "react-bootstrap";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import SearchFilter from "../../components/SearchFilter";
+import {
+  Col,
+  Container,
+  Row,
+  Modal,
+  Form,
+  Button,
+  Table,
+  Pagination,
+  Spinner,
+} from "react-bootstrap";
+import { FaEdit } from "react-icons/fa";
+import { FaDeleteLeft } from "react-icons/fa6";
+import Loader from "../../components/Loader";
 
-function AgencyData() {
-  const [routes, setRoutes] = useState([]);
+function CalendarDates() {
+  const [calendar, setCalendar] = useState([]);
+  const [lastVisible, setLastVisible] = useState(null);
+  const [firstVisible, setFirstVisible] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [editedRoute, setEditedRoute] = useState(null);
-  const [updatedRoute, setUpdatedRoute] = useState({
-    count: "",
-    agency_lang: "",
-    agency_name: "",
-    agency_phone: "",
-    agency_timezone: "",
-    agency_url: "",
-    route_color: "",
-    route_id: "",
-    route_long_name: "",
+  const [editingCalendar, setEditingCalendar] = useState(null);
+  const [updatedCalendarInfo, setUpdatedCalendarInfo] = useState({
+    date: "",
+    exception_type: "",
   });
   const [selectedRows, setSelectedRows] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchDate, setSearchDate] = useState("");
+  const [searchExceptionType, setSearchExceptionType] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const getRoutes = async () => {
-      try {
-        const db = getFirestore();
-        const routesCollection = await getDocs(collection(db, "agency"));
-        const AgencyData = routesCollection.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setRoutes(AgencyData);
-      } catch (error) {
-        console.error("Error fetching routes:", error);
-      }
-    };
-
-    getRoutes();
+    getCalendar();
   }, []);
 
-  const handleEdit = (route) => {
-    setEditedRoute(route);
-    setUpdatedRoute({ ...route }); // Ensure a new object is created to avoid state mutation
+  const handleSearch = () => {
+    const filteredCalendar = calendar.filter((item) => {
+      return (
+        item.date.toLowerCase().includes(searchDate.toLowerCase()) &&
+        item.exception_type
+          .toLowerCase()
+          .includes(searchExceptionType.toLowerCase())
+      );
+    });
+    setCalendar(filteredCalendar);
+  };
+
+  const handleClearSearch = () => {
+    setSearchDate("");
+    setSearchExceptionType("");
+    getCalendar();
+  };
+
+  const getCalendar = async (next = false, previous = false) => {
+    try {
+      setLoading(true);
+      const db = getFirestore();
+      let calendarQuery = query(
+        collection(db, "calendar_dates2"),
+        orderBy("date"),
+        limit(50)
+      );
+
+      if (next && lastVisible) {
+        calendarQuery = query(
+          collection(db, "calendar_dates2"),
+          orderBy("date"),
+          startAfter(lastVisible),
+          limit(50)
+        );
+      } else if (previous && firstVisible) {
+        calendarQuery = query(
+          collection(db, "calendar_dates2"),
+          orderBy("date"),
+          endBefore(firstVisible),
+          limit(50)
+        );
+      }
+
+      const calendarCollection = await getDocs(calendarQuery);
+      const calendarData = calendarCollection.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      setCalendar(calendarData);
+      setFirstVisible(calendarCollection.docs[0]);
+      setLastVisible(calendarCollection.docs[calendarCollection.docs.length - 1]);
+    } catch (error) {
+      console.error("Error fetching calendar:", error);
+      toast.error("Error fetching calendar data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = (calendarItem) => {
+    setEditingCalendar(calendarItem);
+    setUpdatedCalendarInfo({
+      date: calendarItem.date,
+      exception_type: calendarItem.exception_type,
+    });
     setShowModal(true);
   };
 
   const handleCloseModal = () => {
     setShowModal(false);
-    setEditedRoute(null);
-    setUpdatedRoute({
-      count: "",
-      agency_lang: "",
-      agency_name: "",
-      agency_phone: "",
-      agency_timezone: "",
-      agency_url: "",
-      route_color: "",
-      route_id: "",
-      route_long_name: "",
+    setEditingCalendar(null);
+    setUpdatedCalendarInfo({
+      date: "",
+      exception_type: "",
     });
   };
 
-  const saveChanges = async () => {
+  const handleSaveChanges = async () => {
     try {
       const db = getFirestore();
-      const routeRef = doc(db, "agency", editedRoute.id);
-      await updateDoc(routeRef, updatedRoute);
-
-      const updatedRoutes = routes.map((route) =>
-        route.id === editedRoute.id ? updatedRoute : route
+      const calendarRef = doc(db, "calendar_dates2", editingCalendar.id);
+      await updateDoc(calendarRef, updatedCalendarInfo);
+      const updatedCalendars = calendar.map((calendarItem) =>
+        calendarItem.id === editingCalendar.id
+          ? { ...calendarItem, ...updatedCalendarInfo }
+          : calendarItem
       );
-      setRoutes(updatedRoutes);
+      setCalendar(updatedCalendars);
       handleCloseModal();
-      toast.success("Routes updated successfully");
+      toast.success("Calendar updated successfully");
     } catch (error) {
-      toast.error("Error while updating routes:", error.message);
-      console.error("Error while updating routes:", error);
+      console.error("Error updating calendar:", error);
+      toast.error("Error updating calendar");
     }
   };
 
-  const handleDelete = async (count) => {
+  const handleDelete = async (id) => {
     try {
+      setIsLoading(true);
       const db = getFirestore();
-      const routeToDelete = routes.find((route) => route.count === count);
-      if (routeToDelete) {
-        await deleteDoc(doc(db, "agency", routeToDelete.id));
-        setRoutes((prevRoutes) =>
-          prevRoutes.filter((route) => route.count !== count)
-        );
-        console.log("Route deleted successfully:", routeToDelete);
-      } else {
-        console.error("Route with count", count, "not found.");
-      }
+      await deleteDoc(doc(db, "calendar_dates2", id));
+      setCalendar((prevCalendar) =>
+        prevCalendar.filter((calendarItem) => calendarItem.id !== id)
+      );
+      toast.success("Calendar deleted successfully");
     } catch (error) {
-      console.error("Error deleting route:", error);
+      console.error("Error deleting calendar:", error);
+      toast.error("Error deleting calendar");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleToggleRow = (count) => {
+  const handleToggleRow = (id) => {
     setSelectedRows((prevSelectedRows) =>
-      prevSelectedRows.includes(count)
-        ? prevSelectedRows.filter((selectedCount) => selectedCount !== count)
-        : [...prevSelectedRows, count]
+      prevSelectedRows.includes(id)
+        ? prevSelectedRows.filter((selectedId) => selectedId !== id)
+        : [...prevSelectedRows, id]
     );
   };
 
   const handleDeleteSelected = async () => {
     try {
+      setLoading(true);
       const db = getFirestore();
 
-      for (const count of selectedRows) {
-        const routeToDelete = routes.find((route) => route.count === count);
-        if (routeToDelete) {
-          await deleteDoc(doc(db, "agency", routeToDelete.id));
-        } else {
-          console.error("Route with count", count, "not found.");
-        }
+      for (const id of selectedRows) {
+        await deleteDoc(doc(db, "calendar_dates2", id));
       }
 
-      setRoutes((prevRoutes) =>
-        prevRoutes.filter((route) => !selectedRows.includes(route.count))
+      setCalendar((prevCalendar) =>
+        prevCalendar.filter((calendarItem) => !selectedRows.includes(calendarItem.id))
       );
-      console.log("Selected routes deleted successfully:", selectedRows);
+      toast.success("Selected calendars deleted successfully");
       setSelectedRows([]);
     } catch (error) {
-      console.error("Error deleting selected routes:", error);
+      console.error("Error deleting selected calendars:", error);
+      toast.error("Error deleting selected calendars");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleSelectAll = () => {
-    setSelectedRows(routes.map((route) => route.count));
+    setSelectedRows(calendar.map((calendarItem) => calendarItem.id));
   };
 
   const handleUnselectAll = () => {
     setSelectedRows([]);
   };
 
-  const handlePaginationClick = (page) => {
-    setCurrentPage(page);
+  const handleNextPage = () => {
+    setCurrentPage((prevPage) => prevPage + 1);
+    getCalendar(true, false);
   };
 
-  const filteredRoutesData = routes.filter((item) => {
-    const searchTermLower = searchTerm.toLowerCase();
-    return ["agencyName", "agencyPhone", "agencyUrl", "routeId"].some((field) =>
-      item[field] ? item[field].toLowerCase().includes(searchTermLower) : false
-    );
-  });
-  const paginatedStops = filteredRoutesData.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  const handlePreviousPage = () => {
+    setCurrentPage((prevPage) => (prevPage > 1 ? prevPage - 1 : 1));
+    getCalendar(false, true);
+  };
 
   return (
     <>
@@ -178,17 +220,17 @@ function AgencyData() {
         <div className="row">
           <div className="col-lg-12 p-3">
             <div className="text-center">
-              <h5 className="text-uppercase p-2 page-title">Agency Data</h5>
+              <h5 className="text-uppercase p-2 page-title">Calendar Dates</h5>
             </div>
-            <SearchFilter
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              fields={["agencyName", "agencyPhone", "agencyUrl", "routeId"]}
-            />
           </div>
           <div className="col-lg-12 p-3">
-            <Button variant="danger" onClick={handleDeleteSelected}>
-              Delete Selected
+            <Button
+              variant="danger"
+              className="mb-3"
+              onClick={handleDeleteSelected}
+              disabled={isLoading || selectedRows.length === 0} // Disable button when isLoading is true or no shapes are selected
+            >
+              {isLoading ? "Deleting..." : "Delete Selected"}
             </Button>
             <Button variant="info" onClick={handleSelectAll} className="ms-2">
               Select All
@@ -197,229 +239,137 @@ function AgencyData() {
               Unselect All
             </Button>
           </div>
-          <Table striped bordered hover responsive className="overflow-scroll">
+
+          <div className="col-lg-8 p-3 d-flex align-items-center">
+            <Form.Label className="mr-2">Date:</Form.Label>
+            <Form.Control
+              type="text"
+              value={searchDate}
+              onChange={(e) => setSearchDate(e.target.value)}
+            />
+            <Button variant="primary" className="ml-2" onClick={handleSearch}>
+              Search
+            </Button>
+            <Button
+              variant="secondary"
+              className="ml-2"
+              onClick={handleClearSearch}
+            >
+              Clear
+            </Button>
+          </div>
+          <Table striped bordered hover className="overflow-scroll">
             <thead>
               <tr>
                 <th>Select</th>
-                <th>Count</th>
-                <th>Agency Lang</th>
-                <th>Agency Name</th>
-                <th>Agency Phone</th>
-                <th>Agency Timezone</th>
-                <th>Agency URL</th>
-                <th>Route Color</th>
-                <th>Route Id</th>
-                <th>Route Long Name</th>
+                <th>Date</th>
+                <th>Exception Type</th>
+                <th>Service Id</th>
                 <th>Modify</th>
               </tr>
             </thead>
             <tbody>
-              {paginatedStops.map((route) => (
-                <tr key={route.id}>
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={selectedRows.includes(route.count)}
-                      onChange={() => handleToggleRow(route.count)}
-                    />
-                  </td>
-                  <td className="text-secondary">{route.count}</td>
-                  <td>{route.agency_lang}</td>
-                  <td>{route.agency_name}</td>
-                  <td>{route.agency_phone}</td>
-                  <td>{route.agency_timezone}</td>
-                  <td>{route.agency_url}</td>
-                  <td>{route.route_color}</td>
-                  <td>{route.route_id}</td>
-                  <td>{route.route_long_name}</td>
-                  <td>
-                    <Button variant="primary" onClick={() => handleEdit(route)}>
-                      Edit
-                    </Button>{" "}
-                    <Button
-                      variant="danger"
-                      onClick={() => handleDelete(route.count)}
-                    >
-                      Delete
-                    </Button>
+              {loading ? (
+                <tr>
+                  <td colSpan={6}>
+                    <Loader />
                   </td>
                 </tr>
-              ))}
+              ) : calendar.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="text-center">
+                    No data available
+                  </td>
+                </tr>
+              ) : (
+                calendar.map((calendarItem) => (
+                  <tr key={calendarItem.id}>
+                    <td>
+                      <Form.Check
+                        type="checkbox"
+                        checked={selectedRows.includes(calendarItem.id)}
+                        onChange={() => handleToggleRow(calendarItem.id)}
+                      />
+                    </td>
+                    <td>{calendarItem.date}</td>
+                    <td>{calendarItem.exception_type}</td>
+                    <td>{calendarItem.service_id}</td>
+                    <td>
+                      <Button
+                        variant="warning"
+                        size="sm"
+                        onClick={() => handleEdit(calendarItem)}
+                      >
+                        <FaEdit />
+                      </Button>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => handleDelete(calendarItem.id)}
+                        className="ml-2"
+                      >
+                        <FaDeleteLeft />
+                      </Button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </Table>
-          <div className="d-flex justify-content-center">
-            <Pagination>
-              <Pagination.Prev
-                onClick={() => handlePaginationClick(currentPage - 1)}
-                disabled={currentPage === 1}
-              />
-              {currentPage > 1 && (
-                <Pagination.Item
-                  onClick={() => handlePaginationClick(currentPage - 1)}
-                >
-                  {currentPage - 1}
-                </Pagination.Item>
-              )}
-              <Pagination.Item active>{currentPage}</Pagination.Item>
-              {currentPage < Math.ceil(filteredRoutesData.length / pageSize) && (
-                <Pagination.Item
-                  onClick={() => handlePaginationClick(currentPage + 1)}
-                >
-                  {currentPage + 1}
-                </Pagination.Item>
-              )}
-              <Pagination.Next
-                onClick={() => handlePaginationClick(currentPage + 1)}
-                disabled={currentPage === Math.ceil(filteredRoutesData.length / pageSize)}
-              />
-            </Pagination>
-          </div>
+          <Pagination>
+            <Pagination.Prev
+              onClick={handlePreviousPage}
+              disabled={currentPage === 1}
+            />
+            <Pagination.Item active>{currentPage}</Pagination.Item>
+            <Pagination.Next
+              onClick={handleNextPage}
+              disabled={calendar.length < 50}
+            />
+          </Pagination>
         </div>
       </div>
-      <Modal
-        show={showModal}
-        size="lg"
-        centered
-        onHide={handleCloseModal}
-        backdrop="static"
-        className="editinfo_modal"
-      >
+
+      <Modal show={showModal} onHide={handleCloseModal}>
         <Modal.Header closeButton>
-          <Modal.Title>Edit Routes Data</Modal.Title>
+          <Modal.Title>Edit Calendar</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Container fluid>
-            <Row className="gap-3">
-              <Col>
-                <Form.Group>
-                  <Form.Label>Count</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={updatedRoute.count}
-                    onChange={(e) =>
-                      setUpdatedRoute({
-                        ...updatedRoute,
-                        count: e.target.value,
-                      })
-                    }
-                  />
-                </Form.Group>
-                <Form.Group>
-                  <Form.Label>Agency Lang</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={updatedRoute.agency_lang}
-                    onChange={(e) =>
-                      setUpdatedRoute({
-                        ...updatedRoute,
-                        agency_lang: e.target.value,
-                      })
-                    }
-                  />
-                </Form.Group>
-                <Form.Group>
-                  <Form.Label>Agency Name</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={updatedRoute.agency_name}
-                    onChange={(e) =>
-                      setUpdatedRoute({
-                        ...updatedRoute,
-                        agency_name: e.target.value,
-                      })
-                    }
-                  />
-                </Form.Group>
-                <Form.Group>
-                  <Form.Label>Agency Phone</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={updatedRoute.agency_phone}
-                    onChange={(e) =>
-                      setUpdatedRoute({
-                        ...updatedRoute,
-                        agency_phone: e.target.value,
-                      })
-                    }
-                  />
-                </Form.Group>
-              </Col>
-              <Col>
-                <Form.Group>
-                  <Form.Label>Agency Timezone</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={updatedRoute.agency_timezone}
-                    onChange={(e) =>
-                      setUpdatedRoute({
-                        ...updatedRoute,
-                        agency_timezone: e.target.value,
-                      })
-                    }
-                  />
-                </Form.Group>
-                <Form.Group>
-                  <Form.Label>Agency URL</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={updatedRoute.agency_url}
-                    onChange={(e) =>
-                      setUpdatedRoute({
-                        ...updatedRoute,
-                        agency_url: e.target.value,
-                      })
-                    }
-                  />
-                </Form.Group>
-                <Form.Group>
-                  <Form.Label>Route Color</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={updatedRoute.route_color}
-                    onChange={(e) =>
-                      setUpdatedRoute({
-                        ...updatedRoute,
-                        route_color: e.target.value,
-                      })
-                    }
-                  />
-                </Form.Group>
-                <Form.Group>
-                  <Form.Label>Route Id</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={updatedRoute.route_id}
-                    onChange={(e) =>
-                      setUpdatedRoute({
-                        ...updatedRoute,
-                        route_id: e.target.value,
-                      })
-                    }
-                  />
-                </Form.Group>
-                <Form.Group>
-                  <Form.Label>Route Long Name</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={updatedRoute.route_long_name}
-                    onChange={(e) =>
-                      setUpdatedRoute({
-                        ...updatedRoute,
-                        route_long_name: e.target.value,
-                      })
-                    }
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-          </Container>
-        </Modal.Body>
+          <Form>
+            <Form.Group controlId="formDate">
+              <Form.Label>Date</Form.Label>
+              <Form.Control
+                type="text"
+                value={updatedCalendarInfo.date}
+                onChange={(e) =>
+                  setUpdatedCalendarInfo({
+                    ...updatedCalendarInfo,
+                    date: e.target.value,
+                  })
+                }
+              />
+            </Form.Group>
 
+            <Form.Group controlId="formExceptionType">
+              <Form.Label>Exception Type</Form.Label>
+              <Form.Control
+                type="text"
+                value={updatedCalendarInfo.exception_type}
+                onChange={(e) =>
+                  setUpdatedCalendarInfo({
+                    ...updatedCalendarInfo,
+                    exception_type: e.target.value,
+                  })
+                }
+              />
+            </Form.Group>
+          </Form>
+        </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleCloseModal}>
             Close
           </Button>
-          <Button variant="primary" onClick={saveChanges}>
+          <Button variant="primary" onClick={handleSaveChanges}>
             Save Changes
           </Button>
         </Modal.Footer>
@@ -428,4 +378,4 @@ function AgencyData() {
   );
 }
 
-export default AgencyData;
+export default CalendarDates;

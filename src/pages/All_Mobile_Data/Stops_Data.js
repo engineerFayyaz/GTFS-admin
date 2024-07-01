@@ -21,6 +21,10 @@ import { db } from "../../Config";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import SearchFilter from "../../components/SearchFilter";
+import Loader from "../../components/Loader";
+import { FaDeleteLeft } from "react-icons/fa6";
+import { FaEdit } from "react-icons/fa";
+
 function StopesAppData() {
   const [stops, setStops] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -30,7 +34,7 @@ function StopesAppData() {
     stop_lat: "",
     stop_lon: "",
     stop_name: "",
-    zone_id: "",
+stop_code: "",
   });
   const [selectedStops, setSelectedStops] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
@@ -38,11 +42,13 @@ function StopesAppData() {
   const [searchTerm, setSearchTerm] = useState("");
   const [pageSize, setPageSize] = useState(50);
   const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
 
   useEffect(() => {
     const getStops = async () => {
       try {
+        setLoading(true);
         const db = getFirestore(); // Initialize Firestore directly here
         const stopsCollection = await getDocs(collection(db, "stops2"));
         const stopsData = stopsCollection.docs.map((doc) => {
@@ -66,6 +72,8 @@ function StopesAppData() {
         toast.success("Data fetched successfully");
       } catch (error) {
         console.error("Error fetching stops:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -86,7 +94,7 @@ function StopesAppData() {
       stop_lat: "",
       stop_lon: "",
       stop_name: "",
-      zone_id: "",
+  stop_code: "",
     });
   };
 
@@ -107,8 +115,8 @@ function StopesAppData() {
   };
 
   const handleDelete = async (id) => {
-    setIsLoading(true)
     try {
+      setIsLoading(true)
       await deleteDoc(doc(db, "stops2", id));
       setStops((prevStops) => prevStops.filter((stop) => stop.id !== id));
       toast.success("Stop deleted successfully");
@@ -140,8 +148,8 @@ function StopesAppData() {
   };
 
   const handleDeleteSelected = async () => {
-    setIsLoading(true)
     try {
+      setIsLoading(true)
       for (const stop of selectedStops) {
         await deleteDoc(doc(db, "stops2", stop.id));
       }
@@ -165,7 +173,7 @@ function StopesAppData() {
 
   const filteredStopsData = stops.filter((item) => {
     const searchTermLower = searchTerm.toLowerCase();
-    return ['stop_id', 'stop_name', 'zone_id'].some((field) =>
+    return ['stop_id', 'stop_name', 'stop_code'].some((field) =>
       item[field]
         ? item[field].toLowerCase().includes(searchTermLower)
         : false
@@ -188,7 +196,7 @@ function StopesAppData() {
             <SearchFilter 
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
-            fields={['stop_id', 'stop_name', 'zone_id']}
+            fields={['stop_id', 'stop_name', 'stop_code']}
             />
           </Col>
         </Row>
@@ -229,38 +237,55 @@ function StopesAppData() {
                 </tr>
               </thead>
               <tbody>
-                {paginatedStops.map((stop) => (
-                  <tr key={stop.id}>
-                    <td>
-                      <Form.Check
-                        type="checkbox"
-                        checked={stop.isSelected}
-                        onChange={() => handleSelectStop(stop.id)}
-                      />
-                    </td>
-                    <td className="text-secondary">
-                      <b>{stop.stop_id}</b>
-                    </td>
-                    <td>{stop.stop_name}</td>
-                    <td>{stop.stop_lat}</td>
-                    <td>{stop.stop_lon}</td>
-                    <td>{stop.zone_id}</td>
-                    <td className="d-flex gap-2">
-                      <Button
-                        variant="primary"
-                        onClick={() => handleEdit(stop)}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="danger"
-                        onClick={() => handleDelete(stop.id)}
-                      >
-                        Delete
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
+              {loading ? (
+                <tr>
+                  <td colSpan={8}>
+                    <Loader />
+                  </td>
+                </tr>
+              ) : (
+                paginatedStops.length === 0 ? (
+                  <tr>
+                  <td colSpan={8} className="text-center">
+                    no data found
+                  </td>
+                </tr>
+                ) : (
+                  paginatedStops.map((stop) => (
+                    <tr key={stop.id}>
+                      <td>
+                        <Form.Check
+                          type="checkbox"
+                          checked={stop.isSelected}
+                          onChange={() => handleSelectStop(stop.id)}
+                        />
+                      </td>
+                      <td className="text-secondary">
+                        <b>{stop.stop_id}</b>
+                      </td>
+                      <td>{stop.stop_name}</td>
+                      <td>{stop.stop_lat}</td>
+                      <td>{stop.stop_lon}</td>
+                      <td>{stop.zone_id}</td>
+                      <td className="d-flex gap-2">
+                        <Button
+                          variant="primary"
+                          onClick={() => handleEdit(stop)}
+                        >
+                          <FaEdit />
+                        </Button>
+                        <Button
+                          variant="danger"
+                          onClick={() => handleDelete(stop.id)}
+                        >
+                          <FaDeleteLeft />
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                )
+              )}
+                {}
               </tbody>
             </Table>
             <div className="d-flex justify-content-center">
@@ -366,11 +391,11 @@ function StopesAppData() {
                   <Form.Label>Zone Id</Form.Label>
                   <Form.Control
                     type="text"
-                    value={updatedStopInfo.zone_id}
+                    value={updatedStopInfo.stop_code}
                     onChange={(e) =>
                       setUpdatedStopInfo({
                         ...updatedStopInfo,
-                        zone_id: e.target.value,
+                        stop_code: e.target.value,
                       })
                     }
                   />

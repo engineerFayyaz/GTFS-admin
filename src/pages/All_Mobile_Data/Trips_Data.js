@@ -22,6 +22,7 @@ import { db } from "../../Config";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import SearchFilter from "../../components/SearchFilter";
+import Loader from "../../components/Loader";
 function TripsAppData() {
   const [stops, setStops] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -38,16 +39,18 @@ function TripsAppData() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const getStops = async () => {
       try {
+        setIsLoading(true);
         const db = getFirestore(); // Initialize Firestore directly here
         const stopsCollection = await getDocs(collection(db, "trips2"));
         const stopsData = stopsCollection.docs.map((doc) => {
           const data = doc.data();
-          // Remove double quotes from all string properties
+
           const cleanedData = {};
           for (const key in data) {
             if (typeof data[key] === "string") {
@@ -66,6 +69,8 @@ function TripsAppData() {
         toast.success("Data fetched successfully");
       } catch (error) {
         console.log("Error fetching trips:", error);
+      } finally {
+        setIsLoading(false);
       }
     };
   
@@ -232,38 +237,48 @@ function TripsAppData() {
                 </tr>
               </thead>
               <tbody>
-                {paginatedStops.map((stop) => (
-                  <tr key={stop.id}>
-                    <td>
-                      <Form.Check
-                        type="checkbox"
-                        checked={stop.isSelected}
-                        onChange={() => handleSelectStop(stop.id)}
-                      />
-                    </td>
-                    <td className="text-secondary">
-                      <b>{stop.trip_id}</b>
-                    </td>
-                    <td>{stop.direction_id}</td>
-                    <td>{stop.route_id}</td>
-                    <td>{stop.service_id}</td>
-                    <td>{stop.shape_id}</td>
-                    <td className="d-flex gap-2">
-                      <Button
-                        variant="primary"
-                        onClick={() => handleEdit(stop)}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="danger"
-                        onClick={() => handleDelete(stop.id)}
-                      >
-                        Delete
-                      </Button>
+                {isLoading ? (
+
+                  <tr>
+                    <td colSpan={8}>
+                      <Loader />
                     </td>
                   </tr>
-                ))}
+
+                ) : (
+                  paginatedStops.map((stop) => (
+                    <tr key={stop.id}>
+                      <td>
+                        <Form.Check
+                          type="checkbox"
+                          checked={stop.isSelected}
+                          onChange={() => handleSelectStop(stop.id)}
+                        />
+                      </td>
+                      <td className="text-secondary">
+                        <b>{stop.trip_id}</b>
+                      </td>
+                      <td>{stop.direction_id}</td>
+                      <td>{stop.route_id}</td>
+                      <td>{stop.service_id}</td>
+                      <td>{stop.shape_id}</td>
+                      <td className="d-flex gap-2">
+                        <Button
+                          variant="primary"
+                          onClick={() => handleEdit(stop)}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="danger"
+                          onClick={() => handleDelete(stop.id)}
+                        >
+                          Delete
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </Table>
             <div className="d-flex justify-content-center">

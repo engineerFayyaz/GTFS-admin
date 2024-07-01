@@ -20,6 +20,8 @@ import {
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import SearchFilter from "../../components/SearchFilter";
+import Loader from "../../components/Loader";
+
 function StopsTime2Web() {
   const [stops, setStops] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -34,14 +36,18 @@ function StopsTime2Web() {
   });
   const [selectedStops, setSelectedStops] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
+  
+  // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
-  const [isLoading,setIsLoading]= useState(false)
+  const [isLoading,setIsLoading] = useState(false);
+  const [loading,setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const getStops = async () => {
       try {
+        setLoading(true);
         const db = getFirestore(); // Initialize Firestore directly here
         const stopsCollection = await getDocs(collection(db, "stop_times2"));
         const stopsData = stopsCollection.docs.map((doc) => {
@@ -62,16 +68,16 @@ function StopsTime2Web() {
           };
         });
         setStops(stopsData);
-        console.log("stops loaded", stopsData)
-        toast.success("Data fetched successfully");
+        console.log("stops loaded", stopsData);
+        // toast.success("Data fetched successfully");
       } catch (error) {
         console.error("Error fetching stops:", error);
+      } finally {
+        setLoading(false);
       }
     };
-  
     getStops();
   }, []);
-  
 
   const handleEdit = (stop) => {
     setEditedStop(stop);
@@ -110,9 +116,9 @@ function StopsTime2Web() {
   };
 
   const handleSelectedDelete = async () => {
-    setIsLoading(true)
     const selectedIds = selectedStops.map((stop) => stop.id);
     try {
+      setIsLoading(true);
       const db = getFirestore();
       await Promise.all(
         selectedIds.map((id) => deleteDoc(doc(db, "stop_times2", id)))
@@ -152,35 +158,31 @@ function StopsTime2Web() {
     }
   };
 
-  const handleDelete = async (count) => {
+  const handleDelete = async (id) => {
     setIsLoading(true)
     try {
       const db = getFirestore();
-      const stopToDelete = stops.find((stop) => stop.count === count);
-      if (!stopToDelete) {
-        toast.error("Stop not found for count: " + count);
-        return;
-      }
-      await deleteDoc(doc(db, "stop_times2", stopToDelete.id));
-      const updatedStops = stops.filter((stop) => stop.count !== count);
+      await deleteDoc(doc(db, "stop_times2", id));
+      const updatedStops = stops.filter((stop) => stop.id !== id);
       setStops(updatedStops);
-      setSelectedStops(selectedStops.filter((stop) => stop.count !== count));
-      toast.success("Stop deleted successfully for count: " + count);
+      setSelectedStops(selectedStops.filter((stop) => stop.id !== id));
+      toast.success("Stop deleted successfully");
     } catch (error) {
       console.error("Error deleting stop:", error);
-      toast.error("Error deleting stop for count: " + count);
+      toast.error("Error deleting stop");
     }finally{
       setIsLoading(false)
     }
   };
 
+  // Pagination logic
   const handlePaginationClick = (page) => {
     setCurrentPage(page);
   };
 
   const filteredStopsData = stops.filter((item) => {
     const searchTermLower = searchTerm.toLowerCase();
-    return ['arrival_time', 'departure_time', 'trip_id'].some((field) =>
+    return ['trip_id', 'departure_time', 'stop_id'].some((field) =>
       item[field]
         ? item[field].toLowerCase().includes(searchTermLower)
         : false
@@ -199,12 +201,12 @@ function StopsTime2Web() {
         <div className="row">
           <div className="col-lg-12 p-3">
             <div className="text-center">
-              <h5 className="text-uppercase p-2 page-title">Stops Times 2 Data</h5>
+              <h5 className="text-uppercase p-2 page-title">Stops Times Data</h5>
             </div>
             <SearchFilter 
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
-            fields={['arrival_time', 'departure_time', 'trip_id']}
+            fields={['trip_id', 'departure_time', 'stop_id']}
             />
           </div>
 
@@ -212,9 +214,10 @@ function StopsTime2Web() {
             <Button
               variant="danger"
               onClick={handleSelectedDelete}
-              disabled={isLoading||selectedStops.length === 0}
+              disabled={isLoading || selectedStops.length === 0} // Disable button when isLoading is true or no shapes are selected
+
             >
-             {isLoading ? "Deleting..." : "Delete Selected"}
+              {isLoading ? "Deleting..." : "Delete Selected"}
             </Button>
 
             <Button variant="info" onClick={handleToggleAll} className="ms-2">
@@ -241,34 +244,51 @@ function StopsTime2Web() {
               </tr>
             </thead>
             <tbody>
-              {paginatedStops.map((stop) => (
-                <tr key={stop.id}>
-                  <td>
-                    <Form.Check
-                      type="checkbox"
-                      checked={selectedStops.some((s) => s.id === stop.id)}
-                      onChange={() => handleToggleSelect(stop.id)}
-                    />
-                  </td>
-                  <td>{stop.stop_id}</td>
-                  <td>{stop.arrival_time}</td>
-                  <td>{stop.departure_time}</td>
-                  <td>{stop.stop_sequence}</td>
-                  <td>{stop.pickup_type}</td>
-                  <td>{stop.trip_id}</td>
-                  <td className="d-flex gap-2">
-                    <Button variant="primary" onClick={() => handleEdit(stop)}>
-                      Edit
-                    </Button>
-                    <Button
-                      variant="danger"
-                      onClick={() => handleDelete(stop.count)}
-                    >
-                      Delete
-                    </Button>
+              {loading ? (
+                 <tr>
+                 <td colSpan={8}>
+                   <Loader />
+                 </td>
+               </tr>
+              ) : (
+                paginatedStops.length === 0 ? (
+                  <tr>
+                  <td colSpan={8} className="text-center">
+                    no data found
                   </td>
                 </tr>
-              ))}
+                ) : (
+                  paginatedStops.map((stop) => (
+                    <tr key={stop.id}>
+                      <td>
+                        <Form.Check
+                          type="checkbox"
+                          checked={selectedStops.some((s) => s.id === stop.id)}
+                          onChange={() => handleToggleSelect(stop.id)}
+                        />
+                      </td>
+                      <td>{stop.stop_id}</td>
+                      <td>{stop.arrival_time}</td>
+                      <td>{stop.departure_time}</td>
+                      <td>{stop.stop_sequence}</td>
+                      <td>{stop.pickup_type}</td>
+                      <td>{stop.trip_id}</td>
+                      <td className="d-flex gap-2">
+                        <Button variant="primary" onClick={() => handleEdit(stop)}>
+                          Edit
+                        </Button>
+                        <Button
+                          variant="danger"
+                          onClick={() => handleDelete(stop.id)}
+                        >
+                          Delete
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                )
+              )
+              }
             </tbody>
           </Table>
           <div className="d-flex justify-content-center">
@@ -355,11 +375,9 @@ function StopsTime2Web() {
                     }
                   />
                 </Form.Group>
-
-
               </Col>
               <Col>
-              <Form.Group>
+                <Form.Group>
                   <Form.Label>Trip ID</Form.Label>
                   <Form.Control
                     type="text"
@@ -372,7 +390,7 @@ function StopsTime2Web() {
                     }
                   />
                 </Form.Group>
-              <Form.Group>
+                <Form.Group>
                   <Form.Label>Pickup Type</Form.Label>
                   <Form.Control
                     type="text"
@@ -416,4 +434,3 @@ function StopsTime2Web() {
 }
 
 export default StopsTime2Web;
-

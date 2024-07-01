@@ -26,6 +26,9 @@ import {
   Spinner
 } from "react-bootstrap";
 import DeleteData from "../../components/DeleteData";
+import { FaEdit } from "react-icons/fa";
+import { FaDeleteLeft } from "react-icons/fa6";
+import Loader from "../../components/Loader";
 function CalendarDates() {
   const [calendar, setCalendar] = useState([]);
   const [lastVisible, setLastVisible] = useState(null);
@@ -65,8 +68,8 @@ function CalendarDates() {
   };
 
   const getCalendar = async (next = false, previous = false) => {
-    setLoading(true);
     try {
+      setLoading(true);
       const db = getFirestore();
       let calendarQuery = query(collection(db, "calendar_dates2"), orderBy("date"), limit(50));
 
@@ -141,7 +144,7 @@ function CalendarDates() {
 
   const handleDelete = async (id) => {
     try {
-      isLoading(true);
+      setIsLoading(true);
       const db = getFirestore();
       await deleteDoc(doc(db, "calendar_dates2", id));
       setCalendar((prevCalendar) => prevCalendar.filter((calendarItem) => calendarItem.id !== id));
@@ -248,34 +251,52 @@ function CalendarDates() {
               </tr>
             </thead>
             <tbody>
-              {calendar.map((calendarItem) => (
-                <tr key={calendarItem.id}>
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={selectedRows.includes(calendarItem.id)}
-                      onChange={() => handleToggleRow(calendarItem.id)}
-                    />
-                  </td>
-                  <td className="text-secondary">{calendarItem.date}</td>
-                  <td>{calendarItem.exception_type}</td>
-                  <td>{calendarItem.id}</td>
-                  <td>
-                    <Button
-                      variant="primary"
-                      onClick={() => handleEdit(calendarItem)}
-                    >
-                      Edit
-                    </Button>{" "}
-                    <Button
-                      variant="danger"
-                      onClick={() => handleDelete(calendarItem.id)}
-                    >
-                      Delete
-                    </Button>
+              {loading ? (
+                <tr>
+                  <td colSpan={6}>
+                    <Loader />
                   </td>
                 </tr>
-              ))}
+              ) : (
+                calendar.length === 0 ? (
+                  <tr>
+                  <td colSpan={6} className="text-center">
+                   no data available
+                  </td>
+                </tr>
+                ) : (
+                  calendar.map((calendarItem) => (
+                    <tr key={calendarItem.id}>
+                      <td>
+                        <input
+                          type="checkbox"
+                          checked={selectedRows.includes(calendarItem.id)}
+                          onChange={() => handleToggleRow(calendarItem.id)}
+                        />
+                      </td>
+                      <td className="text-secondary">{calendarItem.date}</td>
+                      <td>{calendarItem.exception_type}</td>
+                      <td>{calendarItem.id}</td>
+                      <td>
+                        <Button
+                          variant="primary"
+                          onClick={() => handleEdit(calendarItem)}
+                        >
+                          <FaEdit />
+                        </Button>{" "}
+                        <Button
+                          variant="danger"
+                          onClick={() => handleDelete(calendarItem.id)}
+                        >
+                          <FaDeleteLeft />
+                        </Button>
+                      </td>
+                    </tr>
+                  )) 
+                )
+                
+              )}
+            
             </tbody>
           </Table>
           {loading && <p>Loading...</p>}

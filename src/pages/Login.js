@@ -8,6 +8,7 @@ import {storeUserToLocalStorage} from "../utils/localstorage"
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading]  = useState(false);
   const auth = getAuth();
   const navigate = useNavigate();
 
@@ -15,6 +16,7 @@ const Login = () => {
   const handleLogin = (e) => {
     e.preventDefault();
     const loginForm = document.getElementById("login");
+    setLoading(true);
     const log = signInWithEmailAndPassword(auth,email, password).then((userCredentails) => {
       const user = userCredentails.user;
       storeUserToLocalStorage({email: user.email})
@@ -29,12 +31,13 @@ const Login = () => {
       else{
         toast.error("Invalid credentials");
       }
+      setLoading(false);
     })
     .catch((err) => {
      const errorMessage = err.message;
       console.error("error is ",errorMessage)
      toast.error("Invalid Credentials", errorMessage);
-    })
+    }) 
   };
 
   return (
@@ -64,8 +67,8 @@ const Login = () => {
                   className="w-100 rounded-3 border-1 p-2 my-2"
                 />
             </div>
-            <button type="submit" className="p-2 rounded-3 text-light">
-              Log In
+            <button type="submit" className="p-2 rounded-3 bg-dark text-light">
+              {loading ? "Signing in.." : "Log In" }
             </button>
           </form>
           <div className="content__or-text text-center my-2">

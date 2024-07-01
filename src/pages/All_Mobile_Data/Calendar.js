@@ -13,19 +13,21 @@ import {
 } from "firebase/firestore";
 import { Table, Button, Modal, Form, Container, Col, Row, Pagination } from "react-bootstrap";
 import { toast, ToastContainer } from "react-toastify";
+import {  FaDeleteLeft } from "react-icons/fa6";
+import { FaEdit } from "react-icons/fa";
 import "react-toastify/dist/ReactToastify.css";
 import { db } from "../../Config";
 import SearchFilter from "../../components/SearchFilter";
+import Loader from "../../components/Loader";
 
 function CalendarMobile() {
   const [stops, setStops] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editedStop, setEditedStop] = useState(null);
   const [updatedStopInfo, setUpdatedStopInfo] = useState({
-    startdate: "",
-    count: "",
-    enddate: "",
-    serviceid: "",
+    start_date: "",
+    end_date: "",
+    service_id: "",
     monday: "",
     tuesday: "",
     wednesday: "",
@@ -48,10 +50,11 @@ function CalendarMobile() {
 
   const getStops = async () => {
     try {
+      setIsLoading(true);
       const db = getFirestore();
       const pageSize = 50;
       const startIndex = (currentPage - 1) * pageSize;
-      const stopsQuery = query(collection(db, "calendar2"), orderBy("startdate"), limit(pageSize), startAfter(startIndex));
+      const stopsQuery = query(collection(db, "calendar2"), orderBy("start_date"), limit(pageSize), startAfter(startIndex));
 
       const stopsCollection = await getDocs(stopsQuery);
       const stopsData = stopsCollection.docs.map((doc) => {
@@ -73,11 +76,13 @@ function CalendarMobile() {
 
       setStops(stopsData);
       setTotalPages(Math.ceil(stopsData.length / pageSize));
-
-      toast.success("Data fetched successfully");
+      
+      console.log("Data fetched successfully");
     } catch (error) {
       console.error("Error fetching stops:", error);
       toast.error("Error fetching stops");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -91,10 +96,9 @@ function CalendarMobile() {
     setEditedStop(null);
     setShowModal(false);
     setUpdatedStopInfo({
-      startdate: "",
-      count: "",
-      enddate: "",
-      serviceid: "",
+      start_date: "",
+      end_date: "",
+      service_id: "",
       monday: "",
       tuesday: "",
       wednesday: "",
@@ -177,7 +181,7 @@ function CalendarMobile() {
 
   const filteredAppData = stops.filter((stop) => {
     const searchTermLower = searchTerm.toLowerCase();
-    return ['startdate', 'enddate', 'serviceid'].some((field) =>
+    return ['start_date', 'end_date', 'service_id'].some((field) =>
       stop[field]
         ? stop[field].toLowerCase().includes(searchTermLower)
         : false
@@ -201,7 +205,7 @@ function CalendarMobile() {
             <SearchFilter
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
-              field={['startdate', 'enddate', 'serviceid']}
+              field={['start_date', 'end_date', 'service_id']}
             />
           </Col>
         </Row>
@@ -233,9 +237,8 @@ function CalendarMobile() {
                       onChange={handleSelectAll}
                     />
                   </th>
-                  <th>Count</th>
-                  <th>Start Date</th>
-                  <th>End Date</th>
+                  <th>Start_Date</th>
+                  <th>End_Date</th>
                   <th>Service ID</th>
                   <th>Monday</th>
                   <th>Tuesday</th>
@@ -248,44 +251,48 @@ function CalendarMobile() {
                 </tr>
               </thead>
               <tbody>
-                {paginatedStops.map((stop, index) => (
-                  <tr key={index}>
-                    <td>
-                      <Form.Check
-                        type="checkbox"
-                        checked={stop.isSelected}
-                        onChange={() => handleSelectStop(stop.id)}
-                      />
-                    </td>
-                    <td className="text-secondary">
-                      <b>{stop.count}</b>
-                    </td>
-                    <td>{stop.startdate}</td>
-                    <td>{stop.enddate}</td>
-                    <td>{stop.serviceid}</td>
-                    <td>{stop.monday}</td>
-                    <td>{stop.tuesday}</td>
-                    <td>{stop.wednesday}</td>
-                    <td>{stop.thursday}</td>
-                    <td>{stop.friday}</td>
-                    <td>{stop.saturday}</td>
-                    <td>{stop.sunday}</td>
-                    <td className="d-flex gap-2">
-                      <Button
-                        variant="primary"
-                        onClick={() => handleEdit(stop)}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="danger"
-                        onClick={() => handleDelete(stop.id)}
-                      >
-                        Delete
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
+              {isLoading ? (
+                <tr>
+                  <td colSpan={12}  className="text-center">
+                  <Loader />
+                  </td>
+                </tr>
+                ) 
+            : ( paginatedStops.map((stop, index) => (
+              <tr key={index}>
+                <td>
+                  <Form.Check
+                    type="checkbox"
+                    checked={stop.isSelected}
+                    onChange={() => handleSelectStop(stop.id)}
+                  />
+                </td>
+                <td>{stop.start_date}</td>
+                <td>{stop.end_date}</td>
+                <td>{stop.service_id}</td>
+                <td>{stop.monday}</td>
+                <td>{stop.tuesday}</td>
+                <td>{stop.wednesday}</td>
+                <td>{stop.thursday}</td>
+                <td>{stop.friday}</td>
+                <td>{stop.saturday}</td>
+                <td>{stop.sunday}</td>
+                <td className="d-flex gap-2">
+                  <Button
+                    variant="primary"
+                    onClick={() => handleEdit(stop)}
+                  >
+                    <FaEdit />
+                  </Button>
+                  <Button
+                    variant="danger"
+                    onClick={() => handleDelete(stop.id)}
+                  >
+                    <FaDeleteLeft />
+                  </Button>
+                </td>
+              </tr>
+            )))}
               </tbody>
             </Table>
             <Col lg={12}>
@@ -335,40 +342,27 @@ function CalendarMobile() {
             <Row className="gap-3">
               <Col>
                 <Form.Group>
-                  <Form.Label>Count</Form.Label>
+                  <Form.Label>Start_Date</Form.Label>
                   <Form.Control
                     type="text"
-                    value={updatedStopInfo.count}
+                    value={updatedStopInfo.start_date}
                     onChange={(e) =>
                       setUpdatedStopInfo({
                         ...updatedStopInfo,
-                        count: e.target.value,
+                        start_date: e.target.value,
                       })
                     }
                   />
                 </Form.Group>
                 <Form.Group>
-                  <Form.Label>Start Date</Form.Label>
+                  <Form.Label>End_Date</Form.Label>
                   <Form.Control
                     type="text"
-                    value={updatedStopInfo.startdate}
+                    value={updatedStopInfo.end_date}
                     onChange={(e) =>
                       setUpdatedStopInfo({
                         ...updatedStopInfo,
-                        startdate: e.target.value,
-                      })
-                    }
-                  />
-                </Form.Group>
-                <Form.Group>
-                  <Form.Label>End Date</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={updatedStopInfo.enddate}
-                    onChange={(e) =>
-                      setUpdatedStopInfo({
-                        ...updatedStopInfo,
-                        enddate: e.target.value,
+                        end_date: e.target.value,
                       })
                     }
                   />
@@ -377,17 +371,15 @@ function CalendarMobile() {
                   <Form.Label>Service ID</Form.Label>
                   <Form.Control
                     type="text"
-                    value={updatedStopInfo.serviceid}
+                    value={updatedStopInfo.service_id}
                     onChange={(e) =>
                       setUpdatedStopInfo({
                         ...updatedStopInfo,
-                        serviceid: e.target.value,
+                        service_id: e.target.value,
                       })
                     }
                   />
                 </Form.Group>
-              </Col>
-              <Col>
                 <Form.Group>
                   <Form.Label>Monday</Form.Label>
                   <Form.Control
@@ -414,6 +406,9 @@ function CalendarMobile() {
                     }
                   />
                 </Form.Group>
+              </Col>
+              <Col>
+              
                 <Form.Group>
                   <Form.Label>Wednesday</Form.Label>
                   <Form.Control

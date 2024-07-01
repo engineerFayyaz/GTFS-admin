@@ -21,6 +21,7 @@ import { db } from "../../Config";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import SearchFilter from "../../components/SearchFilter";
+import Loader from "../../components/Loader";
 
 function TripsWebData() {
   const [stops, setStops] = useState([]);
@@ -41,10 +42,13 @@ function TripsWebData() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [isloading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const getStops = async () => {
       try {
+        setLoading(true);
         const db = getFirestore(); // Initialize Firestore directly here
         const stopsCollection = await getDocs(collection(db, "trips-web-data"));
         const stopsData = stopsCollection.docs.map((doc) => {
@@ -68,6 +72,8 @@ function TripsWebData() {
         toast.success("Data fetched successfully");
       } catch (error) {
         console.error("Error fetching stops:", error);
+      } finally {
+        setLoading(false);
       }
     };
   
@@ -227,41 +233,58 @@ function TripsWebData() {
                 </tr>
               </thead>
               <tbody>
-                {paginatedStops.map((stop) => (
-                  <tr key={stop.id}>
-                    <td>
-                      <Form.Check
-                        type="checkbox"
-                        checked={stop.isSelected}
-                        onChange={() => handleSelectStop(stop.id)}
-                      />
-                    </td>
-                    <td className="text-secondary">
-                      <b>{stop.trip_id}</b>
-                    </td>
-                    <td>{stop.block_id}</td>
-                    <td>{stop.direction_id}</td>
-                    <td>{stop.route_id}</td>
-                    <td>{stop.service_id}</td>
-                    <td>{stop.shape_id}</td>
-                    <td>{stop.trip_headsign}</td>
-                    <td>{stop.wheelchair_accessible}</td>
-                    <td className="d-flex gap-2">
-                      <Button
-                        variant="primary"
-                        onClick={() => handleEdit(stop)}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        variant="danger"
-                        onClick={() => handleDelete(stop.id)}
-                      >
-                        Delete
-                      </Button>
+                {loading ? (
+                   <tr>
+                   <td colSpan={12}>
+                     <Loader />
+                   </td>
+                 </tr>
+                ) : (
+                  paginatedStops.length === 0 ? (
+                    <tr>
+                    <td colSpan={12} className="text-center">
+                     no data found
                     </td>
                   </tr>
-                ))}
+                  ) : (
+                    paginatedStops.map((stop) => (
+                      <tr key={stop.id}>
+                        <td>
+                          <Form.Check
+                            type="checkbox"
+                            checked={stop.isSelected}
+                            onChange={() => handleSelectStop(stop.id)}
+                          />
+                        </td>
+                        <td className="text-secondary">
+                          <b>{stop.trip_id}</b>
+                        </td>
+                        <td>{stop.block_id}</td>
+                        <td>{stop.direction_id}</td>
+                        <td>{stop.route_id}</td>
+                        <td>{stop.service_id}</td>
+                        <td>{stop.shape_id}</td>
+                        <td>{stop.trip_headsign}</td>
+                        <td>{stop.wheelchair_accessible}</td>
+                        <td className="d-flex gap-2">
+                          <Button
+                            variant="primary"
+                            onClick={() => handleEdit(stop)}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="danger"
+                            onClick={() => handleDelete(stop.id)}
+                          >
+                            Delete
+                          </Button>
+                        </td>
+                      </tr>
+                    ))
+                  )
+                )}
+                
               </tbody>
             </Table>
             <div className="d-flex justify-content-center">

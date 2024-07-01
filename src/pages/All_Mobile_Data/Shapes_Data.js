@@ -23,6 +23,9 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 import SearchFilter from "../../components/SearchFilter";
+import Loader from "../../components/Loader";
+import { FaEdit } from "react-icons/fa";
+import { FaDeleteLeft } from "react-icons/fa6";
 function ShapesAppData() {
   const [shapes, setShapes] = useState([]);
   const [showModal, setShowModal] = useState(false);
@@ -45,8 +48,9 @@ function ShapesAppData() {
   useEffect(() => {
     const getShapes = async () => {
       try {
+        setLoading(true);
         const db = getFirestore(); // Initialize Firestore directly here
-        const shapesCollection = await getDocs(collection(db, "shapes2"));
+        const shapesCollection = await getDocs(collection(db, "shapes"));
         const shapesData = shapesCollection.docs.map((doc) => {
           const data = doc.data();
           // Remove double quotes from all string properties
@@ -65,10 +69,11 @@ function ShapesAppData() {
           };
         });
         setShapes(shapesData);
-        setLoading(false);
-        toast.success("Data fetched successfully");
+        // toast.success("Data fetched successfully");
+        console.log("Data fetched successfully", shapesData)
       } catch (error) {
         console.error("Error fetching shapes:", error);
+      } finally{
         setLoading(false);
       }
     };
@@ -96,7 +101,7 @@ function ShapesAppData() {
 
   const handleSaveChanges = async () => {
     try {
-      const shapeRef = doc(db, "shapes2", editedShape.id);
+      const shapeRef = doc(db, "shapes", editedShape.id);
       await updateDoc(shapeRef, updatedShapeInfo);
       const updatedShapes = shapes.map((shape) =>
         shape.id === editedShape.id ? { ...shape, ...updatedShapeInfo } : shape
@@ -114,7 +119,7 @@ function ShapesAppData() {
     setIsLoading(true);
     try {
       const db = getFirestore();
-      await deleteDoc(doc(db, "shapes2", id));
+      await deleteDoc(doc(db, "shapes", id));
       setShapes((prevShapes) => prevShapes.filter((shape) => shape.id !== id));
       toast.success("Shape deleted successfully");
     } catch (error) {
@@ -146,8 +151,8 @@ function ShapesAppData() {
 
 
   const handleDeleteSelected = async () => {
-    setIsLoading(true);
     try {
+      setIsLoading(true);
         const db = getFirestore();
 
         // Check if selectedShapes is an array
@@ -162,7 +167,7 @@ function ShapesAppData() {
         const deletedRows = [];
 
         for (const shape of selectedShapes) {
-            await deleteDoc(doc(db, "shapes2", shape.id));
+            await deleteDoc(doc(db, "shapes", shape.id));
             deletedRows.push(shape); // Add the deleted shape to the array
             console.log("Deleted row:", shape); // Log the individual deleted row
         }
@@ -188,7 +193,7 @@ function ShapesAppData() {
 
   const filteredShapesData = shapes.filter((item) => {
     const searchTermLower = searchTerm.toLowerCase();
-    return ['shape_id', 'shape_pt_lat', 'Shape_Lon', 'Dist_Traveled'].some((field) =>
+    return ['shape_id', 'shape_pt_lat', 'shape_pt_lon', 'dist_traveled'].some((field) =>
       item[field]
         ? item[field].toLowerCase().includes(searchTermLower)
         : false
@@ -212,7 +217,7 @@ function ShapesAppData() {
             <SearchFilter 
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
-            fields={['shapeId', 'Shape_Lat', 'Shape_Lon', 'Dist_Traveled']}
+            fields={['shape_id', 'shape_pt_lat', 'shape_pt_lon', 'dist_traveled']}
             />
           </Col>
         </Row>
@@ -234,10 +239,6 @@ function ShapesAppData() {
             >
               {selectAll ? "Unselect All" : "Select All"}
             </Button>
-            {loading ? (
-              <div className="col-lg-12 text-center">Loading...</div>
-            ) : (
-              <>
                 <Table striped bordered hover className="overflow-scroll">
                   <thead>
                     <tr>
@@ -257,38 +258,55 @@ function ShapesAppData() {
                     </tr>
                   </thead>
                   <tbody>
-                    {paginatedShapes.map((shape) => (
-                      <tr key={shape.id}>
-                        <td>
-                          <Form.Check
-                            type="checkbox"
-                            checked={shape.isSelected}
-                            onChange={() => handleSelectShape(shape.id)}
-                          />
-                        </td>
-                        <td className="text-secondary">
-                          <b>{shape.shape_id}</b>
-                        </td>
-                        <td>{shape.shape_pt_lat}</td>
-                        <td>{shape.shape_pt_lon}</td>
-                        <td>{shape.shape_pt_sequence}</td>
-                        <td>{shape.shape_dist_traveled}</td>
-                        <td className="d-flex gap-2">
-                          <Button
-                            variant="primary"
-                            onClick={() => handleEdit(shape)}
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            variant="danger"
-                            onClick={() => handleDelete(shape.id)}
-                          >
-                            Delete
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
+                    {loading ? (
+                       <tr>
+                       <td colSpan={8}>
+                         <Loader />
+                       </td>
+                     </tr>
+                    ) : (
+                      paginatedShapes.length === 0 ? (
+<tr>
+                       <td colSpan={8} className="text-center">
+                        no data found
+                       </td>
+                     </tr>
+                      ) : (
+                        paginatedShapes.map((shape) => (
+                          <tr key={shape.id}>
+                            <td>
+                              <Form.Check
+                                type="checkbox"
+                                checked={shape.isSelected}
+                                onChange={() => handleSelectShape(shape.id)}
+                              />
+                            </td>
+                            <td className="text-secondary">
+                              <b>{shape.shape_id}</b>
+                            </td>
+                            <td>{shape.shape_pt_lat}</td>
+                            <td>{shape.shape_pt_lon}</td>
+                            <td>{shape.shape_pt_sequence}</td>
+                            <td>{shape.shape_dist_traveled}</td>
+                            <td className="d-flex gap-2">
+                              <Button
+                                variant="primary"
+                                onClick={() => handleEdit(shape)}
+                              >
+                               <FaEdit />
+                              </Button>
+                              <Button
+                                variant="danger"
+                                onClick={() => handleDelete(shape.id)}
+                              >
+                                <FaDeleteLeft />
+                              </Button>
+                            </td>
+                          </tr>
+                        ))
+                      )
+                    
+                    )}
                   </tbody>
                 </Table>
                 <div className="d-flex justify-content-center">
@@ -318,8 +336,6 @@ function ShapesAppData() {
                     />
                   </Pagination>
                 </div>
-              </>
-            )}
           </Col>
         </Row>
       </Container>

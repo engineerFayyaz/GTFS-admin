@@ -20,6 +20,7 @@ import {
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import SearchFilter from "../../components/SearchFilter";
+import Loader from "../../components/Loader";
 
 function StopsTimeWeb() {
   const [stops, setStops] = useState([]);
@@ -35,18 +36,20 @@ function StopsTimeWeb() {
   });
   const [selectedStops, setSelectedStops] = useState([]);
   const [selectAll, setSelectAll] = useState(false);
-  
+
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
-  const [isLoading,setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const getStops = async () => {
       try {
+        setLoading(true);
         const db = getFirestore(); // Initialize Firestore directly here
-        const stopsCollection = await getDocs(collection(db, "stop_times"));
+        const stopsCollection = await getDocs(collection(db, "stop_times2"));
         const stopsData = stopsCollection.docs.map((doc) => {
           const data = doc.data();
           // Remove double quotes from all string properties
@@ -66,12 +69,13 @@ function StopsTimeWeb() {
         });
         setStops(stopsData);
         console.log("stops loaded", stopsData);
-        toast.success("Data fetched successfully");
+        // toast.success("Data fetched successfully");
       } catch (error) {
         console.error("Error fetching stops:", error);
+      } finally {
+        setLoading(false);
       }
     };
-
     getStops();
   }, []);
 
@@ -97,7 +101,7 @@ function StopsTimeWeb() {
   const handleSaveChanges = async () => {
     try {
       const db = getFirestore();
-      const stopRef = doc(db, "stop_times", editedStop.id);
+      const stopRef = doc(db, "stop_times2", editedStop.id);
       await updateDoc(stopRef, updatedStopInfo);
       const updatedStops = stops.map((stop) =>
         stop.id === editedStop.id ? { ...stop, ...updatedStopInfo } : stop
@@ -112,12 +116,12 @@ function StopsTimeWeb() {
   };
 
   const handleSelectedDelete = async () => {
-    setIsLoading(true)
     const selectedIds = selectedStops.map((stop) => stop.id);
     try {
+      setIsLoading(true);
       const db = getFirestore();
       await Promise.all(
-        selectedIds.map((id) => deleteDoc(doc(db, "stop_times", id)))
+        selectedIds.map((id) => deleteDoc(doc(db, "stop_times2", id)))
       );
       const updatedStops = stops.filter(
         (stop) => !selectedIds.includes(stop.id)
@@ -128,8 +132,8 @@ function StopsTimeWeb() {
     } catch (error) {
       console.error("Error deleting stops:", error);
       toast.error("Error deleting selected stops");
-    }finally{
-      setIsLoading(false)
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -155,7 +159,7 @@ function StopsTimeWeb() {
   };
 
   const handleDelete = async (id) => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
       const db = getFirestore();
       await deleteDoc(doc(db, "stop_times", id));
@@ -166,8 +170,8 @@ function StopsTimeWeb() {
     } catch (error) {
       console.error("Error deleting stop:", error);
       toast.error("Error deleting stop");
-    }finally{
-      setIsLoading(false)
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -178,17 +182,14 @@ function StopsTimeWeb() {
 
   const filteredStopsData = stops.filter((item) => {
     const searchTermLower = searchTerm.toLowerCase();
-    return ['trip_id', 'departure_time', 'stop_id'].some((field) =>
-      item[field]
-        ? item[field].toLowerCase().includes(searchTermLower)
-        : false
+    return ["trip_id", "departure_time", "stop_id"].some((field) =>
+      item[field] ? item[field].toLowerCase().includes(searchTermLower) : false
     );
   });
   const paginatedStops = filteredStopsData.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
-
 
   return (
     <>
@@ -197,12 +198,14 @@ function StopsTimeWeb() {
         <div className="row">
           <div className="col-lg-12 p-3">
             <div className="text-center">
-              <h5 className="text-uppercase p-2 page-title">Stops Times Data</h5>
+              <h5 className="text-uppercase p-2 page-title">
+                Stops Times Data
+              </h5>
             </div>
-            <SearchFilter 
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            fields={['trip_id', 'departure_time', 'stop_id']}
+            <SearchFilter
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              fields={["trip_id", "departure_time", "stop_id"]}
             />
           </div>
 
@@ -211,7 +214,6 @@ function StopsTimeWeb() {
               variant="danger"
               onClick={handleSelectedDelete}
               disabled={isLoading || selectedStops.length === 0} // Disable button when isLoading is true or no shapes are selected
-
             >
               {isLoading ? "Deleting..." : "Delete Selected"}
             </Button>
@@ -240,63 +242,82 @@ function StopsTimeWeb() {
               </tr>
             </thead>
             <tbody>
-              {paginatedStops.map((stop) => (
-                <tr key={stop.id}>
-                  <td>
-                    <Form.Check
-                      type="checkbox"
-                      checked={selectedStops.some((s) => s.id === stop.id)}
-                      onChange={() => handleToggleSelect(stop.id)}
-                    />
-                  </td>
-                  <td>{stop.stop_id}</td>
-                  <td>{stop.arrival_time}</td>
-                  <td>{stop.departure_time}</td>
-                  <td>{stop.stop_sequence}</td>
-                  <td>{stop.pickup_type}</td>
-                  <td>{stop.trip_id}</td>
-                  <td className="d-flex gap-2">
-                    <Button variant="primary" onClick={() => handleEdit(stop)}>
-                      Edit
-                    </Button>
-                    <Button
-                      variant="danger"
-                      onClick={() => handleDelete(stop.id)}
-                    >
-                      Delete
-                    </Button>
+              {loading ? (
+                <tr>
+                  <td colSpan={8}>
+                    <Loader />
                   </td>
                 </tr>
-              ))}
+              ) : paginatedStops.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="text-center">
+                    no data found
+                  </td>
+                </tr>
+              ) : (
+                paginatedStops.map((stop) => (
+                  <tr key={stop.id}>
+                    <td>
+                      <Form.Check
+                        type="checkbox"
+                        checked={selectedStops.some((s) => s.id === stop.id)}
+                        onChange={() => handleToggleSelect(stop.id)}
+                      />
+                    </td>
+                    <td>{stop.stop_id}</td>
+                    <td>{stop.arrival_time}</td>
+                    <td>{stop.departure_time}</td>
+                    <td>{stop.stop_sequence}</td>
+                    <td>{stop.pickup_type}</td>
+                    <td>{stop.trip_id}</td>
+                    <td className="d-flex gap-2">
+                      <Button
+                        variant="primary"
+                        onClick={() => handleEdit(stop)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="danger"
+                        onClick={() => handleDelete(stop.id)}
+                      >
+                        Delete
+                      </Button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </Table>
           <div className="d-flex justify-content-center">
-              <Pagination>
-                <Pagination.Prev
+            <Pagination>
+              <Pagination.Prev
+                onClick={() => handlePaginationClick(currentPage - 1)}
+                disabled={currentPage === 1}
+              />
+              {currentPage > 1 && (
+                <Pagination.Item
                   onClick={() => handlePaginationClick(currentPage - 1)}
-                  disabled={currentPage === 1}
-                />
-                {currentPage > 1 && (
-                  <Pagination.Item
-                    onClick={() => handlePaginationClick(currentPage - 1)}
-                  >
-                    {currentPage - 1}
-                  </Pagination.Item>
-                )}
-                <Pagination.Item active>{currentPage}</Pagination.Item>
-                {currentPage < Math.ceil(filteredStopsData.length / pageSize) && (
-                  <Pagination.Item
-                    onClick={() => handlePaginationClick(currentPage + 1)}
-                  >
-                    {currentPage + 1}
-                  </Pagination.Item>
-                )}
-                <Pagination.Next
+                >
+                  {currentPage - 1}
+                </Pagination.Item>
+              )}
+              <Pagination.Item active>{currentPage}</Pagination.Item>
+              {currentPage < Math.ceil(filteredStopsData.length / pageSize) && (
+                <Pagination.Item
                   onClick={() => handlePaginationClick(currentPage + 1)}
-                  disabled={currentPage === Math.ceil(filteredStopsData.length / pageSize)}
-                />
-              </Pagination>
-            </div>
+                >
+                  {currentPage + 1}
+                </Pagination.Item>
+              )}
+              <Pagination.Next
+                onClick={() => handlePaginationClick(currentPage + 1)}
+                disabled={
+                  currentPage === Math.ceil(filteredStopsData.length / pageSize)
+                }
+              />
+            </Pagination>
+          </div>
         </div>
       </div>
       <Modal
