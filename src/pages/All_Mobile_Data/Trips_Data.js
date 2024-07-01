@@ -238,7 +238,6 @@ function TripsAppData() {
               </thead>
               <tbody>
                 {isLoading ? (
-
                   <tr>
                     <td colSpan={8}>
                       <Loader />
