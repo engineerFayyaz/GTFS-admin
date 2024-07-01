@@ -28,15 +28,12 @@ function AgencyData2() {
   const [showModal, setShowModal] = useState(false);
   const [editedRoute, setEditedRoute] = useState(null);
   const [updatedRoute, setUpdatedRoute] = useState({
-    count: "",
     agency_lang: "",
     agency_name: "",
     agency_phone: "",
     agency_timezone: "",
     agency_url: "",
-    route_color: "",
     route_id: "",
-    route_long_name: "",
   });
   const [selectedRows, setSelectedRows] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -72,15 +69,12 @@ function AgencyData2() {
     setShowModal(false);
     setEditedRoute(null);
     setUpdatedRoute({
-      count: "",
       agency_lang: "",
       agency_name: "",
       agency_phone: "",
       agency_timezone: "",
       agency_url: "",
-      route_color: "",
       route_id: "",
-      route_long_name: "",
     });
   };
 
@@ -181,7 +175,7 @@ function AgencyData2() {
 
   const filteredRoutesData = routes.filter((item) => {
     const searchTermLower = searchTerm.toLowerCase();
-    return ["agencyName", "agencyPhone", "agencyUrl", "routeId"].some((field) =>
+    return ["agency_name", "agency_phone", "agency_url", "route_id"].some((field) =>
       item[field] ? item[field].toLowerCase().includes(searchTermLower) : false
     );
   });
@@ -202,7 +196,7 @@ function AgencyData2() {
             <SearchFilter
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
-              fields={["agencyName", "agencyPhone", "agencyUrl", "routeId"]}
+              fields={["agency_name", "agency_phone", "agency_url", "route_id"]}
             />
           </div>
           <div className="col-lg-12 p-3">
@@ -231,15 +225,13 @@ function AgencyData2() {
             <thead>
               <tr>
                 <th>Select</th>
-                <th>Count</th>
+                {/* <th>Count</th> */}
                 <th>Agency Lang</th>
                 <th>Agency Name</th>
                 <th>Agency Phone</th>
                 <th>Agency Timezone</th>
                 <th>Agency URL</th>
-                <th>Route Color</th>
                 <th>Route Id</th>
-                <th>Route Long Name</th>
                 <th>Modify</th>
               </tr>
             </thead>
@@ -253,15 +245,15 @@ function AgencyData2() {
                       onChange={() => handleToggleRow(route.count)}
                     />
                   </td>
-                  <td className="text-secondary">{route.count}</td>
+                  {/* <td className="text-secondary">{route.count}</td> */}
                   <td>{route.agency_lang}</td>
                   <td>{route.agency_name}</td>
                   <td>{route.agency_phone}</td>
                   <td>{route.agency_timezone}</td>
                   <td>{route.agency_url}</td>
-                  <td>{route.route_color}</td>
-                  <td>{route.route_id}</td>
-                  <td>{route.route_long_name}</td>
+                  {/* <td>{route.route_color}</td> */}
+                  <td>{route.agency_id}</td>
+                  {/* <td>{route.route_long_name}</td> */}
                   <td>
                     <Button variant="primary" onClick={() => handleEdit(route)}>
                       Edit

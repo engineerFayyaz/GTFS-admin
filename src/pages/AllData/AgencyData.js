@@ -73,21 +73,21 @@ function CalendarDates() {
       setLoading(true);
       const db = getFirestore();
       let calendarQuery = query(
-        collection(db, "calendar_dates2"),
+        collection(db, "agency2"),
         orderBy("date"),
         limit(50)
       );
 
       if (next && lastVisible) {
         calendarQuery = query(
-          collection(db, "calendar_dates2"),
+          collection(db, "agency2"),
           orderBy("date"),
           startAfter(lastVisible),
           limit(50)
         );
       } else if (previous && firstVisible) {
         calendarQuery = query(
-          collection(db, "calendar_dates2"),
+          collection(db, "agency2"),
           orderBy("date"),
           endBefore(firstVisible),
           limit(50)
@@ -132,7 +132,7 @@ function CalendarDates() {
   const handleSaveChanges = async () => {
     try {
       const db = getFirestore();
-      const calendarRef = doc(db, "calendar_dates2", editingCalendar.id);
+      const calendarRef = doc(db, "agency2", editingCalendar.id);
       await updateDoc(calendarRef, updatedCalendarInfo);
       const updatedCalendars = calendar.map((calendarItem) =>
         calendarItem.id === editingCalendar.id
@@ -152,7 +152,7 @@ function CalendarDates() {
     try {
       setIsLoading(true);
       const db = getFirestore();
-      await deleteDoc(doc(db, "calendar_dates2", id));
+      await deleteDoc(doc(db, "agency2", id));
       setCalendar((prevCalendar) =>
         prevCalendar.filter((calendarItem) => calendarItem.id !== id)
       );
@@ -179,7 +179,7 @@ function CalendarDates() {
       const db = getFirestore();
 
       for (const id of selectedRows) {
-        await deleteDoc(doc(db, "calendar_dates2", id));
+        await deleteDoc(doc(db, "agency2", id));
       }
 
       setCalendar((prevCalendar) =>
