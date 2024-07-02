@@ -11,6 +11,7 @@ import {
   startAfter,
   endBefore,
   limit,
+  writeBatch
 } from "firebase/firestore";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -166,28 +167,63 @@ function CalendarDates() {
   };
 
   const handleDeleteSelected = async () => {
-    try {
-      setLoading(true);
-      const db = getFirestore();
-
-      for (const id of selectedRows) {
-        await deleteDoc(doc(db, "calendar_dates2", id));
+    if (selectedRows.length === calendar.length) {
+      // Delete all documents if all rows are selected
+      try {
+        setLoading(true);
+        const db = getFirestore();
+        const batch = writeBatch(db);
+        const calendarCollection = await getDocs(collection(db, "calendar_dates2"));
+  
+        calendarCollection.docs.forEach((calendarDoc) => {
+          const calendarRef = doc(db, "calendar_dates2", calendarDoc.id);
+          batch.delete(calendarRef);
+        });
+  
+        await batch.commit();
+        setCalendar([]);
+        setSelectedRows([]);
+        toast.success("All calendar dates deleted successfully");
+      } catch (error) {
+        console.error("Error deleting calendar dates:", error);
+        toast.error("Error deleting calendar dates");
+      } finally {
+        setLoading(false);
       }
-
-      setCalendar((prevCalendar) => prevCalendar.filter((calendarItem) => !selectedRows.includes(calendarItem.id)));
-      toast.success("Selected calendars deleted successfully");
-      setSelectedRows([]);
-    } catch (error) {
-      console.error("Error deleting selected calendars:", error);
-      toast.error("Error deleting selected calendars");
-    }finally {
-      setLoading(false);
+    } else {
+      // Delete only the selected rows
+      try {
+        setLoading(true);
+        const db = getFirestore();
+        const batch = writeBatch(db);
+  
+        selectedRows.forEach((calendarId) => {
+          const calendarRef = doc(db, "calendar_dates2", calendarId);
+          batch.delete(calendarRef);
+        });
+  
+        await batch.commit();
+  
+        const updatedCalendar = calendar.filter(
+          (calendarItem) => !selectedRows.includes(calendarItem.id)
+        );
+        setCalendar(updatedCalendar);
+        setSelectedRows([]);
+        toast.success("Selected calendar dates deleted successfully");
+      } catch (error) {
+        console.error("Error deleting selected calendar dates:", error);
+        toast.error("Error deleting selected calendar dates");
+      } finally {
+        setLoading(false);
+      }
     }
   };
+  
 
   const handleSelectAll = () => {
-    setSelectedRows(calendar.map((calendarItem) => calendarItem.id));
-  };
+  const allCalendarIds = calendar.map((calendar) => calendar.id);
+  setSelectedRows(allCalendarIds);
+};
 
   const handleUnselectAll = () => {
     setSelectedRows([]);

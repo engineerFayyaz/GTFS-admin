@@ -123,33 +123,59 @@ function RoutesMobileData() {
   };
 
   const handleDeleteSelected = async () => {
-    const firestore = getFirestore();
-    try {
-      setLoading(true);
-      const batch = writeBatch(firestore);
-
-      selectedRows.forEach((routeId) => {
-        const routeRef = doc(firestore, "routes2", routeId);
-        batch.delete(routeRef);
-      });
-
-      await batch.commit();
-
-      const updatedRoutes = routes.filter((route) => !selectedRows.includes(route.id));
-      setRoutes(updatedRoutes);
-      setSelectedRows([]);
-      toast.success("Selected routes deleted successfully");
-    } catch (error) {
-      console.error("Error deleting selected routes:", error);
-      toast.error("Error deleting selected routes");
-    } finally {
-      setLoading(false);
+    if (selectedRows.length === routes.length) {
+      try {
+        setLoading(true);
+        const db = getFirestore();
+        const batch = writeBatch(db);
+        const routesCollection = await getDocs(collection(db, "routes2"));
+  
+        routesCollection.docs.forEach((route) => {
+          const routeRef = doc(db, "routes2", route.id);
+          batch.delete(routeRef);
+        });
+  
+        await batch.commit();
+        setRoutes([]);
+        setSelectedRows([]);
+        toast.success("All routes deleted successfully");
+      } catch (error) {
+        console.error("Error deleting routes:", error);
+        toast.error("Error deleting routes");
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      try {
+        setLoading(true);
+        const db = getFirestore();
+        const batch = writeBatch(db);
+  
+        selectedRows.forEach((routeId) => {
+          const routeRef = doc(db, "routes2", routeId);
+          batch.delete(routeRef);
+        });
+  
+        await batch.commit();
+  
+        const updatedRoutes = routes.filter((route) => !selectedRows.includes(route.id));
+        setRoutes(updatedRoutes);
+        setSelectedRows([]);
+        toast.success("Selected routes deleted successfully");
+      } catch (error) {
+        console.error("Error deleting selected routes:", error);
+        toast.error("Error deleting selected routes");
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
   const handleSelectAll = () => {
-    setSelectedRows(routes.map((route) => route.id));
+    const allRouteIds = routes.map((route) => route.id);
+    setSelectedRows(allRouteIds);
   };
+  
 
   const handleUnselectAll = () => {
     setSelectedRows([]);
@@ -190,7 +216,7 @@ function RoutesMobileData() {
             <Button
               variant="danger"
               onClick={handleDeleteSelected}
-              disabled={loading}
+              disabled={loading || selectedRows.length === 0}
             >
               {loading ? (
                 <>

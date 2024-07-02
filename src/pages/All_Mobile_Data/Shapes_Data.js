@@ -50,7 +50,7 @@ function ShapesAppData() {
       try {
         setLoading(true);
         const db = getFirestore(); // Initialize Firestore directly here
-        const shapesCollection = await getDocs(collection(db, "shapes"));
+        const shapesCollection = await getDocs(collection(db, "shapes2"));
         const shapesData = shapesCollection.docs.map((doc) => {
           const data = doc.data();
           // Remove double quotes from all string properties
@@ -101,7 +101,7 @@ function ShapesAppData() {
 
   const handleSaveChanges = async () => {
     try {
-      const shapeRef = doc(db, "shapes", editedShape.id);
+      const shapeRef = doc(db, "shapes2", editedShape.id);
       await updateDoc(shapeRef, updatedShapeInfo);
       const updatedShapes = shapes.map((shape) =>
         shape.id === editedShape.id ? { ...shape, ...updatedShapeInfo } : shape
@@ -119,7 +119,7 @@ function ShapesAppData() {
     setIsLoading(true);
     try {
       const db = getFirestore();
-      await deleteDoc(doc(db, "shapes", id));
+      await deleteDoc(doc(db, "shapes2", id));
       setShapes((prevShapes) => prevShapes.filter((shape) => shape.id !== id));
       toast.success("Shape deleted successfully");
     } catch (error) {
@@ -167,7 +167,7 @@ function ShapesAppData() {
         const deletedRows = [];
 
         for (const shape of selectedShapes) {
-            await deleteDoc(doc(db, "shapes", shape.id));
+            await deleteDoc(doc(db, "shapes2", shape.id));
             deletedRows.push(shape); // Add the deleted shape to the array
             console.log("Deleted row:", shape); // Log the individual deleted row
         }
