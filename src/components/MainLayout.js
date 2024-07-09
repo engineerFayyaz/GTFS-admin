@@ -398,6 +398,12 @@ const MainLayout = () => {
               icon: <AiOutlineUser className="fs-4" />,
               label: "Contact-Request",
             },
+
+            {
+              key: "verify-email",
+              icon: <AiOutlineUser className="fs-4" />,
+              label: "AdminVerificationPage",
+            },
             // {
             //   key: "Product-Approval",
             //   icon: <BiCheckSquare className="fs-4" />,

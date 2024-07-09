@@ -50,6 +50,7 @@ import StopesAppData from "./pages/All_Mobile_Data/Stops_Data";
 import TripsAppData from "./pages/All_Mobile_Data/Trips_Data";
 import AgencyData from "./pages/AllData/AgencyData";
 import AgencyData2 from "./pages/AllData/AgencyData2";
+import AdminVerificationPage from "./pages/VerificationEmail";
 function App() {
   return (
     <Router>
@@ -118,6 +119,10 @@ function App() {
           <Route path="All_Web_Data/Shapes_Time_Web" element={<ShapesWebData/>}/>
           <Route path="All_Web_Data/Trips_Web" element={<TripsWebData/>}/>
 
+
+          {/* verify emails */}
+
+          <Route path="/admin/verify-email" element={<AdminVerificationPage/>}/>
         </Route>
       </Routes>
     </Router>
