@@ -12,11 +12,12 @@ import {
   doc,
   writeBatch,
 } from "firebase/firestore";
-import ProgressBar from "react-bootstrap/ProgressBar";
 
 export const UploadMobileData = () => {
   const [file, setFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+  const showError = document.getElementById("show_error");
   const storage = getStorage();
   const db = getFirestore();
 
@@ -27,7 +28,6 @@ export const UploadMobileData = () => {
   const parseGTFSFile = async (file) => {
     try {
       const gtfsData = [];
-
       const fileContent = await file.text();
       const lines = fileContent.split("\n");
 
@@ -36,6 +36,15 @@ export const UploadMobileData = () => {
       }
 
       const headers = lines[0].split(",").map((header) => header.trim());
+
+      if (file.name === "routes.txt") {
+        const requiredFields = ["route_id", "route_long_name", "route_short_name", "route_type", "agency_id"];
+        const missingFields = requiredFields.filter((field) => !headers.includes(field));
+
+        if (missingFields.length > 0) {
+          throw new Error(`File ${file.name} is missing required fields: ${missingFields.join(", ")}`);
+        }
+      }
 
       for (let i = 1; i < lines.length; i++) {
         const values = lines[i].split(",").map((value) => value.trim());
@@ -46,6 +55,13 @@ export const UploadMobileData = () => {
             data[header] = values[index];
           }
         });
+
+        if (file.name === "routes.txt" && data.shape_pt_sequence !== undefined) {
+          const sequenceValue = parseInt(data.shape_pt_sequence, 10);
+          if (isNaN(sequenceValue) || sequenceValue < 0) {
+            throw new Error(`Invalid shape_pt_sequence value at line ${i + 1}: ${data.shape_pt_sequence}`);
+          }
+        }
 
         if (Object.keys(data).length > 0) {
           gtfsData.push(data);
@@ -60,6 +76,7 @@ export const UploadMobileData = () => {
       return gtfsData;
     } catch (error) {
       console.error("Error parsing GTFS file", error);
+      showError.innerHTML = ` ${error.message}`;
       throw error;
     }
   };
@@ -88,6 +105,9 @@ export const UploadMobileData = () => {
       return;
     }
 
+    setIsUploading(true);
+    setUploadProgress(0);
+
     try {
       const docRef = ref(storage, `gtfs/${file.name}`);
       const uploadTask = uploadBytesResumable(docRef, file);
@@ -95,13 +115,14 @@ export const UploadMobileData = () => {
       uploadTask.on(
         "state_changed",
         (snapshot) => {
-          const progress =
-            (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
           setUploadProgress(progress);
         },
         (error) => {
           toast.error("Error while uploading file");
           console.error("Error while uploading file", error);
+          showError.innerHTML = ` ${error.message}`;
+          setIsUploading(false);
         },
         async () => {
           try {
@@ -121,16 +142,25 @@ export const UploadMobileData = () => {
             setFile(null);
             toast.success("File uploaded successfully");
             console.log("File uploaded successfully");
-            window.location.reload();
+
+            setTimeout(() => {
+              window.location.reload();
+            }, 1000);
           } catch (error) {
             toast.error(error.message);
             console.error("Error while processing file", error);
+            showError.innerHTML = ` ${error.message}`;
+          } finally {
+            setIsUploading(false);
+            setUploadProgress(0);
           }
         }
       );
     } catch (error) {
       toast.error("Error while uploading file");
       console.error("Error while uploading file", error);
+      showError.innerHTML = ` ${error.message}`;
+      setIsUploading(false);
     }
   };
 
@@ -144,6 +174,9 @@ export const UploadMobileData = () => {
               <h5 className="text-uppercase p-2 page-title">
                 Upload GTFS Mobile Data
               </h5>
+              <p className="fs-6 fw-bold text-danger" id="show_error">
+                Upload only .txt files
+              </p>
               <div className="upload_data mt-4">
                 <input
                   type="file"
@@ -152,15 +185,11 @@ export const UploadMobileData = () => {
                   onChange={handleFileChange}
                   accept=".txt"
                 />
-                {uploadProgress > 0 && (
-                  <ProgressBar
-                    now={uploadProgress}
-                    label={`${uploadProgress}%`}
-                  />
-                )}
+                {isUploading && <div>{Math.round(uploadProgress)}%</div>}
                 <button
                   className="btn btn-success px-3 py-2"
                   onClick={handleSubmit}
+                  disabled={isUploading}
                 >
                   Upload Data
                 </button>

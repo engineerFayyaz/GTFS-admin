@@ -30,11 +30,13 @@ function RoutesMobileData() {
   const [showModal, setShowModal] = useState(false);
   const [editedRoute, setEditedRoute] = useState(null);
   const [updatedRoute, setUpdatedRoute] = useState({
-    routeColor: "",
-    id: "",
-    routeLongName: "",
-    routeShortName: "",
-    routeTypeCat: "",
+    agency_id: "",
+    route_color: "",
+    route_long_name: "",
+    route_short_name: "",
+    route_type: "",
+    route_text_color:"",
+    route_decs:"",
   });
   const [selectedRows, setSelectedRows] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -73,11 +75,13 @@ function RoutesMobileData() {
     setEditedRoute(null);
     setShowModal(false);
     setUpdatedRoute({
-      id: "",
-      routeColor: "",
-      routeLongName: "",
-      routeShortName: "",
-      routeTypeCat: "",
+      agency_id: "",
+    route_color: "",
+    route_long_name: "",
+    route_short_name: "",
+    route_type: "",
+    route_text_color:"",
+    route_decs:"",
     });
   };
 
@@ -187,7 +191,7 @@ function RoutesMobileData() {
 
   const filteredRoutesData = routes.filter((item) => {
     const searchTermLower = searchTerm.toLowerCase();
-    return ["routeLongName", "routeColor"].some((field) =>
+    return ["route_long_name", "route_color", "route_id", "route_type"].some((field) =>
       item[field] ? item[field].toLowerCase().includes(searchTermLower) : false
     );
   });
@@ -209,7 +213,7 @@ function RoutesMobileData() {
             <SearchFilter
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
-              fields={["routeLongName", "routeColor"]}
+              fields={["route_long_name", "route_color", "route_id", "route_type"]}
             />
           </div>
           <div className="col-lg-12 p-3">
@@ -242,7 +246,8 @@ function RoutesMobileData() {
                 <th>Route_Color</th>
                 <th>Route_Short_Name</th>
                 <th>Route_Long_Name</th>
-                <th>Route_Type_Cat</th>
+                <th>Route_Type</th>
+                <th>Route_Text_Color</th>
                 <th>Modify</th>
               </tr>
             </thead>
@@ -264,10 +269,12 @@ function RoutesMobileData() {
                       />
                     </td>
                     <td className="text-secondary">{route.id}</td>
-                    <td>{route.routeColor}</td>
-                    <td>{route.routeShortName}</td>
-                    <td>{route.routeLongName}</td>
-                    <td>{route.routeTypeCat}</td>
+                    <td>{route.route_color}</td>
+                    <td>{route.route_short_name}</td>
+                    <td>{route.route_long_name}</td>
+                    <td>{route.route_type}</td>
+                    <td>{route.route_text_color}</td>
+
                     <td className="d-flex gap-1">
                       <Button variant="primary" onClick={() => handleEdit(route)}>
                         <FaEdit />
@@ -318,9 +325,9 @@ function RoutesMobileData() {
                   <Form.Label>New Route Color</Form.Label>
                   <Form.Control
                     type="text"
-                    value={updatedRoute.routeColor}
+                    value={updatedRoute.route_color}
                     onChange={(e) =>
-                      setUpdatedRoute({ ...updatedRoute, routeColor: e.target.value })
+                      setUpdatedRoute({ ...updatedRoute, route_color: e.target.value })
                     }
                   />
                 </Form.Group>
@@ -338,6 +345,18 @@ function RoutesMobileData() {
                   />
                 </Form.Group>
               </Col>
+              <Col>
+                <Form.Group>
+                  <Form.Label>New Route Text Color</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={updatedRoute.route_text_color}
+                    onChange={(e) =>
+                      setUpdatedRoute({ ...updatedRoute, route_text_color: e.target.value })
+                    }
+                  />
+                </Form.Group>
+              </Col>
             </Row>
             <Row className="gap-3 mt-3">
               <Col>
@@ -345,9 +364,9 @@ function RoutesMobileData() {
                   <Form.Label>Route Long Name</Form.Label>
                   <Form.Control
                     type="text"
-                    value={updatedRoute.routeLongName}
+                    value={updatedRoute.route_long_name}
                     onChange={(e) =>
-                      setUpdatedRoute({ ...updatedRoute, routeLongName: e.target.value })
+                      setUpdatedRoute({ ...updatedRoute, route_long_name: e.target.value })
                     }
                   />
                 </Form.Group>
@@ -357,9 +376,9 @@ function RoutesMobileData() {
                   <Form.Label>Route Short Name</Form.Label>
                   <Form.Control
                     type="text"
-                    value={updatedRoute.routeShortName}
+                    value={updatedRoute.route_short_name}
                     onChange={(e) =>
-                      setUpdatedRoute({ ...updatedRoute, routeShortName: e.target.value })
+                      setUpdatedRoute({ ...updatedRoute, route_short_name: e.target.value })
                     }
                   />
                 </Form.Group>
@@ -369,9 +388,9 @@ function RoutesMobileData() {
                   <Form.Label>Route Type Category</Form.Label>
                   <Form.Control
                     type="text"
-                    value={updatedRoute.routeTypeCat}
+                    value={updatedRoute.route_type}
                     onChange={(e) =>
-                      setUpdatedRoute({ ...updatedRoute, routeTypeCat: e.target.value })
+                      setUpdatedRoute({ ...updatedRoute, route_type: e.target.value })
                     }
                   />
                 </Form.Group>

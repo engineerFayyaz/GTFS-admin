@@ -5,6 +5,7 @@ import "react-toastify/dist/ReactToastify.css";
 import "../Config"
 import {getAuth, signInWithEmailAndPassword} from "firebase/auth"
 import {storeUserToLocalStorage} from "../utils/localstorage"
+
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
