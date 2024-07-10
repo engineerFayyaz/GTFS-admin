@@ -104,14 +104,16 @@ function PublicTransitStops() {
         <Col md={8}>
           <div style={{ height: "80vh", width: "100%" }}>
             <GoogleMapReact
-              bootstrapURLKeys={{ key: "AIzaSyA6SzmrYZ9l1sxEev_InIxKI9aCwjlRAq0", libraries: ['places'] }}
+              bootstrapURLKeys={{ key: "AIzaSyCt6m1rrV32jEStp8x-cgBL0WwL9zXKOG4", libraries: ['places'] }}
               defaultCenter={{ lat: 41.9028, lng: 12.4964 }}
-              defaultZoom={20}
+              defaultZoom={14}
               yesIWantToUseGoogleMapApiInternals
               onGoogleApiLoaded={({ map, maps }) => {
+                console.log("Google Maps API loaded");
                 setMap(map);
                 setMapsApi(maps);
               }}
+              onError={(e) => console.error("Error loading Google Maps API", e)}
             >
               {/* Markers are rendered by the useEffect hook */}
             </GoogleMapReact>
