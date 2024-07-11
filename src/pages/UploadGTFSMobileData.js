@@ -11,13 +11,15 @@ import {
   getFirestore,
   doc,
   writeBatch,
+  getDocs,
+  query,
+  where,
 } from "firebase/firestore";
 
 export const UploadMobileData = () => {
   const [file, setFile] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
-  const showError = document.getElementById("show_error");
   const storage = getStorage();
   const db = getFirestore();
 
@@ -37,10 +39,19 @@ export const UploadMobileData = () => {
 
       const headers = lines[0].split(",").map((header) => header.trim());
 
-      if (file.name === "routes.txt") {
-        const requiredFields = ["route_id", "route_long_name", "route_short_name", "route_type", "agency_id"];
-        const missingFields = requiredFields.filter((field) => !headers.includes(field));
+      const requiredFieldsMap = {
+        "routes.txt": ["route_id", "route_long_name", "route_short_name", "route_type", "agency_id"],
+        "shapes.txt": ["shape_id", "shape_pt_lat", "shape_pt_lon", "shape_pt_sequence"],
+        "agency.txt": ["agency_name", "agency_url", "agency_timezone"],
+        "calendar.txt": ["service_id", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday", "start_date", "end_date"],
+        "calendar_dates.txt": ["service_id", "date", "exception_type"],
+        "fare_attributes.txt": ["fare_id", "price", "currency_type", "payment_method", "transfer"],
+        "trips.txt": ["route_id", "service_id", "trip_id"],
+      };
 
+      const requiredFields = requiredFieldsMap[file.name];
+      if (requiredFields) {
+        const missingFields = requiredFields.filter((field) => !headers.includes(field));
         if (missingFields.length > 0) {
           throw new Error(`File ${file.name} is missing required fields: ${missingFields.join(", ")}`);
         }
@@ -56,11 +67,12 @@ export const UploadMobileData = () => {
           }
         });
 
-        if (file.name === "routes.txt" && data.shape_pt_sequence !== undefined) {
+        if (file.name === "shapes.txt" && data.shape_pt_sequence !== undefined) {
           const sequenceValue = parseInt(data.shape_pt_sequence, 10);
-          if (isNaN(sequenceValue) || sequenceValue < 0) {
-            throw new Error(`Invalid shape_pt_sequence value at line ${i + 1}: ${data.shape_pt_sequence}`);
-          }
+          // Uncomment the following lines if you need to validate the sequence value
+          // if (isNaN(sequenceValue) || sequenceValue < 0) {
+          //   throw new Error(`Invalid shape_pt_sequence value at line ${i + 1}: ${data.shape_pt_sequence}`);
+          // }
         }
 
         if (Object.keys(data).length > 0) {
@@ -76,7 +88,7 @@ export const UploadMobileData = () => {
       return gtfsData;
     } catch (error) {
       console.error("Error parsing GTFS file", error);
-      showError.innerHTML = ` ${error.message}`;
+      document.getElementById("show_error").innerHTML = ` ${error.message}`;
       throw error;
     }
   };
@@ -86,6 +98,15 @@ export const UploadMobileData = () => {
       const batch = writeBatch(db);
       const gtfsDataCollectionRef = collection(db, `${fileName}2`);
 
+      // Check if documents already exist and delete them
+      const existingDocsQuery = query(gtfsDataCollectionRef);
+      const existingDocsSnapshot = await getDocs(existingDocsQuery);
+
+      existingDocsSnapshot.forEach((doc) => {
+        batch.delete(doc.ref);
+      });
+
+      // Add new documents
       batchData.forEach((data) => {
         const docRef = doc(gtfsDataCollectionRef);
         batch.set(docRef, data);
@@ -121,7 +142,7 @@ export const UploadMobileData = () => {
         (error) => {
           toast.error("Error while uploading file");
           console.error("Error while uploading file", error);
-          showError.innerHTML = ` ${error.message}`;
+          document.getElementById("show_error").innerHTML = ` ${error.message}`;
           setIsUploading(false);
         },
         async () => {
@@ -149,7 +170,7 @@ export const UploadMobileData = () => {
           } catch (error) {
             toast.error(error.message);
             console.error("Error while processing file", error);
-            showError.innerHTML = ` ${error.message}`;
+            document.getElementById("show_error").innerHTML = ` ${error.message}`;
           } finally {
             setIsUploading(false);
             setUploadProgress(0);
@@ -159,7 +180,7 @@ export const UploadMobileData = () => {
     } catch (error) {
       toast.error("Error while uploading file");
       console.error("Error while uploading file", error);
-      showError.innerHTML = ` ${error.message}`;
+      document.getElementById("show_error").innerHTML = ` ${error.message}`;
       setIsUploading(false);
     }
   };
