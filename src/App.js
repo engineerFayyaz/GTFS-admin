@@ -51,6 +51,7 @@ import TripsAppData from "./pages/All_Mobile_Data/Trips_Data";
 import AgencyData from "./pages/AllData/AgencyData";
 import AgencyData2 from "./pages/AllData/AgencyData2";
 import AdminVerificationPage from "./pages/VerificationEmail";
+import PaymentHistory from './pages/PaymentHistory'
 function App() {
   return (
     <Router>
@@ -123,6 +124,9 @@ function App() {
           {/* verify emails */}
 
           <Route path="/admin/verify-email" element={<AdminVerificationPage/>}/>
+          <Route path="/admin/Payment-Status" element={<PaymentHistory/>}/>
+          
+
         </Route>
       </Routes>
     </Router>

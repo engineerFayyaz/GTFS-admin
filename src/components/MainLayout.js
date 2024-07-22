@@ -7,7 +7,8 @@ import {
   AiOutlineNotification,
   AiOutlineHighlight,
   AiOutlineAlert,
-  AiOutlineUser
+  AiOutlineUser,
+  AiOutlineCreditCard
 } from "react-icons/ai";
 import {
   FaBusinessTime,
@@ -22,6 +23,7 @@ import {
   FaUpload,
   FaBuilding,
   FaBusSimple, 
+  faCreditCard 
 } from "react-icons/fa6";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -403,6 +405,12 @@ const MainLayout = () => {
               key: "verify-email",
               icon: <AiOutlineUser className="fs-4" />,
               label: "AdminVerificationPage",
+            },
+
+            {
+              key: "Payment-Status",
+              icon: <AiOutlineCreditCard  className="fs-4" />,
+              label: "Payment-Status",
             },
             // {
             //   key: "Product-Approval",
